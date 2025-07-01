@@ -12,7 +12,7 @@ ProjectFlow Dashboard is a demo project management platform built with React, Ty
 1. **Install dependencies**
    ```bash
    npm install
-   cd server && npm install
+   (cd server && npm install)
    ```
 2. **Seed the database**
    ```bash
@@ -21,12 +21,11 @@ ProjectFlow Dashboard is a demo project management platform built with React, Ty
    This creates `projectflow.db` inside the `server` folder and fills it with the sample data from `src/data/seedData.ts`.
 3. **Start the backend**
    ```bash
-   npm start
+   npm run start:server
    ```
    The API will be available on `http://localhost:3000/api`.
 4. **Run the frontend**
    ```bash
-   cd ..
    npm run dev
    ```
    Vite will start the development server on `http://localhost:5173`.
