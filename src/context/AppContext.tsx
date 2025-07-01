@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect, useState } from 'react';
 import { User, Project, Task, CalendarEvent, Notification, Team, BlogPost, BlogComment } from '../types';
-import { users, projects, tasks, calendarEvents, notifications, teams, blogPosts } from '../data/mockData';
 
 interface AppState {
   currentUser: User;
@@ -50,17 +49,19 @@ type AppAction =
   | { type: 'ADD_BLOG_COMMENT'; payload: { postId: string; comment: BlogComment } }
   | { type: 'UPDATE_BLOG_COMMENT'; payload: { postId: string; comment: BlogComment } }
   | { type: 'DELETE_BLOG_COMMENT'; payload: { postId: string; commentId: string } }
-  | { type: 'TOGGLE_COMMENT_LIKE'; payload: { postId: string; commentId: string; userId: string } };
+  | { type: 'TOGGLE_COMMENT_LIKE'; payload: { postId: string; commentId: string; userId: string } }
+  | { type: 'INIT_STATE'; payload: AppState };
 
 const initialState: AppState = {
-  currentUser: users[0],
-  users,
-  projects,
-  tasks,
-  calendarEvents,
-  notifications,
-  teams,
-  blogPosts,
+  // Initial state will be populated from the server
+  currentUser: {} as User,
+  users: [],
+  projects: [],
+  tasks: [],
+  calendarEvents: [],
+  notifications: [],
+  teams: [],
+  blogPosts: [],
   searchQuery: '',
   filters: {
     projectStatus: 'all',
@@ -71,6 +72,8 @@ const initialState: AppState = {
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
+    case 'INIT_STATE':
+      return { ...action.payload };
     case 'UPDATE_TASK_STATUS':
       return {
         ...state,
@@ -353,6 +356,27 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/state')
+      .then(res => res.json())
+      .then(data => {
+        dispatch({ type: 'INIT_STATE', payload: data });
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (loaded) {
+      fetch('http://localhost:3000/api/state', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state)
+      });
+    }
+  }, [state, loaded]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
