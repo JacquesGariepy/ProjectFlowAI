@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+// Utility script to seed the SQLite database with demo data
 const db = require('./db');
 
-function loadMockData() {
-  let ts = fs.readFileSync(path.join(__dirname, '../src/data/mockData.ts'), 'utf8');
+function loadSeedData() {
+  let ts = fs.readFileSync(path.join(__dirname, '../src/data/seedData.ts'), 'utf8');
   ts = ts.replace(/import[^;]+;\n/, '');
   ts = ts.replace(/ as const/g, '');
   ts = ts.replace(/export const /g, 'const ');
@@ -15,7 +16,7 @@ function loadMockData() {
   return moduleObj.exports;
 }
 
-const data = loadMockData();
+const data = loadSeedData();
 
 db.serialize(() => {
   db.run('CREATE TABLE IF NOT EXISTS state (id INTEGER PRIMARY KEY, data TEXT)');
