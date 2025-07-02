@@ -21,7 +21,7 @@ ProjectFlow Dashboard is a demo project management platform built with React, Ty
    This creates `projectflow.db` inside the `server` folder and fills it with the sample data from `src/data/seedData.ts`.
 3. **Start the backend**
    ```bash
-   npm run start:server
+   npm run start:server (npm start)
    ```
    The API will be available on `http://localhost:3000/api`.
 4. **Run the frontend**
