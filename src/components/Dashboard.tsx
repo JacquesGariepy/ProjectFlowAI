@@ -15,11 +15,13 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Tooltip, Legend } from 'recharts';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getProjectStats, getTaskStats, calculateCompletionRate } from '../utils/calculations';
 import { formatDate, getDaysUntilDeadline, isOverdue } from '../utils/dateUtils';
 
 const Dashboard: React.FC = () => {
   const { state } = useAppContext();
+  const { t } = useLanguage();
   const { projects, tasks, users } = state;
 
   const projectStats = getProjectStats(projects);
@@ -36,7 +38,7 @@ const Dashboard: React.FC = () => {
 
   const stats = [
     {
-      title: 'Active Projects',
+      title: t.dashboard.activeProjects,
       value: projectStats.inProgress.toString(),
       change: '+12%',
       isUp: true,
@@ -45,7 +47,7 @@ const Dashboard: React.FC = () => {
       total: projectStats.total
     },
     {
-      title: 'Pending Tasks',
+      title: t.dashboard.pendingTasks,
       value: (taskStats.todo + taskStats.inProgress).toString(),
       change: '+8%',
       isUp: true,
@@ -54,7 +56,7 @@ const Dashboard: React.FC = () => {
       total: taskStats.total
     },
     {
-      title: 'Team Members',
+      title: t.dashboard.teamMembers,
       value: users.filter(u => u.status === 'active').length.toString(),
       change: '+4%',
       isUp: true,
@@ -63,7 +65,7 @@ const Dashboard: React.FC = () => {
       total: users.length
     },
     {
-      title: 'Completion Rate',
+      title: t.dashboard.completionRate,
       value: `${completionRate}%`,
       change: completionRate > 90 ? '+5%' : '-2%',
       isUp: completionRate > 90,
@@ -84,10 +86,10 @@ const Dashboard: React.FC = () => {
   ];
 
   const pieData = [
-    { name: 'Completed', value: taskStats.completed, color: '#10b981' },
-    { name: 'In Progress', value: taskStats.inProgress, color: '#3b82f6' },
-    { name: 'To Do', value: taskStats.todo, color: '#f59e0b' },
-    { name: 'Review', value: taskStats.review, color: '#8b5cf6' }
+    { name: t.dashboard.completed, value: taskStats.completed, color: '#10b981' },
+    { name: t.dashboard.inProgress, value: taskStats.inProgress, color: '#3b82f6' },
+    { name: t.dashboard.toDo, value: taskStats.todo, color: '#f59e0b' },
+    { name: t.dashboard.review, value: taskStats.review, color: '#8b5cf6' }
   ];
 
   const recentProjects = projects
@@ -160,7 +162,7 @@ const Dashboard: React.FC = () => {
                     <span className={`text-sm font-medium ${stat.isUp ? 'text-emerald-500' : 'text-red-500'}`}>
                       {stat.change}
                     </span>
-                    <span className="text-sm text-slate-500 ml-1">vs last month</span>
+                    <span className="text-sm text-slate-500 ml-1">{t.dashboard.vsLastMonth}</span>
                   </div>
                 </div>
                 <div className={`p-3 rounded-lg bg-gradient-to-r ${stat.color}`}>
@@ -177,17 +179,17 @@ const Dashboard: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-5 h-5 text-red-500" />
-            <h3 className="font-semibold text-red-900">Attention Required</h3>
+            <h3 className="font-semibold text-red-900">{t.dashboard.attentionRequired}</h3>
           </div>
           <div className="mt-2 space-y-1">
             {overdueTasks > 0 && (
               <p className="text-sm text-red-700">
-                {overdueTasks} task{overdueTasks > 1 ? 's are' : ' is'} overdue
+                {overdueTasks} {overdueTasks > 1 ? t.dashboard.tasksOverdue : t.dashboard.taskOverdue}
               </p>
             )}
             {budgetUtilization > 90 && (
               <p className="text-sm text-red-700">
-                Budget utilization is at {budgetUtilization}% - review spending
+                {t.dashboard.budgetUtilizationHigh} {budgetUtilization}% {t.dashboard.reviewSpending}
               </p>
             )}
           </div>
@@ -199,7 +201,7 @@ const Dashboard: React.FC = () => {
         {/* Performance Chart */}
         <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-slate-900">Performance Overview</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{t.dashboard.performanceOverview}</h3>
             <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
               <MoreHorizontal className="w-4 h-4 text-slate-500" />
             </button>
@@ -218,7 +220,7 @@ const Dashboard: React.FC = () => {
                   stackId="1"
                   stroke="#3b82f6"
                   fill="url(#colorTasks)"
-                  name="Total Tasks"
+                  name={t.dashboard.totalTasks}
                 />
                 <Area
                   type="monotone"
@@ -226,7 +228,7 @@ const Dashboard: React.FC = () => {
                   stackId="2"
                   stroke="#10b981"
                   fill="url(#colorCompleted)"
-                  name="Completed Tasks"
+                  name={t.dashboard.completedTasks}
                 />
                 <defs>
                   <linearGradient id="colorTasks" x1="0" y1="0" x2="0" y2="1">
@@ -245,7 +247,7 @@ const Dashboard: React.FC = () => {
 
         {/* Task Distribution */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900 mb-6">Task Distribution</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-6">{t.dashboard.taskDistribution}</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -285,12 +287,12 @@ const Dashboard: React.FC = () => {
         {/* Recent Projects */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-slate-900">Recent Projects</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{t.dashboard.recentProjects}</h3>
             <button 
               onClick={navigateToProjects}
               className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
             >
-              View All
+              {t.dashboard.viewAll}
             </button>
           </div>
           
@@ -316,7 +318,11 @@ const Dashboard: React.FC = () => {
                         project.status === 'on-hold' ? 'bg-red-100 text-red-700' :
                         'bg-slate-100 text-slate-700'
                       }`}>
-                        {project.status.replace('-', ' ')}
+                        {project.status === 'in-progress' ? t.dashboard.inProgress :
+                        project.status === 'review' ? t.dashboard.review :
+                        project.status === 'completed' ? t.dashboard.completed :
+                        project.status === 'on-hold' ? t.dashboard.onHold :
+                        project.status.replace('-', ' ')}
                       </span>
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3 text-slate-400" />
@@ -358,12 +364,12 @@ const Dashboard: React.FC = () => {
         {/* Upcoming Deadlines */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-slate-900">Upcoming Deadlines</h3>
+            <h3 className="text-lg font-semibold text-slate-900">{t.dashboard.upcomingDeadlines}</h3>
             <button 
               onClick={navigateToCalendar}
               className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
             >
-              View Calendar
+              {t.dashboard.viewCalendar}
             </button>
           </div>
           
@@ -395,7 +401,7 @@ const Dashboard: React.FC = () => {
                             daysLeft <= 7 ? 'bg-orange-100 text-orange-700' :
                             'bg-blue-100 text-blue-700'
                           }`}>
-                            {daysLeft === 0 ? 'Today' : daysLeft === 1 ? '1 day left' : `${daysLeft} days left`}
+                            {daysLeft === 0 ? t.dashboard.today : daysLeft === 1 ? `1 ${t.dashboard.dayLeft}` : `${daysLeft} ${t.dashboard.daysLeft}`}
                           </span>
                         </div>
                       </div>
@@ -423,8 +429,8 @@ const Dashboard: React.FC = () => {
             ) : (
               <div className="text-center py-8">
                 <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h4 className="text-lg font-medium text-slate-900 mb-2">No upcoming deadlines</h4>
-                <p className="text-slate-600 text-sm">All projects are on track or completed</p>
+                <h4 className="text-lg font-medium text-slate-900 mb-2">{t.dashboard.noUpcomingDeadlines}</h4>
+                <p className="text-slate-600 text-sm">{t.dashboard.allProjectsOnTrack}</p>
               </div>
             )}
           </div>

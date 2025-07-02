@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useAI } from '../hooks/useAI';
+import { useLanguage } from '../context/LanguageContext';
 
 interface AIInsight {
   id: string;
@@ -28,6 +29,7 @@ const AIInsights: React.FC = () => {
   const { state } = useAppContext();
   const { projects, tasks, users } = state;
   const { isLoading: aiLoading, isAvailable, generateResponse } = useAI();
+  const { t, language } = useLanguage();
   
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
@@ -38,18 +40,18 @@ const AIInsights: React.FC = () => {
       const saved = localStorage.getItem('ai-insights');
       if (saved) {
         const parsedInsights = JSON.parse(saved);
-        // Vérifier si les insights ne sont pas trop anciens (ex: 24 heures pour plus de persistance)
+        // Check if insights are not too old (24 hours for better persistence)
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const validInsights = parsedInsights.filter((insight: any) => 
           new Date(insight.timestamp || 0) > twentyFourHoursAgo
         );
         if (validInsights.length > 0) {
           setInsights(validInsights);
-          return; // Important: arrêter ici si on a des insights sauvegardés
+          return; // Important: stop here if we have saved insights
         }
       }
       
-      // Seulement si aucun insight sauvegardé valide, générer des insights par défaut
+      // Only if no valid saved insights, generate default insights
       generateInitialInsights();
     } catch (error) {
       console.error('Error loading saved insights:', error);
@@ -58,16 +60,16 @@ const AIInsights: React.FC = () => {
   };
 
   const generateInitialInsights = () => {
-    // Insights de bienvenue uniquement la première fois
+    // Welcome insights only the first time
     const welcomeInsights: AIInsight[] = [
       {
         id: 'welcome-1',
         type: 'opportunity',
-        title: '🎉 Bienvenue dans les Insights IA !',
-        description: 'Cliquez sur "Actualiser IA" pour générer des analyses intelligentes basées sur vos données de projet.',
+        title: t.ai.welcomeInsightTitle,
+        description: t.ai.welcomeInsightDescription,
         confidence: 100,
         impact: 'high',
-        category: 'Système',
+        category: t.ai.systemCategory,
         actionable: false,
         data: {
           isWelcomeMessage: true
@@ -124,7 +126,8 @@ const AIInsights: React.FC = () => {
         const activeProjects = projects.filter(p => p.status === 'in-progress').length;
         const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
 
-        const analysisPrompt = `En tant qu'expert en gestion de projet et analyste de données, analysez ce contexte et générez exactement 6 insights IA distincts au format JSON:
+        const analysisPrompt = language === 'fr' 
+          ? `En tant qu'expert en gestion de projet et analyste de données, analysez ce contexte et générez exactement 6 insights IA distincts au format JSON:
 
         **DONNÉES ACTUELLES:**
         - Taux de completion: ${completionRate}%
@@ -163,7 +166,47 @@ const AIInsights: React.FC = () => {
         5. Variez les niveaux d'impact (high/medium/low)
         6. Utilisez des catégories: Performance, Budget, Ressources, Qualité, Risques, Opportunités
 
-        Contexte détaillé: ${JSON.stringify(projectContext)}`;
+        Contexte détaillé: ${JSON.stringify(projectContext)}`
+          : `As a project management expert and data analyst, analyze this context and generate exactly 6 distinct AI insights in JSON format:
+
+        **CURRENT DATA:**
+        - Completion rate: ${completionRate}%
+        - Overdue tasks: ${overdueTasks}
+        - High priority tasks: ${highPriorityTasks}
+        - Active projects: ${activeProjects}
+        - Total budget: $${totalBudget.toLocaleString()}
+        - Team: ${users.length} members
+
+        **REQUIRED RESPONSE FORMAT:**
+        {
+          "insights": [
+            {
+              "id": "insight_1",
+              "type": "prediction",
+              "title": "Specific and actionable title",
+              "description": "Detailed analysis with precise numbers",
+              "confidence": 85,
+              "impact": "high",
+              "category": "Performance",
+              "actionable": true,
+              "data": {
+                "metric": "specific_value",
+                "recommendation": "concrete_action",
+                "timeline": "expected_delay"
+              }
+            }
+          ]
+        }
+
+        **INSTRUCTIONS:**
+        1. Generate EXACTLY 6 varied insights (prediction, risk, optimization, opportunity)
+        2. Base on the REAL provided data
+        3. Give SPECIFIC titles with numbers
+        4. Propose CONCRETE and ACHIEVABLE actions
+        5. Vary impact levels (high/medium/low)
+        6. Use categories: Performance, Budget, Resources, Quality, Risks, Opportunities
+
+        Detailed context: ${JSON.stringify(projectContext)}`;
         
         console.log('Envoi du prompt IA:', analysisPrompt);
 
@@ -172,28 +215,28 @@ const AIInsights: React.FC = () => {
         try {
           const parsedResponse = JSON.parse(aiResponse);
           if (parsedResponse.insights && Array.isArray(parsedResponse.insights)) {
-            // Ajouter un timestamp et un ID unique pour identifier les insights générés par IA
+            // Add timestamp and unique ID to identify AI-generated insights
             const newAIInsights = parsedResponse.insights.map((insight: any, index: number) => ({
               ...insight,
-              id: `ai_${Date.now()}_${index}`, // ID unique basé sur timestamp
+              id: `ai_${Date.now()}_${index}`, // Unique ID based on timestamp
               generatedByAI: true,
               generatedAt: new Date().toISOString(),
-              sessionId: Date.now() // Pour grouper les insights d'une même session
+              sessionId: Date.now() // To group insights from the same session
             }));
             
-            // Supprimer les anciens insights de bienvenue et ajouter les nouveaux
+            // Remove old welcome insights and add new ones
             const filteredOldInsights = insights.filter(insight => 
               !(insight.data as any)?.isWelcomeMessage && 
               !insight.id.startsWith('welcome-')
             );
             
-            // Combiner les anciens insights (non-bienvenue) avec les nouveaux
+            // Combine old insights (non-welcome) with new ones
             const combinedInsights = [...filteredOldInsights, ...newAIInsights];
             
             setInsights(combinedInsights);
             saveInsights(combinedInsights);
             
-            console.log(`✅ ${newAIInsights.length} nouveaux insights générés et sauvegardés`);
+            console.log(`✅ ${newAIInsights.length} new insights generated and saved`);
           } else {
             throw new Error('Invalid AI response format');
           }
@@ -211,14 +254,14 @@ const AIInsights: React.FC = () => {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAvailable, generateResponse, projects, tasks, users]);
+  }, [isAvailable, generateResponse, projects, tasks, users, language]);
 
   useEffect(() => {
-    // Charger les insights sauvegardés une seule fois au montage
+    // Load saved insights only once on mount
     loadSavedInsights();
   }, []);
 
-  // Supprimer ce useEffect qui regenerait automatiquement
+  // Remove this useEffect that automatically regenerated
   // useEffect(() => {
   //   if (insights.length === 0) {
   //     generateAIInsights();
@@ -236,67 +279,87 @@ const AIInsights: React.FC = () => {
       {
         id: '1',
         type: 'prediction',
-        title: `Performance Équipe: ${completionRate}% de Réussite`,
-        description: `Analyse: ${completedTasks}/${totalTasks} tâches terminées. Tendance ${completionRate > 80 ? 'excellente' : completionRate > 60 ? 'satisfaisante' : 'préoccupante'}.`,
+        title: language === 'fr' 
+          ? `Performance Équipe: ${completionRate}% de Réussite`
+          : `Team Performance: ${completionRate}% Success Rate`,
+        description: language === 'fr' 
+          ? `Analyse: ${completedTasks}/${totalTasks} tâches terminées. Tendance ${completionRate > 80 ? 'excellente' : completionRate > 60 ? 'satisfaisante' : 'préoccupante'}.`
+          : `Analysis: ${completedTasks}/${totalTasks} tasks completed. Trend ${completionRate > 80 ? 'excellent' : completionRate > 60 ? 'satisfactory' : 'concerning'}.`,
         confidence: 92,
         impact: completionRate > 80 ? 'high' : 'medium',
-        category: 'Performance',
+        category: t.ai.performanceCategory,
         actionable: true,
         data: {
           completedTasks,
           totalTasks,
           completionRate,
-          recommendation: completionRate < 70 ? 'Redistribuer les tâches' : 'Maintenir le rythme'
+          recommendation: completionRate < 70 
+            ? (language === 'fr' ? 'Redistribuer les tâches' : 'Redistribute tasks')
+            : (language === 'fr' ? 'Maintenir le rythme' : 'Maintain pace')
         }
       },
       {
         id: '2',
         type: 'risk',
-        title: `${overdueTasks} Tâche(s) en Retard Détectée(s)`,
-        description: `Risque identifié: ${overdueTasks} tâches dépassent leur deadline. Impact potentiel sur les projets.`,
+        title: language === 'fr' 
+          ? `${overdueTasks} Tâche(s) en Retard Détectée(s)`
+          : `${overdueTasks} Overdue Task(s) Detected`,
+        description: language === 'fr'
+          ? `Risque identifié: ${overdueTasks} tâches dépassent leur deadline. Impact potentiel sur les projets.`
+          : `Risk identified: ${overdueTasks} tasks exceed their deadline. Potential impact on projects.`,
         confidence: 88,
         impact: overdueTasks > 3 ? 'high' : overdueTasks > 0 ? 'medium' : 'low',
-        category: 'Planning',
+        category: t.ai.planningCategory,
         actionable: overdueTasks > 0,
         data: {
           overdueTasks,
-          impact: overdueTasks > 3 ? 'Critique' : 'Modéré',
-          action: 'Reprioriser et réassigner'
+          impact: overdueTasks > 3 
+            ? (language === 'fr' ? 'Critique' : 'Critical') 
+            : (language === 'fr' ? 'Modéré' : 'Moderate'),
+          action: language === 'fr' ? 'Reprioriser et réassigner' : 'Reprioritize and reassign'
         }
       },
       {
         id: '3',
         type: 'optimization',
-        title: 'Optimisation de la Charge de Travail',
-        description: `${highPriorityTasks} tâches haute priorité en attente. Optimisation de l'allocation recommandée.`,
+        title: language === 'fr' 
+          ? 'Optimisation de la Charge de Travail'
+          : 'Workload Optimization',
+        description: language === 'fr'
+          ? `${highPriorityTasks} tâches haute priorité en attente. Optimisation de l'allocation recommandée.`
+          : `${highPriorityTasks} high priority tasks pending. Allocation optimization recommended.`,
         confidence: 85,
         impact: 'medium',
-        category: 'Ressources',
+        category: t.ai.resourcesCategory,
         actionable: true,
         data: {
           highPriorityTasks,
           availableUsers: users.length,
-          optimization: 'Équilibrer la charge'
+          optimization: language === 'fr' ? 'Équilibrer la charge' : 'Balance workload'
         }
       },
       {
         id: '4',
         type: 'opportunity',
-        title: 'Opportunité d\'Amélioration Continue',
-        description: `Potentiel d'amélioration de ${Math.round((100 - completionRate) / 2)}% identifié via l'optimisation des processus.`,
+        title: language === 'fr' 
+          ? 'Opportunité d\'Amélioration Continue'
+          : 'Continuous Improvement Opportunity',
+        description: language === 'fr'
+          ? `Potentiel d'amélioration de ${Math.round((100 - completionRate) / 2)}% identifié via l'optimisation des processus.`
+          : `${Math.round((100 - completionRate) / 2)}% improvement potential identified through process optimization.`,
         confidence: 78,
         impact: 'medium',
-        category: 'Processus',
+        category: t.ai.processCategory,
         actionable: true,
         data: {
           currentEfficiency: completionRate,
           potentialImprovement: Math.round((100 - completionRate) / 2),
-          method: 'Automatisation et formation'
+          method: language === 'fr' ? 'Automatisation et formation' : 'Automation and training'
         }
       }
     ];
     
-    // Marquer comme insights de fallback
+    // Mark as fallback insights
     const fallbackInsights = newInsights.map(insight => ({
       ...insight,
       generatedByAI: false,
@@ -310,33 +373,52 @@ const AIInsights: React.FC = () => {
   const applyInsightAction = async (insight: AIInsight) => {
     try {
       if (!insight.actionable) {
-        alert('Cette insight n\'est pas actionnable.');
+        alert(t.ai.actionNotActionable);
         return;
       }
 
-      // Simuler l'application de l'action
+      // Simulate action application
       let actionMessage = '';
       
-      switch (insight.type) {
-        case 'optimization':
-          actionMessage = `✅ Optimisation appliquée: ${insight.title}\n\nActions prises:\n• Analyse des données effectuée\n• Recommandations envoyées à l'équipe\n• Suivi programmé dans 7 jours`;
-          break;
-        case 'risk':
-          actionMessage = `⚠️ Mesures de mitigation mises en place: ${insight.title}\n\nActions prises:\n• Équipe alertée\n• Plan de contingence activé\n• Surveillance renforcée`;
-          break;
-        case 'prediction':
-          actionMessage = `🔮 Prédiction prise en compte: ${insight.title}\n\nActions prises:\n• Planning ajusté\n• Ressources réallouées\n• Parties prenantes informées`;
-          break;
-        case 'opportunity':
-          actionMessage = `🚀 Opportunité saisie: ${insight.title}\n\nActions prises:\n• Initiative lancée\n• Budget alloué\n• Équipe constituée`;
-          break;
-        default:
-          actionMessage = `✅ Action appliquée: ${insight.title}`;
+      if (language === 'fr') {
+        switch (insight.type) {
+          case 'optimization':
+            actionMessage = `✅ Optimisation appliquée: ${insight.title}\n\nActions prises:\n• Analyse des données effectuée\n• Recommandations envoyées à l'équipe\n• Suivi programmé dans 7 jours`;
+            break;
+          case 'risk':
+            actionMessage = `⚠️ Mesures de mitigation mises en place: ${insight.title}\n\nActions prises:\n• Équipe alertée\n• Plan de contingence activé\n• Surveillance renforcée`;
+            break;
+          case 'prediction':
+            actionMessage = `🔮 Prédiction prise en compte: ${insight.title}\n\nActions prises:\n• Planning ajusté\n• Ressources réallouées\n• Parties prenantes informées`;
+            break;
+          case 'opportunity':
+            actionMessage = `🚀 Opportunité saisie: ${insight.title}\n\nActions prises:\n• Initiative lancée\n• Budget alloué\n• Équipe constituée`;
+            break;
+          default:
+            actionMessage = `✅ Action appliquée: ${insight.title}`;
+        }
+      } else {
+        switch (insight.type) {
+          case 'optimization':
+            actionMessage = `✅ Optimization applied: ${insight.title}\n\nActions taken:\n• Data analysis performed\n• Recommendations sent to team\n• Follow-up scheduled in 7 days`;
+            break;
+          case 'risk':
+            actionMessage = `⚠️ Mitigation measures implemented: ${insight.title}\n\nActions taken:\n• Team alerted\n• Contingency plan activated\n• Enhanced monitoring`;
+            break;
+          case 'prediction':
+            actionMessage = `🔮 Prediction taken into account: ${insight.title}\n\nActions taken:\n• Planning adjusted\n• Resources reallocated\n• Stakeholders informed`;
+            break;
+          case 'opportunity':
+            actionMessage = `🚀 Opportunity seized: ${insight.title}\n\nActions taken:\n• Initiative launched\n• Budget allocated\n• Team assembled`;
+            break;
+          default:
+            actionMessage = `✅ Action applied: ${insight.title}`;
+        }
       }
 
       alert(actionMessage);
       
-      // Marquer l'insight comme appliqué
+      // Mark insight as applied
       const updatedInsights = insights.map(i => 
         i.id === insight.id 
           ? { ...i, applied: true, appliedAt: new Date().toISOString() }
@@ -347,15 +429,15 @@ const AIInsights: React.FC = () => {
       
     } catch (error) {
       console.error('Error applying insight action:', error);
-      alert('Erreur lors de l\'application de l\'action.');
+      alert(t.ai.actionErrorMessage);
     }
   };
 
   const clearInsights = () => {
-    if (confirm('Êtes-vous sûr de vouloir vider tout l\'historique des insights ?')) {
+    if (confirm(t.ai.confirmClearHistory)) {
       setInsights([]);
       localStorage.removeItem('ai-insights');
-      generateInitialInsights(); // Remettre le message de bienvenue
+      generateInitialInsights(); // Reset welcome message
     }
   };
 
@@ -388,6 +470,15 @@ const AIInsights: React.FC = () => {
     }
   };
 
+  const getImpactText = (impact: string) => {
+    switch (impact) {
+      case 'high': return t.ai.impactHigh;
+      case 'medium': return t.ai.impactMedium;
+      case 'low': return t.ai.impactLow;
+      default: return impact;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -396,21 +487,21 @@ const AIInsights: React.FC = () => {
           <div>
             <div className="flex items-center space-x-3 mb-2">
               <Brain className="w-8 h-8" />
-              <h1 className="text-3xl font-bold">Insights IA Avancés</h1>
+              <h1 className="text-3xl font-bold">{t.ai.insightsTitle}</h1>
               <Sparkles className="w-6 h-6 animate-pulse" />
             </div>
-            <p className="text-purple-100">Analyse intelligente • Prédictions précises • Recommandations actionables</p>
+            <p className="text-purple-100">{t.ai.insightsSubtitle}</p>
           </div>
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
               {!isAvailable && (
                 <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
-                  Mode Dégradé
+                  {t.ai.fallbackMode}
                 </span>
               )}
               {insights.some(insight => (insight as any).generatedByAI) && (
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  ✨ IA Activée ({insights.filter(insight => (insight as any).generatedByAI).length} insights)
+                  ✨ {t.ai.aiActive} ({insights.filter(insight => (insight as any).generatedByAI).length} {t.ai.insightsCount})
                 </span>
               )}
             </div>
@@ -418,16 +509,16 @@ const AIInsights: React.FC = () => {
               <button
                 onClick={clearInsights}
                 className="bg-red-500/20 hover:bg-red-500/30 px-3 py-1 text-xs rounded-lg font-medium transition-colors text-white"
-                title="Vider l'historique des insights"
+                title={t.ai.clearHistoryTitle}
               >
-                Vider
+                {t.common.clear}
               </button>
               <button
                 onClick={generateAIInsights}
                 disabled={isAnalyzing || aiLoading}
                 className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
               >
-                {isAnalyzing || aiLoading ? 'Analyse...' : 'Générer Insights IA'}
+                {isAnalyzing || aiLoading ? t.ai.analyzing : t.ai.generateInsights}
               </button>
             </div>
           </div>
@@ -440,8 +531,8 @@ const AIInsights: React.FC = () => {
           <div className="flex items-center space-x-4">
             <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
             <div>
-              <h3 className="font-semibold text-slate-900">Analyse IA en cours...</h3>
-              <p className="text-sm text-slate-600">Traitement des données • Génération d'insights • Calcul de confiance</p>
+              <h3 className="font-semibold text-slate-900">{t.ai.analysisInProgress}</h3>
+              <p className="text-sm text-slate-600">{t.ai.analysisDescription}</p>
             </div>
           </div>
         </div>
@@ -463,7 +554,7 @@ const AIInsights: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${getImpactColor(insight.impact)}`}>
-                    {insight.impact.toUpperCase()}
+                    {getImpactText(insight.impact).toUpperCase()}
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                 </div>
@@ -477,22 +568,22 @@ const AIInsights: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="text-xs text-slate-500">
-                    Confiance: <span className="font-medium text-slate-900">{insight.confidence}%</span>
+                    {t.ai.confidence}: <span className="font-medium text-slate-900">{insight.confidence}%</span>
                   </div>
                   <div className="text-xs text-slate-500">
-                    Catégorie: <span className="font-medium text-slate-900">{insight.category}</span>
+                    {t.ai.category}: <span className="font-medium text-slate-900">{insight.category}</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   {(insight as any).applied && (
                     <div className="flex items-center space-x-1 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                      <span>✅ Appliquée</span>
+                      <span>{t.ai.applied}</span>
                     </div>
                   )}
                   {insight.actionable && !(insight as any).applied && (
                     <div className="flex items-center space-x-1 text-xs text-emerald-600">
                       <Target className="w-3 h-3" />
-                      <span>Actionnable</span>
+                      <span>{t.ai.actionable}</span>
                     </div>
                   )}
                 </div>
@@ -536,35 +627,35 @@ const AIInsights: React.FC = () => {
 
             <div className="space-y-6">
               <div>
-                <h4 className="font-semibold text-slate-900 mb-2">Description détaillée</h4>
+                <h4 className="font-semibold text-slate-900 mb-2">{t.ai.detailedDescription}</h4>
                 <p className="text-slate-700">{selectedInsight.description}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-slate-50 rounded-lg">
                   <div className="text-2xl font-bold text-slate-900">{selectedInsight.confidence}%</div>
-                  <div className="text-sm text-slate-600">Confiance IA</div>
+                  <div className="text-sm text-slate-600">{t.ai.confidenceAI}</div>
                 </div>
                 <div className="text-center p-4 bg-slate-50 rounded-lg">
                   <div className={`text-2xl font-bold ${
                     selectedInsight.impact === 'high' ? 'text-red-600' :
                     selectedInsight.impact === 'medium' ? 'text-orange-600' : 'text-green-600'
                   }`}>
-                    {selectedInsight.impact.toUpperCase()}
+                    {getImpactText(selectedInsight.impact).toUpperCase()}
                   </div>
-                  <div className="text-sm text-slate-600">Impact</div>
+                  <div className="text-sm text-slate-600">{t.ai.impact}</div>
                 </div>
                 <div className="text-center p-4 bg-slate-50 rounded-lg">
                   <div className="text-2xl font-bold text-emerald-600">
-                    {selectedInsight.actionable ? 'OUI' : 'NON'}
+                    {selectedInsight.actionable ? t.common.yes.toUpperCase() : t.common.no.toUpperCase()}
                   </div>
-                  <div className="text-sm text-slate-600">Actionnable</div>
+                  <div className="text-sm text-slate-600">{t.ai.actionable}</div>
                 </div>
               </div>
 
               {selectedInsight.data && (
                 <div>
-                  <h4 className="font-semibold text-slate-900 mb-3">Données détaillées</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3">{t.ai.detailedData}</h4>
                   <div className="bg-slate-50 rounded-lg p-4">
                     <pre className="text-sm text-slate-700 whitespace-pre-wrap">
                       {JSON.stringify(selectedInsight.data, null, 2)}
@@ -578,14 +669,14 @@ const AIInsights: React.FC = () => {
                   onClick={() => setSelectedInsight(null)}
                   className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
                 >
-                  Fermer
+                  {t.ai.modalClose}
                 </button>
                 {selectedInsight.actionable && (
                   <button 
                     onClick={() => applyInsightAction(selectedInsight)}
                     className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200"
                   >
-                    {(selectedInsight as any).applied ? '✅ Action appliquée' : 'Appliquer l\'action'}
+                    {(selectedInsight as any).applied ? t.ai.appliedAction : t.ai.applyAction}
                   </button>
                 )}
               </div>

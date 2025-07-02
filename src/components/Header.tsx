@@ -32,9 +32,11 @@ import {
   ArrowRight,
   Globe,
   Wifi,
-  WifiOff
+  WifiOff,
+  Languages
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 import { getRelativeTime } from '../utils/dateUtils';
 
 interface HeaderProps {
@@ -72,6 +74,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const { state, dispatch } = useAppContext();
   const { currentUser, notifications, searchQuery, projects, tasks, users, calendarEvents } = state;
+  const { language, setLanguage, t, availableLanguages } = useLanguage();
   
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -84,6 +87,7 @@ const Header: React.FC<HeaderProps> = ({
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -828,11 +832,51 @@ const Header: React.FC<HeaderProps> = ({
             <Search className="w-5 h-5 text-slate-600" />
           </button>
 
+          {/* Language Selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+              className="p-2 rounded-lg hover:bg-slate-100 transition-colors flex items-center space-x-1"
+              title={t.header.language}
+            >
+              <Languages className="w-5 h-5 text-slate-600" />
+              <span className="text-xs font-medium text-slate-600 hidden lg:block">
+                {language.toUpperCase()}
+              </span>
+            </button>
+
+            {showLanguageSelector && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-2 z-50">
+                <div className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wide border-b border-slate-100">
+                  {t.header.language}
+                </div>
+                {availableLanguages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setShowLanguageSelector(false);
+                    }}
+                    className={`flex items-center w-full px-4 py-2 text-sm hover:bg-slate-50 transition-colors ${
+                      language === lang.code ? 'bg-purple-50 text-purple-700' : 'text-slate-700'
+                    }`}
+                  >
+                    <span className="mr-3 text-lg">{lang.flag}</span>
+                    <span className="flex-1 text-left">{lang.name}</span>
+                    {language === lang.code && (
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Keyboard Shortcuts */}
           <button
             onClick={() => setShowKeyboardShortcuts(true)}
             className="hidden lg:flex p-2 rounded-lg hover:bg-slate-100 transition-colors"
-            title="Raccourcis clavier (Ctrl+/)"
+            title={language === 'fr' ? 'Raccourcis clavier (Ctrl+/)' : 'Keyboard shortcuts (Ctrl+/)'}
           >
             <Keyboard className="w-5 h-5 text-slate-600" />
           </button>
