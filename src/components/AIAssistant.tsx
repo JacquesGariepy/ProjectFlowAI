@@ -11,6 +11,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 import { AIService, createAIService } from '../config/ai';
 
 interface Message {
@@ -23,6 +24,7 @@ interface Message {
 
 const AIAssistant: React.FC = () => {
   const { state } = useAppContext();
+  const { t, language } = useLanguage();
   const { projects, tasks, users } = state;
   
   // Initialize AI service (you can configure this via environment variables)
@@ -49,20 +51,18 @@ const AIAssistant: React.FC = () => {
   
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'ai',
-      content: '👋 Bonjour ! Je suis votre assistant IA conversationnel pour la gestion de projet. \n\n🤖 Je peux vous aider avec :\n• Analyses en temps réel de vos projets\n• Prédictions et insights intelligents\n• Conseils stratégiques personnalisés\n• Optimisation de vos processus\n• Et toute question sur la gestion de projet !\n\n💬 Posez-moi n\'importe quelle question ou utilisez les suggestions ci-dessous.',
-      timestamp: new Date(),
-      suggestions: [
-        'Comment va mon équipe ?',
-        'Quels sont les risques actuels ?',
-        'Donne-moi des conseils pour optimiser',
-        'Analyse mes projets en cours'
-      ]
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => [{
+    id: '1',
+    type: 'ai',
+    content: `${t.aiAssistant.welcomeMessage}\n\n${t.aiAssistant.welcomeHelp}\n${t.aiAssistant.realtimeAnalysis}\n${t.aiAssistant.intelligentInsights}\n${t.aiAssistant.personalizedAdvice}\n${t.aiAssistant.processOptimization}\n${t.aiAssistant.projectManagementQuestions}\n\n${t.aiAssistant.welcomePrompt}`,
+    timestamp: new Date(),
+    suggestions: [
+      t.aiAssistant.teamPerformance,
+      t.aiAssistant.currentRisks,
+      t.aiAssistant.optimizationAdvice,
+      t.aiAssistant.analyzeProjects
+    ]
+  }]);
   const [inputValue, setInputValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -75,6 +75,22 @@ const AIAssistant: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Update welcome message when language changes
+  useEffect(() => {
+    setMessages([{
+      id: '1',
+      type: 'ai',
+      content: `${t.aiAssistant.welcomeMessage}\n\n${t.aiAssistant.welcomeHelp}\n${t.aiAssistant.realtimeAnalysis}\n${t.aiAssistant.intelligentInsights}\n${t.aiAssistant.personalizedAdvice}\n${t.aiAssistant.processOptimization}\n${t.aiAssistant.projectManagementQuestions}\n\n${t.aiAssistant.welcomePrompt}`,
+      timestamp: new Date(),
+      suggestions: [
+        t.aiAssistant.teamPerformance,
+        t.aiAssistant.currentRisks,
+        t.aiAssistant.optimizationAdvice,
+        t.aiAssistant.analyzeProjects
+      ]
+    }]);
+  }, [language, t]);
 
   const generateAIResponse = async (userMessage: string): Promise<string> => {
     // If AI service is not available, use static responses
@@ -105,8 +121,9 @@ const AIAssistant: React.FC = () => {
         }))
       };
 
-      // Create a comprehensive prompt for natural conversation
-      const conversationalPrompt = `Tu es un assistant IA intelligent spécialisé en gestion de projet. Tu peux converser naturellement et aider avec tous les aspects de la gestion de projet.
+      // Create a comprehensive prompt for natural conversation adapted to language
+      const conversationalPrompt = language === 'fr' 
+        ? `Tu es un assistant IA intelligent spécialisé en gestion de projet. Tu peux converser naturellement et aider avec tous les aspects de la gestion de projet.
 
 **Contexte actuel du projet:**
 - Projets: ${projects.length} projets actifs
@@ -116,7 +133,7 @@ const AIAssistant: React.FC = () => {
 
 **Message de l'utilisateur:** "${userMessage}"
 
-Réponds de manière conversationnelle, utile et engageante. Tu peux:
+Réponds de manière conversationnelle, utile et engageante en français. Tu peux:
 - Analyser les données de projet
 - Donner des conseils stratégiques
 - Prédire des tendances
@@ -124,7 +141,26 @@ Réponds de manière conversationnelle, utile et engageante. Tu peux:
 - Répondre à toutes questions sur la gestion de projet
 - Avoir une conversation naturelle
 
-Utilise des emojis appropriés et structure ta réponse avec markdown pour la lisibilité.`;
+Utilise des emojis appropriés et structure ta réponse avec markdown pour la lisibilité.`
+        : `You are an intelligent AI assistant specialized in project management. You can converse naturally and help with all aspects of project management.
+
+**Current project context:**
+- Projects: ${projects.length} active projects
+- Tasks: ${tasks.filter(t => t.status === 'completed').length}/${tasks.length} tasks completed (${Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100)}% success rate)
+- Team: ${users.length} members
+- Ongoing projects: ${projects.filter(p => p.status === 'in-progress').length}
+
+**User message:** "${userMessage}"
+
+Respond conversationally, helpfully and engagingly in English. You can:
+- Analyze project data
+- Give strategic advice
+- Predict trends
+- Suggest optimizations
+- Answer any project management questions
+- Have natural conversations
+
+Use appropriate emojis and structure your response with markdown for readability.`;
       
       return await aiService.generateResponse(conversationalPrompt);
       
@@ -138,17 +174,21 @@ Utilise des emojis appropriés et structure ta réponse avec markdown pour la li
   const generateStaticResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Analyse de performance
-    if (lowerMessage.includes('performance') || lowerMessage.includes('équipe')) {
+    // Performance analysis
+    const performanceKeywords = language === 'fr' 
+      ? ['performance', 'équipe', 'team'] 
+      : ['performance', 'team', 'équipe'];
+    
+    if (performanceKeywords.some(keyword => lowerMessage.includes(keyword))) {
       const completedTasks = tasks.filter(t => t.status === 'completed').length;
       const totalTasks = tasks.length;
       const completionRate = Math.round((completedTasks / totalTasks) * 100);
       
-      return `📊 **Analyse de Performance**\n\n✅ Taux de completion: ${completionRate}%\n📈 ${completedTasks}/${totalTasks} tâches terminées\n\n🎯 **Recommandations:**\n• L'équipe performe bien avec ${completionRate}% de réussite\n• ${users.find(u => u.performance > 95)?.name || 'Sarah'} est votre top performer\n• Considérez redistribuer les tâches pour optimiser l'efficacité`;
+      return `${t.aiAssistant.performanceAnalysis}\n\n${t.aiAssistant.completionRate} ${completionRate}%\n📈 ${completedTasks}/${totalTasks} ${t.aiAssistant.tasksCompleted}\n\n${t.aiAssistant.recommendations}\n${t.aiAssistant.teamPerformsWell} ${completionRate}% ${language === 'fr' ? 'de réussite' : 'success rate'}\n• ${users.find(u => u.performance > 95)?.name || 'Sarah'} ${t.aiAssistant.topPerformer}\n${t.aiAssistant.redistributeTasks}`;
     }
     
-    // Réponse par défaut
-    return `🤖 Je comprends votre demande ! Voici ce que je peux faire pour vous:\n\n✨ **Capacités IA avancées:**\n• Analyse prédictive des projets\n• Optimisation automatique des ressources\n• Détection proactive des risques\n• Recommandations personnalisées\n\nPosez-moi une question spécifique ou utilisez les suggestions ci-dessous !`;
+    // Default response
+    return `${t.aiAssistant.aiCapabilities}\n\n✨ **${language === 'fr' ? 'Capacités IA avancées:' : 'Advanced AI Capabilities:'}**\n${t.aiAssistant.predictiveAnalysis}\n${t.aiAssistant.automaticOptimization}\n${t.aiAssistant.proactiveRiskDetection}\n${t.aiAssistant.personalizedRecommendations}\n\n${t.aiAssistant.askSpecificQuestion}`;
   };
 
   const handleSendMessage = async () => {
@@ -175,10 +215,10 @@ Utilise des emojis appropriés et structure ta réponse avec markdown pour la li
         content: aiResponseContent,
         timestamp: new Date(),
         suggestions: [
-          'Comment puis-je améliorer ça ?',
-          'Quelles sont les prochaines étapes ?',
-          'Y a-t-il des risques à surveiller ?',
-          'Peux-tu m\'expliquer plus en détail ?'
+          t.aiAssistant.improveThis,
+          t.aiAssistant.nextSteps,
+          t.aiAssistant.risksToWatch,
+          t.aiAssistant.explainDetail
         ]
       };
 
@@ -189,7 +229,7 @@ Utilise des emojis appropriés et structure ta réponse avec markdown pour la li
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer plus tard.',
+        content: `${t.aiAssistant.technicalDifficulties} ${t.aiAssistant.tryAgainLater}`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -205,7 +245,7 @@ Utilise des emojis appropriés et structure ta réponse avec markdown pour la li
     setIsListening(true);
     // Simulate voice recognition
     setTimeout(() => {
-      setInputValue('Analyser la performance de mon équipe');
+      setInputValue(t.aiAssistant.analyzeTeamPerformance);
       setIsListening(false);
     }, 2000);
   };
@@ -237,8 +277,8 @@ Utilise des emojis appropriés et structure ta réponse avec markdown pour la li
                 <Brain className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-semibold">Assistant IA</h3>
-                <p className="text-xs opacity-90">Powered by Advanced AI</p>
+                <h3 className="font-semibold">{t.aiAssistant.title}</h3>
+                <p className="text-xs opacity-90">{t.aiAssistant.poweredBy}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -310,7 +350,7 @@ Utilise des emojis appropriés et structure ta réponse avec markdown pour la li
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Demandez à l'IA..."
+                    placeholder={t.aiAssistant.placeholder}
                     className="w-full px-4 py-2 pr-12 border border-slate-200 rounded-full focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <button

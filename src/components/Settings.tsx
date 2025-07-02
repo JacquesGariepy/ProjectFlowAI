@@ -167,7 +167,7 @@ const Settings: React.FC = () => {
     {
       id: '1',
       name: 'Slack',
-      description: 'Synchroniser les notifications et messages',
+      description: t.settings.syncNotifications,
       icon: Slack,
       connected: true,
       lastSync: '2024-01-20T10:30:00Z',
@@ -176,7 +176,7 @@ const Settings: React.FC = () => {
     {
       id: '2',
       name: 'GitHub',
-      description: 'Intégration avec les repositories',
+      description: t.settings.repositoryIntegration,
       icon: Github,
       connected: false,
       status: 'pending'
@@ -184,7 +184,7 @@ const Settings: React.FC = () => {
     {
       id: '3',
       name: 'Figma',
-      description: 'Synchroniser les designs et prototypes',
+      description: t.settings.syncDesigns,
       icon: Figma,
       connected: true,
       lastSync: '2024-01-19T15:45:00Z',
@@ -193,7 +193,7 @@ const Settings: React.FC = () => {
     {
       id: '4',
       name: 'Google Drive',
-      description: 'Stockage et partage de fichiers',
+      description: t.settings.fileStorage,
       icon: Cloud,
       connected: true,
       lastSync: '2024-01-20T09:15:00Z',
@@ -239,7 +239,7 @@ const Settings: React.FC = () => {
   const [backups, setBackups] = useState<BackupConfig[]>([
     {
       id: '1',
-      name: 'Base de données complète',
+      name: t.settings.completeDatabase,
       frequency: 'daily',
       destination: 'cloud',
       enabled: true,
@@ -248,7 +248,7 @@ const Settings: React.FC = () => {
     },
     {
       id: '2',
-      name: 'Fichiers utilisateurs',
+      name: t.settings.userFiles,
       frequency: 'weekly',
       destination: 's3',
       enabled: true,
@@ -257,7 +257,7 @@ const Settings: React.FC = () => {
     },
     {
       id: '3',
-      name: 'Configuration système',
+      name: t.settings.systemConfiguration,
       frequency: 'monthly',
       destination: 'local',
       enabled: false,
@@ -311,9 +311,9 @@ const Settings: React.FC = () => {
     { id: 'security', label: t.settings.security, icon: Shield },
     { id: 'notifications', label: t.settings.notifications, icon: Bell },
     { id: 'appearance', label: t.settings.preferences, icon: Palette },
-    { id: 'ai', label: 'Intelligence Artificielle', icon: Brain },
+    { id: 'ai', label: t.settings.aiIntelligence, icon: Brain },
     { id: 'integrations', label: t.settings.integrations, icon: Plug },
-    { id: 'database', label: 'Base de données', icon: Database },
+    { id: 'database', label: t.settings.databaseLabel, icon: Database },
     { id: 'backup', label: t.settings.backupData, icon: Download },
     { id: 'blog', label: t.nav.blog, icon: FileText }
   ];
@@ -331,8 +331,8 @@ const Settings: React.FC = () => {
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Paramètres sauvegardés',
-        message: 'Vos paramètres ont été mis à jour avec succès',
+        title: t.common.save,
+        message: t.common.success,
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -346,8 +346,8 @@ const Settings: React.FC = () => {
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Erreur',
-          message: 'Les mots de passe ne correspondent pas',
+          title: t.common.error,
+          message: t.common.error,
           type: 'error',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -365,8 +365,8 @@ const Settings: React.FC = () => {
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Mot de passe modifié',
-        message: 'Votre mot de passe a été changé avec succès',
+        title: t.settings.passwordChanged,
+        message: t.settings.passwordChanged,
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -383,8 +383,8 @@ const Settings: React.FC = () => {
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: '2FA activée',
-          message: 'L\'authentification à deux facteurs a été activée',
+          title: t.settings.twoFactorEnabled,
+          message: t.settings.twoFactorEnabled,
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -397,8 +397,8 @@ const Settings: React.FC = () => {
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: '2FA désactivée',
-          message: 'L\'authentification à deux facteurs a été désactivée',
+          title: t.settings.disabled,
+          message: t.settings.disabled,
           type: 'warning',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -446,8 +446,8 @@ const Settings: React.FC = () => {
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Sauvegarde lancée',
-        message: 'La sauvegarde a été démarrée avec succès',
+        title: t.settings.lastBackup,
+        message: t.common.success,
         type: 'info',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -543,7 +543,7 @@ const Settings: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Nom complet</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.fullName}</label>
               <input
                 type="text"
                 value={profileData.name}
@@ -553,7 +553,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.email}</label>
               <input
                 type="email"
                 value={profileData.email}
@@ -563,7 +563,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Téléphone</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.telephone}</label>
               <input
                 type="tel"
                 value={profileData.phone}
@@ -573,7 +573,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Localisation</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.location}</label>
               <input
                 type="text"
                 value={profileData.location}
@@ -584,19 +584,19 @@ const Settings: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Bio</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.bio}</label>
             <textarea
               value={profileData.bio}
               onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
               rows={3}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Parlez-nous de vous..."
+              placeholder={t.settings.bioPlaceholder}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Site web</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.website}</label>
               <input
                 type="url"
                 value={profileData.website}
@@ -607,7 +607,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">LinkedIn</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.linkedin}</label>
               <input
                 type="url"
                 value={profileData.linkedin}
@@ -618,7 +618,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">GitHub</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.github}</label>
               <input
                 type="url"
                 value={profileData.github}
@@ -641,7 +641,7 @@ const Settings: React.FC = () => {
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Mot de passe actuel</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.currentPassword}</label>
             <div className="relative">
               <input
                 type={showPasswords ? "text" : "password"}
@@ -660,7 +660,7 @@ const Settings: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Nouveau mot de passe</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.newPassword}</label>
             <input
               type={showPasswords ? "text" : "password"}
               value={newPassword}
@@ -670,7 +670,7 @@ const Settings: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Confirmer le nouveau mot de passe</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.confirmNewPassword}</label>
             <input
               type={showPasswords ? "text" : "password"}
               value={confirmPassword}
@@ -691,20 +691,20 @@ const Settings: React.FC = () => {
 
       {/* Two-Factor Authentication */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Authentification à deux facteurs (2FA)</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.twoFactorAuthentication}</h3>
         
         <div className="bg-slate-50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h4 className="font-medium text-slate-900">2FA Status</h4>
+              <h4 className="font-medium text-slate-900">{t.settings.twoFactorStatus}</h4>
               <p className="text-sm text-slate-600">
-                {twoFactorEnabled ? 'Activée' : 'Désactivée'}
+                {twoFactorEnabled ? t.settings.enabled : t.settings.disabled}
               </p>
             </div>
             <div className={`flex items-center space-x-2 ${twoFactorEnabled ? 'text-green-600' : 'text-red-600'}`}>
               {twoFactorEnabled ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
               <span className="font-medium">
-                {twoFactorEnabled ? 'Sécurisé' : 'Non sécurisé'}
+                {twoFactorEnabled ? t.settings.secure : t.settings.notSecure}
               </span>
             </div>
           </div>
@@ -714,12 +714,12 @@ const Settings: React.FC = () => {
               <div className="text-center">
                 <img src={qrCode} alt="QR Code" className="mx-auto mb-4 border rounded-lg" />
                 <p className="text-sm text-slate-600 mb-4">
-                  Scannez ce QR code avec votre application d'authentification
+                  {t.settings.scanQR}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Code de vérification</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.verificationCode}</label>
                 <input
                   type="text"
                   value={verificationCode}
@@ -735,7 +735,7 @@ const Settings: React.FC = () => {
                 disabled={verificationCode.length !== 6}
                 className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Activer la 2FA
+                {t.settings.enable2FA}
               </button>
             </div>
           )}
@@ -745,7 +745,7 @@ const Settings: React.FC = () => {
               onClick={toggle2FA}
               className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              Désactiver la 2FA
+              {t.settings.disable2FA}
             </button>
           )}
         </div>
@@ -753,14 +753,14 @@ const Settings: React.FC = () => {
 
       {/* Security Log */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Journal de sécurité</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.securityLog}</h3>
         
         <div className="space-y-3">
           {[
-            { action: 'Connexion réussie', time: '2024-01-20 10:30', ip: '192.168.1.100', status: 'success' },
-            { action: 'Tentative de connexion échouée', time: '2024-01-19 15:45', ip: '203.0.113.1', status: 'error' },
-            { action: 'Mot de passe modifié', time: '2024-01-18 09:15', ip: '192.168.1.100', status: 'warning' },
-            { action: '2FA activée', time: '2024-01-17 14:20', ip: '192.168.1.100', status: 'success' }
+            { action: t.settings.successfulLogin, time: '2024-01-20 10:30', ip: '192.168.1.100', status: 'success' },
+            { action: t.settings.failedLoginAttempt, time: '2024-01-19 15:45', ip: '203.0.113.1', status: 'error' },
+            { action: t.settings.passwordChanged, time: '2024-01-18 09:15', ip: '192.168.1.100', status: 'warning' },
+            { action: t.settings.twoFactorEnabled, time: '2024-01-17 14:20', ip: '192.168.1.100', status: 'success' }
           ].map((log, index) => (
             <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
               <div className="flex items-center space-x-3">
@@ -783,13 +783,13 @@ const Settings: React.FC = () => {
   const renderNotificationsSection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Préférences de notification</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.notificationPreferences}</h3>
         
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
             <div>
-              <h4 className="font-medium text-slate-900">Notifications générales</h4>
-              <p className="text-sm text-slate-600">Activer ou désactiver toutes les notifications</p>
+              <h4 className="font-medium text-slate-900">{t.settings.generalNotifications}</h4>
+              <p className="text-sm text-slate-600">{t.settings.generalNotificationsDesc}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -808,12 +808,12 @@ const Settings: React.FC = () => {
           {settings.notifications.enabled && (
             <>
               <div className="space-y-3">
-                <h4 className="font-medium text-slate-900">Canaux de notification</h4>
+                <h4 className="font-medium text-slate-900">{t.settings.notificationChannels}</h4>
                 
                 {[
-                  { key: 'email', label: 'Email', icon: Mail },
-                  { key: 'push', label: 'Notifications push', icon: Smartphone },
-                  { key: 'desktop', label: 'Notifications bureau', icon: Monitor }
+                  { key: 'email', label: t.settings.email, icon: Mail },
+                  { key: 'push', label: t.settings.pushNotifications, icon: Smartphone },
+                  { key: 'desktop', label: t.settings.desktopNotifications, icon: Monitor }
                 ].map(({ key, label, icon: Icon }) => (
                   <div key={key} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
                     <div className="flex items-center space-x-3">
@@ -837,12 +837,12 @@ const Settings: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-medium text-slate-900">Types de notification</h4>
+                <h4 className="font-medium text-slate-900">{t.settings.notificationTypes}</h4>
                 
                 {[
-                  { key: 'taskUpdates', label: 'Mises à jour des tâches', description: 'Nouvelles tâches, changements de statut' },
-                  { key: 'projectDeadlines', label: 'Échéances de projet', description: 'Rappels avant les dates limites' },
-                  { key: 'teamMentions', label: 'Mentions d\'équipe', description: 'Quand vous êtes mentionné dans les commentaires' }
+                  { key: 'taskUpdates', label: t.settings.taskUpdates, description: t.settings.taskUpdatesDesc },
+                  { key: 'projectDeadlines', label: t.settings.projectDeadlines, description: t.settings.projectDeadlinesDesc },
+                  { key: 'teamMentions', label: t.settings.teamMentions, description: t.settings.teamMentionsDesc }
                 ].map(({ key, label, description }) => (
                   <div key={key} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
                     <div>
@@ -902,7 +902,7 @@ const Settings: React.FC = () => {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.language} et région</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.languageAndRegion}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -956,7 +956,7 @@ const Settings: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Format d'heure</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.timeFormat}</label>
             <select
               value={settings.preferences.timeFormat}
               onChange={(e) => setSettings({
@@ -965,8 +965,8 @@ const Settings: React.FC = () => {
               })}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="24h">24 heures</option>
-              <option value="12h">12 heures (AM/PM)</option>
+              <option value="24h">{t.settings.hours24}</option>
+              <option value="12h">{t.settings.hours12}</option>
             </select>
           </div>
         </div>
@@ -977,16 +977,16 @@ const Settings: React.FC = () => {
   const renderAISection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Configuration IA</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.aiConfiguration}</h3>
         
         <div className="space-y-4">
           {[
-            { key: 'enabled', label: 'Activer l\'IA', description: 'Utiliser l\'intelligence artificielle pour optimiser vos projets' },
-            { key: 'autoOptimization', label: 'Optimisation automatique', description: 'Permettre à l\'IA d\'optimiser automatiquement vos workflows' },
-            { key: 'predictiveAnalytics', label: 'Analyses prédictives', description: 'Prédictions sur les performances et les risques' },
-            { key: 'smartNotifications', label: 'Notifications intelligentes', description: 'Notifications personnalisées basées sur l\'IA' },
-            { key: 'voiceCommands', label: 'Commandes vocales', description: 'Contrôler l\'application avec la voix' },
-            { key: 'dataSharing', label: 'Partage de données', description: 'Partager des données anonymes pour améliorer l\'IA' }
+            { key: 'enabled', label: t.settings.enableAI, description: t.settings.enableAIDesc },
+            { key: 'autoOptimization', label: t.settings.autoOptimization, description: t.settings.autoOptimizationDesc },
+            { key: 'predictiveAnalytics', label: t.settings.predictiveAnalytics, description: t.settings.predictiveAnalyticsDesc },
+            { key: 'smartNotifications', label: t.settings.smartNotifications, description: t.settings.smartNotificationsDesc },
+            { key: 'voiceCommands', label: t.settings.voiceCommands, description: t.settings.voiceCommandsDesc },
+            { key: 'dataSharing', label: t.settings.dataSharing, description: t.settings.dataSharingDesc }
           ].map(({ key, label, description }) => (
             <div key={key} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
               <div>
@@ -1008,32 +1008,32 @@ const Settings: React.FC = () => {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Modèle IA</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.aiModel}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Version du modèle</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.modelVersion}</label>
             <select
               value={aiSettings.modelVersion}
               onChange={(e) => setAiSettings({ ...aiSettings, modelVersion: e.target.value })}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="gpt-4">GPT-4 (Recommandé)</option>
-              <option value="gpt-3.5">GPT-3.5 (Plus rapide)</option>
-              <option value="claude">Claude (Alternatif)</option>
+              <option value="gpt-4">GPT-4 ({t.settings.recommended})</option>
+              <option value="gpt-3.5">GPT-3.5 ({t.settings.faster})</option>
+              <option value="claude">Claude ({t.settings.alternative})</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Vitesse de réponse</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.responseSpeed}</label>
             <select
               value={aiSettings.responseSpeed}
               onChange={(e) => setAiSettings({ ...aiSettings, responseSpeed: e.target.value })}
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="fast">Rapide</option>
-              <option value="balanced">Équilibré</option>
-              <option value="accurate">Précis</option>
+              <option value="fast">{t.settings.fast}</option>
+              <option value="balanced">{t.settings.balanced}</option>
+              <option value="accurate">{t.settings.accurate}</option>
             </select>
           </div>
         </div>
@@ -1044,7 +1044,7 @@ const Settings: React.FC = () => {
   const renderIntegrationsSection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.integrations} disponibles</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.availableIntegrations}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {integrations.map((integration) => {
@@ -1067,7 +1067,7 @@ const Settings: React.FC = () => {
 
                 {integration.connected && integration.lastSync && (
                   <p className="text-xs text-slate-500 mb-3">
-                    Dernière sync: {new Date(integration.lastSync).toLocaleString('fr-FR')}
+                    {t.settings.lastSync}: {new Date(integration.lastSync).toLocaleString('fr-FR')}
                   </p>
                 )}
 
@@ -1079,7 +1079,7 @@ const Settings: React.FC = () => {
                       : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                   }`}
                 >
-                  {integration.connected ? 'Déconnecter' : 'Connecter'}
+                  {integration.connected ? t.settings.disconnect : t.settings.connect}
                 </button>
               </div>
             );
@@ -1088,16 +1088,16 @@ const Settings: React.FC = () => {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Webhooks</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.webhooks}</h3>
         
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
             <div>
-              <h4 className="font-medium text-slate-900">Webhook de notification</h4>
+              <h4 className="font-medium text-slate-900">{t.settings.notificationWebhook}</h4>
               <p className="text-sm text-slate-600">https://api.company.com/webhooks/notifications</p>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Actif</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">{t.settings.active}</span>
               <button className="p-1 text-slate-400 hover:text-slate-600">
                 <Edit className="w-4 h-4" />
               </button>
@@ -1106,7 +1106,7 @@ const Settings: React.FC = () => {
 
           <button className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-700 transition-colors">
             <Plus className="w-5 h-5 mx-auto mb-1" />
-            Ajouter un webhook
+            {t.settings.addWebhook}
           </button>
         </div>
       </div>
@@ -1116,7 +1116,7 @@ const Settings: React.FC = () => {
   const renderDatabaseSection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Connexions de base de données</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.databaseConnections}</h3>
         
         <div className="space-y-4">
           {databases.map((db) => (
@@ -1135,15 +1135,15 @@ const Settings: React.FC = () => {
                     db.status === 'connected' ? 'text-green-700' :
                     db.status === 'error' ? 'text-red-700' : 'text-orange-700'
                   }`}>
-                    {db.status === 'connected' ? 'Connecté' :
-                     db.status === 'error' ? 'Erreur' : 'Déconnecté'}
+                    {db.status === 'connected' ? t.settings.connected :
+                     db.status === 'error' ? t.settings.error : t.settings.disconnected}
                   </span>
                 </div>
               </div>
 
               {db.lastConnection && (
                 <p className="text-xs text-slate-500 mb-3">
-                  Dernière connexion: {new Date(db.lastConnection).toLocaleString('fr-FR')}
+                  {t.settings.lastConnection}: {new Date(db.lastConnection).toLocaleString('fr-FR')}
                 </p>
               )}
 
@@ -1152,7 +1152,7 @@ const Settings: React.FC = () => {
                   onClick={() => testDatabaseConnection(db.id)}
                   className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
                 >
-                  Tester la connexion
+                  {t.settings.testConnection}
                 </button>
                 <button className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">
                   <Edit className="w-4 h-4" />
@@ -1167,39 +1167,39 @@ const Settings: React.FC = () => {
 
         <button className="w-full p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-700 transition-colors">
           <Plus className="w-5 h-5 mx-auto mb-2" />
-          Ajouter une connexion
+          {t.settings.addConnection}
         </button>
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Statistiques de la base de données</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.databaseStats}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-slate-50 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
               <Database className="w-5 h-5 text-blue-600" />
-              <h4 className="font-medium text-slate-900">Taille totale</h4>
+              <h4 className="font-medium text-slate-900">{t.settings.totalSize}</h4>
             </div>
             <p className="text-2xl font-bold text-slate-900">2.8 GB</p>
-            <p className="text-sm text-slate-600">+12% ce mois</p>
+            <p className="text-sm text-slate-600">+12% {t.settings.thisMonth}</p>
           </div>
 
           <div className="bg-slate-50 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
               <Zap className="w-5 h-5 text-green-600" />
-              <h4 className="font-medium text-slate-900">Requêtes/sec</h4>
+              <h4 className="font-medium text-slate-900">{t.settings.queriesPerSec}</h4>
             </div>
             <p className="text-2xl font-bold text-slate-900">1,247</p>
-            <p className="text-sm text-slate-600">Moyenne 24h</p>
+            <p className="text-sm text-slate-600">{t.settings.average24h}</p>
           </div>
 
           <div className="bg-slate-50 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
               <Clock className="w-5 h-5 text-orange-600" />
-              <h4 className="font-medium text-slate-900">Temps de réponse</h4>
+              <h4 className="font-medium text-slate-900">{t.settings.responseTime}</h4>
             </div>
             <p className="text-2xl font-bold text-slate-900">23ms</p>
-            <p className="text-sm text-slate-600">Moyenne</p>
+            <p className="text-sm text-slate-600">{t.settings.average}</p>
           </div>
         </div>
       </div>
@@ -1209,7 +1209,7 @@ const Settings: React.FC = () => {
   const renderBackupSection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Configurations de sauvegarde</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.backupConfigurations}</h3>
         
         <div className="space-y-4">
           {backups.map((backup) => (
@@ -1218,10 +1218,10 @@ const Settings: React.FC = () => {
                 <div>
                   <h4 className="font-medium text-slate-900">{backup.name}</h4>
                   <p className="text-sm text-slate-600">
-                    {backup.frequency === 'daily' ? 'Quotidienne' :
-                     backup.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuelle'} • 
-                    {backup.destination === 'cloud' ? ' Cloud' :
-                     backup.destination === 's3' ? ' Amazon S3' : ' Local'}
+                    {backup.frequency === 'daily' ? t.settings.daily :
+                     backup.frequency === 'weekly' ? t.settings.weekly : t.settings.monthly} • 
+                    {backup.destination === 'cloud' ? ` ${t.settings.cloud}` :
+                     backup.destination === 's3' ? ` ${t.settings.amazonS3}` : ` ${t.settings.local}`}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -1242,7 +1242,7 @@ const Settings: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 mb-3">
                 {backup.lastBackup && (
                   <div>
-                    <p className="text-xs text-slate-500">Dernière sauvegarde</p>
+                    <p className="text-xs text-slate-500">{t.settings.lastBackup}</p>
                     <p className="text-sm font-medium text-slate-900">
                       {new Date(backup.lastBackup).toLocaleString('fr-FR')}
                     </p>
@@ -1250,7 +1250,7 @@ const Settings: React.FC = () => {
                 )}
                 {backup.size && (
                   <div>
-                    <p className="text-xs text-slate-500">Taille</p>
+                    <p className="text-xs text-slate-500">{t.settings.size}</p>
                     <p className="text-sm font-medium text-slate-900">{backup.size}</p>
                   </div>
                 )}
@@ -1262,7 +1262,7 @@ const Settings: React.FC = () => {
                   disabled={!backup.enabled}
                   className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                 >
-                  Lancer maintenant
+                  {t.settings.runNow}
                 </button>
                 <button className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">
                   <Edit className="w-4 h-4" />
@@ -1277,23 +1277,23 @@ const Settings: React.FC = () => {
 
         <button className="w-full p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-700 transition-colors">
           <Plus className="w-5 h-5 mx-auto mb-2" />
-          Nouvelle configuration
+          {t.settings.newConfiguration}
         </button>
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Restauration</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.restore}</h3>
         
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
           <div className="flex items-center space-x-2 mb-3">
             <AlertTriangle className="w-5 h-5 text-orange-600" />
-            <h4 className="font-medium text-orange-900">Zone de danger</h4>
+            <h4 className="font-medium text-orange-900">{t.settings.dangerZone}</h4>
           </div>
           <p className="text-sm text-orange-700 mb-4">
-            La restauration remplacera toutes les données actuelles. Cette action est irréversible.
+            {t.settings.restoreWarning}
           </p>
           <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-            Restaurer depuis une sauvegarde
+            {t.settings.restoreFromBackup}
           </button>
         </div>
       </div>

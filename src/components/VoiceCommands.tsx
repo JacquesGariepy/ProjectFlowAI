@@ -10,9 +10,11 @@ import {
   Settings
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const VoiceCommands: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { language, t } = useLanguage();
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastCommand, setLastCommand] = useState('');
@@ -21,30 +23,30 @@ const VoiceCommands: React.FC = () => {
 
   const voiceCommands = [
     {
-      command: "créer un nouveau projet",
+      command: t.voiceCommandsPanel.commands.createProject,
       action: () => {
-        speak("Création d'un nouveau projet en cours...");
+        speak(t.voiceCommandsPanel.responses.creatingProject);
         // Trigger new project modal
       }
     },
     {
-      command: "afficher les tâches",
+      command: t.voiceCommandsPanel.commands.showTasks,
       action: () => {
-        speak("Affichage des tâches...");
+        speak(t.voiceCommandsPanel.responses.showingTasks);
         // Navigate to tasks
       }
     },
     {
-      command: "analyser les performances",
+      command: t.voiceCommandsPanel.commands.analyzePerformance,
       action: () => {
-        speak("Analyse des performances de l'équipe en cours...");
+        speak(t.voiceCommandsPanel.responses.analyzingPerformance);
         // Show performance analysis
       }
     },
     {
-      command: "rapport intelligent",
+      command: t.voiceCommandsPanel.commands.smartReport,
       action: () => {
-        speak("Génération du rapport intelligent...");
+        speak(t.voiceCommandsPanel.responses.generatingReport);
         // Generate AI report
       }
     }
@@ -55,7 +57,7 @@ const VoiceCommands: React.FC = () => {
     
     setIsSpeaking(true);
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'fr-FR';
+    utterance.lang = language === 'fr' ? 'fr-FR' : 'en-US';
     utterance.rate = 0.9;
     utterance.pitch = 1;
     
@@ -68,14 +70,14 @@ const VoiceCommands: React.FC = () => {
 
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window)) {
-      alert('Reconnaissance vocale non supportée dans ce navigateur');
+      alert(t.voiceCommandsPanel.messages.notSupported);
       return;
     }
 
     const recognition = new (window as any).webkitSpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'fr-FR';
+    recognition.lang = language === 'fr' ? 'fr-FR' : 'en-US';
 
     setIsListening(true);
     setConfidence(0);
@@ -93,7 +95,7 @@ const VoiceCommands: React.FC = () => {
     recognition.onerror = (event: any) => {
       console.error('Erreur de reconnaissance vocale:', event.error);
       setIsListening(false);
-      speak("Désolé, je n'ai pas compris. Pouvez-vous répéter ?");
+      speak(t.voiceCommandsPanel.messages.errorMessage);
     };
 
     recognition.onend = () => {
@@ -112,7 +114,7 @@ const VoiceCommands: React.FC = () => {
     if (matchedCommand) {
       matchedCommand.action();
     } else {
-      speak("Commande non reconnue. Dites 'aide' pour voir les commandes disponibles.");
+      speak(t.voiceCommandsPanel.messages.commandNotRecognized);
     }
   };
 
@@ -128,7 +130,7 @@ const VoiceCommands: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <Brain className="w-5 h-5 text-purple-500" />
-            <h3 className="font-semibold text-slate-900">Commandes Vocales IA</h3>
+            <h3 className="font-semibold text-slate-900">{t.voiceCommandsPanel.title}</h3>
           </div>
           <button
             onClick={() => setVoiceEnabled(!voiceEnabled)}
@@ -162,13 +164,13 @@ const VoiceCommands: React.FC = () => {
           
           <div className="mt-2">
             {isListening && (
-              <div className="text-sm text-red-600 font-medium">🎤 Écoute en cours...</div>
+              <div className="text-sm text-red-600 font-medium">🎤 {t.voiceCommandsPanel.listening}</div>
             )}
             {isSpeaking && (
-              <div className="text-sm text-blue-600 font-medium">🔊 Réponse en cours...</div>
+              <div className="text-sm text-blue-600 font-medium">🔊 {t.voiceCommandsPanel.speaking}</div>
             )}
             {!isListening && !isSpeaking && (
-              <div className="text-sm text-slate-600">Cliquez pour parler</div>
+              <div className="text-sm text-slate-600">{t.voiceCommandsPanel.clickToSpeak}</div>
             )}
           </div>
         </div>
@@ -176,10 +178,10 @@ const VoiceCommands: React.FC = () => {
         {/* Last Command */}
         {lastCommand && (
           <div className="mb-4 p-3 bg-slate-50 rounded-lg">
-            <div className="text-xs text-slate-500 mb-1">Dernière commande:</div>
+            <div className="text-xs text-slate-500 mb-1">{t.voiceCommandsPanel.lastCommand}:</div>
             <div className="text-sm text-slate-900 font-medium">"{lastCommand}"</div>
             {confidence > 0 && (
-              <div className="text-xs text-slate-500 mt-1">Confiance: {confidence}%</div>
+              <div className="text-xs text-slate-500 mt-1">{t.voiceCommandsPanel.confidence}: {confidence}%</div>
             )}
           </div>
         )}
@@ -188,7 +190,7 @@ const VoiceCommands: React.FC = () => {
         <div>
           <h4 className="text-sm font-medium text-slate-900 mb-2 flex items-center space-x-1">
             <MessageSquare className="w-4 h-4" />
-            <span>Commandes disponibles:</span>
+            <span>{t.voiceCommandsPanel.availableCommands}:</span>
           </h4>
           <div className="space-y-2">
             {voiceCommands.map((cmd, index) => (
@@ -203,10 +205,10 @@ const VoiceCommands: React.FC = () => {
         <div className="mt-4 pt-4 border-t border-slate-200">
           <div className="grid grid-cols-2 gap-2">
             <button
-              onClick={() => speak("Bonjour ! Je suis votre assistant vocal IA. Comment puis-je vous aider aujourd'hui ?")}
+              onClick={() => speak(t.voiceCommandsPanel.messages.testMessage)}
               className="p-2 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
             >
-              Test vocal
+              {t.voiceCommandsPanel.voiceTest}
             </button>
             <button
               onClick={() => {
@@ -215,7 +217,7 @@ const VoiceCommands: React.FC = () => {
               }}
               className="p-2 text-xs bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition-colors"
             >
-              Effacer
+              {t.voiceCommandsPanel.clear}
             </button>
           </div>
         </div>

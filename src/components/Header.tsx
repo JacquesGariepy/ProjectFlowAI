@@ -111,118 +111,118 @@ const Header: React.FC<HeaderProps> = ({
   // Voice commands configuration
   const voiceCommands: VoiceCommand[] = [
     {
-      command: "créer un nouveau projet",
-      description: "Ouvre le formulaire de création de projet",
+      command: t.voiceCommands.createNewProject,
+      description: t.voiceCommands.createProjectDesc,
       action: () => {
         navigateToView('projects', undefined, 'create');
       },
-      category: "Navigation"
+      category: t.header.categoryNavigation
     },
     {
-      command: "afficher les tâches",
-      description: "Navigue vers la page des tâches",
+      command: t.voiceCommands.showTasks,
+      description: t.voiceCommands.showTasksDesc,
       action: () => {
         navigateToView('tasks');
       },
-      category: "Navigation"
+      category: t.header.categoryNavigation
     },
     {
-      command: "ouvrir le calendrier",
-      description: "Navigue vers le calendrier",
+      command: t.voiceCommands.openCalendar,
+      description: t.voiceCommands.openCalendarDesc,
       action: () => {
         navigateToView('calendar');
       },
-      category: "Navigation"
+      category: t.header.categoryNavigation
     },
     {
-      command: "afficher le blog",
-      description: "Navigue vers le blog",
+      command: t.voiceCommands.showBlog,
+      description: t.voiceCommands.showBlogDesc,
       action: () => {
         navigateToView('blog');
       },
-      category: "Navigation"
+      category: t.header.categoryNavigation
     },
     {
-      command: "analyser les performances",
-      description: "Ouvre le dashboard IA",
+      command: t.voiceCommands.analyzePerformance,
+      description: t.voiceCommands.analyzePerformanceDesc,
       action: () => {
         navigateToView('smart-dashboard');
       },
-      category: "IA"
+      category: t.header.categoryIA
     },
     {
-      command: "insights ia",
-      description: "Ouvre les insights IA avancés",
+      command: t.voiceCommands.aiInsights,
+      description: t.voiceCommands.aiInsightsDesc,
       action: () => {
         navigateToView('ai-insights');
       },
-      category: "IA"
+      category: t.header.categoryIA
     },
     {
-      command: "équipe",
-      description: "Navigue vers la page équipe",
+      command: t.voiceCommands.teamPage,
+      description: t.voiceCommands.teamPageDesc,
       action: () => {
         navigateToView('team');
       },
-      category: "Navigation"
+      category: t.header.categoryNavigation
     },
     {
-      command: "paramètres",
-      description: "Ouvre les paramètres",
+      command: t.voiceCommands.settingsPage,
+      description: t.voiceCommands.settingsPageDesc,
       action: () => {
         navigateToView('settings');
       },
-      category: "Navigation"
+      category: t.header.categoryNavigation
     },
     {
-      command: "aide",
-      description: "Ouvre la page d'aide",
+      command: t.voiceCommands.helpPage,
+      description: t.voiceCommands.helpPageDesc,
       action: () => {
         navigateToView('help-support');
       },
-      category: "Navigation"
+      category: t.header.categoryNavigation
     },
     {
-      command: "rechercher",
-      description: "Active la recherche globale",
+      command: t.voiceCommands.searchGlobal,
+      description: t.voiceCommands.searchGlobalDesc,
       action: () => {
         setShowSearch(true);
         setTimeout(() => searchInputRef.current?.focus(), 100);
       },
-      category: "Recherche"
+      category: t.header.categorySearch
     },
     {
-      command: "notifications",
-      description: "Ouvre le panneau des notifications",
+      command: t.voiceCommands.notificationsPanel,
+      description: t.voiceCommands.notificationsPanelDesc,
       action: () => {
         setShowNotifications(true);
       },
-      category: "Interface"
+      category: t.header.categoryInterface
     },
     {
-      command: "profil",
-      description: "Ouvre le menu profil",
+      command: t.voiceCommands.profileMenu,
+      description: t.voiceCommands.profileMenuDesc,
       action: () => {
         setShowProfile(true);
       },
-      category: "Interface"
+      category: t.header.categoryInterface
     }
   ];
 
   // Keyboard shortcuts
   const keyboardShortcuts = [
-    { key: 'Ctrl + K', description: 'Recherche globale', action: ()=> setShowSearch(true) },
-    { key: 'Ctrl + N', description: 'Nouveau projet', action: () => navigateToView('projects', undefined, 'create') },
-    { key: 'Ctrl + T', description: 'Nouvelle tâche', action: () => navigateToView('tasks', undefined, 'create') },
-    { key: 'Ctrl + /', description: 'Raccourcis clavier', action: () => setShowKeyboardShortcuts(true) },
-    { key: 'Ctrl + B', description: 'Toggle sidebar', action: () => setSidebarCollapsed(!sidebarCollapsed) },
-    { key: 'Ctrl + 1', description: 'Dashboard IA', action: () => navigateToView('smart-dashboard') },
-    { key: 'Ctrl + 2', description: 'Projets', action: () => navigateToView('projects') },
-    { key: 'Ctrl + 3', description: 'Tâches', action: () => navigateToView('tasks') },
-    { key: 'Ctrl + 4', description: 'Équipe', action: () => navigateToView('team') },
-    { key: 'Ctrl + 5', description: 'Calendrier', action: () => navigateToView('calendar') },
-    { key: 'Ctrl + 6', description: 'Blog', action: () => navigateToView('blog') },
-    { key: 'Ctrl + 0', description: 'Paramètres', action: () => navigateToView('settings') },
+    { key: 'Ctrl + K', description: t.header.globalSearch, action: ()=> setShowSearch(true) },
+    { key: 'Ctrl + N', description: t.header.newProject, action: () => navigateToView('projects', undefined, 'create') },
+    { key: 'Ctrl + T', description: t.header.newTask, action: () => navigateToView('tasks', undefined, 'create') },
+    { key: 'Ctrl + /', description: t.header.keyboardShortcuts, action: () => setShowKeyboardShortcuts(true) },
+    { key: 'Ctrl + B', description: t.header.toggleSidebar, action: () => setSidebarCollapsed(!sidebarCollapsed) },
+    { key: 'Ctrl + 1', description: t.header.pageSmartDashboard, action: () => navigateToView('smart-dashboard') },
+    { key: 'Ctrl + 2', description: t.header.pageProjects, action: () => navigateToView('projects') },
+    { key: 'Ctrl + 3', description: t.header.pageTasks, action: () => navigateToView('tasks') },
+    { key: 'Ctrl + 4', description: t.header.pageTeam, action: () => navigateToView('team') },
+    { key: 'Ctrl + 5', description: t.header.pageCalendar, action: () => navigateToView('calendar') },
+    { key: 'Ctrl + 6', description: t.header.pageBlog, action: () => navigateToView('blog') },
+    { key: 'Ctrl + 0', description: t.header.pageSettings, action: () => navigateToView('settings') },
   ];
 
   // Online/offline detection
@@ -420,9 +420,9 @@ const Header: React.FC<HeaderProps> = ({
     if (lowerQuery.includes('blog') || lowerQuery.includes('article') || lowerQuery.includes('guide')) {
       results.push({
         id: 'blog-search',
-        title: 'Blog et Articles',
+        title: t.nav.blog,
         type: 'blog',
-        description: 'Parcourir les articles et guides',
+        description: t.nav.blog,
         url: 'blog',
         icon: FileText,
         relevance: 1,
@@ -459,8 +459,8 @@ const Header: React.FC<HeaderProps> = ({
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Navigation vers l\'élément',
-        message: `Ouverture de "${result.title}"`,
+        title: t.header.navigationToItem,
+        message: `${t.header.opening} "${result.title}"`,
         type: 'info',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -471,7 +471,7 @@ const Header: React.FC<HeaderProps> = ({
   // Voice recognition
   const startVoiceRecognition = () => {
     if (!('webkitSpeechRecognition' in window)) {
-      alert('Reconnaissance vocale non supportée dans ce navigateur');
+      alert(t.header.voiceNotSupported);
       return;
     }
 
@@ -501,8 +501,8 @@ const Header: React.FC<HeaderProps> = ({
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Erreur vocale',
-          message: 'Impossible de comprendre la commande vocale',
+          title: t.header.voiceError,
+          message: t.header.voiceError,
           type: 'error',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -530,7 +530,7 @@ const Header: React.FC<HeaderProps> = ({
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Commande vocale exécutée',
+          title: t.header.commandExecuted,
           message: `"${command}" - ${matchedCommand.description}`,
           type: 'success',
           isRead: false,
@@ -542,8 +542,8 @@ const Header: React.FC<HeaderProps> = ({
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Commande non reconnue',
-          message: `"${command}" - Dites "aide" pour voir les commandes disponibles`,
+          title: t.header.commandNotRecognized,
+          message: `"${command}" - ${t.header.commandNotRecognized}`,
           type: 'warning',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -554,18 +554,18 @@ const Header: React.FC<HeaderProps> = ({
 
   const getPageTitle = () => {
     switch (activeView) {
-      case 'smart-dashboard': return 'Dashboard IA Intelligent';
-      case 'ai-insights': return 'Insights IA Avancés';
-      case 'dashboard': return 'Dashboard Classic';
-      case 'projects': return 'Projets';
-      case 'tasks': return 'Tâches';
-      case 'team': return 'Équipe';
-      case 'calendar': return 'Calendrier';
-      case 'blog': return 'Blog';
-      case 'settings': return 'Paramètres';
-      case 'help-support': return 'Aide et Support';
-      case 'ai-premium': return 'IA Premium';
-      default: return 'Dashboard IA';
+      case 'smart-dashboard': return t.header.pageSmartDashboard;
+      case 'ai-insights': return t.header.pageAiInsights;
+      case 'dashboard': return t.header.pageClassicDashboard;
+      case 'projects': return t.header.pageProjects;
+      case 'tasks': return t.header.pageTasks;
+      case 'team': return t.header.pageTeam;
+      case 'calendar': return t.header.pageCalendar;
+      case 'blog': return t.header.pageBlog;
+      case 'settings': return t.header.pageSettings;
+      case 'help-support': return t.header.pageHelpSupport;
+      case 'ai-premium': return t.header.pageAiPremium;
+      default: return t.header.pageAiDashboard;
     }
   };
 
@@ -599,8 +599,8 @@ const Header: React.FC<HeaderProps> = ({
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Déconnexion',
-        message: 'Vous avez été déconnecté avec succès',
+        title: t.header.logout,
+        message: t.header.logout,
         type: 'info',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -642,11 +642,11 @@ const Header: React.FC<HeaderProps> = ({
 
   const getTypeBadge = (type: string) => {
     switch (type) {
-      case 'project': return 'Projet';
-      case 'task': return 'Tâche';
-      case 'user': return 'Utilisateur';
-      case 'event': return 'Événement';
-      case 'blog': return 'Article';
+      case 'project': return t.projects.title.slice(0, -1); // Remove 's' for singular
+      case 'task': return t.tasks.title.slice(0, -1); // Remove 's' for singular  
+      case 'user': return 'Utilisateur'; // Keep simple for now
+      case 'event': return 'Événement'; // Keep simple for now  
+      case 'blog': return 'Article'; // Keep simple for now
       default: return type;
     }
   };
@@ -669,19 +669,19 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="flex items-center space-x-1">
                   <Sparkles className="w-5 h-5 text-purple-500 animate-pulse" />
                   <span className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full font-medium">
-                    IA ACTIVE
+                    {t.header.aiActive}
                   </span>
                 </div>
               )}
             </div>
             <div className="flex items-center space-x-2">
               <p className="text-sm text-slate-500">
-                Bienvenue, {currentUser?.name ? currentUser.name.split(' ')[0] : 'Utilisateur'} ! 🚀
+                {t.header.welcome}, {currentUser?.name ? currentUser.name.split(' ')[0] : 'Utilisateur'} ! 🚀
               </p>
               {!isOnline && (
                 <div className="flex items-center space-x-1 text-red-500">
                   <WifiOff className="w-3 h-3" />
-                  <span className="text-xs">Hors ligne</span>
+                  <span className="text-xs">{t.header.offline}</span>
                 </div>
               )}
             </div>
@@ -697,7 +697,7 @@ const Header: React.FC<HeaderProps> = ({
                 ? 'bg-purple-100 text-purple-600' 
                 : 'hover:bg-slate-100 text-slate-600'
             }`}
-            title="Commandes vocales IA"
+            title={t.header.voiceCommands}
           >
             <Mic className="w-5 h-5" />
           </button>
@@ -711,7 +711,7 @@ const Header: React.FC<HeaderProps> = ({
                 ? 'bg-red-100 text-red-600 animate-pulse' 
                 : 'hover:bg-slate-100 text-slate-600'
             }`}
-            title="Reconnaissance vocale"
+            title={t.header.voiceRecognition}
           >
             {isListening ? <Mic className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
@@ -719,7 +719,7 @@ const Header: React.FC<HeaderProps> = ({
           {/* AI Status Indicator */}
           <div className="hidden md:flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full">
             <Brain className="w-4 h-4 text-purple-600" />
-            <span className="text-xs font-medium text-purple-700">IA Optimisée</span>
+            <span className="text-xs font-medium text-purple-700">{t.header.aiOptimized}</span>
             <div className={`w-2 h-2 rounded-full animate-pulse ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
           </div>
 
@@ -729,7 +729,7 @@ const Header: React.FC<HeaderProps> = ({
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Recherche intelligente IA... (Ctrl+K)"
+              placeholder={t.header.searchPlaceholder}
               value={searchQuery || ''}
               onChange={handleSearchChange}
               onFocus={() => setShowSearch(true)}
@@ -755,7 +755,7 @@ const Header: React.FC<HeaderProps> = ({
                   <>
                     <div className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center space-x-2">
                       <Search className="w-3 h-3" />
-                      <span>Résultats de recherche</span>
+                      <span>{t.header.searchResults}</span>
                       <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs">
                         {searchResults.length}
                       </span>
@@ -803,7 +803,7 @@ const Header: React.FC<HeaderProps> = ({
                   <>
                     <div className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center space-x-2">
                       <History className="w-3 h-3" />
-                      <span>Recherches récentes</span>
+                      <span>{t.header.recentSearches}</span>
                     </div>
                     {searchHistory.map((query, index) => (
                       <button
@@ -876,7 +876,7 @@ const Header: React.FC<HeaderProps> = ({
           <button
             onClick={() => setShowKeyboardShortcuts(true)}
             className="hidden lg:flex p-2 rounded-lg hover:bg-slate-100 transition-colors"
-            title={language === 'fr' ? 'Raccourcis clavier (Ctrl+/)' : 'Keyboard shortcuts (Ctrl+/)'}
+            title={t.header.shortcuts}
           >
             <Keyboard className="w-5 h-5 text-slate-600" />
           </button>
@@ -898,14 +898,14 @@ const Header: React.FC<HeaderProps> = ({
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-slate-200 py-2 z-50 max-h-96 overflow-y-auto">
                 <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-900">Notifications IA</h3>
+                  <h3 className="font-semibold text-slate-900">{t.header.notificationsAI}</h3>
                   <div className="flex items-center space-x-2">
                     {unreadNotifications.length > 0 && (
                       <button
                         onClick={markAllNotificationsRead}
                         className="text-xs text-purple-600 hover:text-purple-800"
                       >
-                        Tout marquer lu
+                        {t.header.markAllRead}
                       </button>
                     )}
                     <button
@@ -920,7 +920,7 @@ const Header: React.FC<HeaderProps> = ({
                 {notifications.length === 0 ? (
                   <div className="px-4 py-8 text-center text-slate-500">
                     <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                    <p>Aucune notification</p>
+                    <p>{t.header.noNotifications}</p>
                   </div>
                 ) : (
                   <div className="max-h-64 overflow-y-auto">
@@ -988,7 +988,7 @@ const Header: React.FC<HeaderProps> = ({
                   </div>
                   <div className="flex items-center space-x-1 mt-2">
                     <Zap className="w-3 h-3 text-purple-500" />
-                    <span className="text-xs text-purple-600 font-medium">Utilisateur IA Premium</span>
+                    <span className="text-xs text-purple-600 font-medium">{t.header.aiPremiumUser}</span>
                     <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
                   </div>
                 </div>
@@ -1002,7 +1002,7 @@ const Header: React.FC<HeaderProps> = ({
                     className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <User className="w-4 h-4 mr-3" />
-                    Voir le profil
+                    {t.header.viewProfile}
                   </button>
                   <button 
                     onClick={() => {
@@ -1012,14 +1012,14 @@ const Header: React.FC<HeaderProps> = ({
                     className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Settings className="w-4 h-4 mr-3" />
-                    Paramètres
+                    {t.header.pageSettings}
                   </button>
                   <button 
                     onClick={() => setShowKeyboardShortcuts(true)}
                     className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Keyboard className="w-4 h-4 mr-3" />
-                    Raccourcis clavier
+                    {t.header.keyboardShortcutsMenu}
                   </button>
                   <button 
                     onClick={() => {
@@ -1029,14 +1029,14 @@ const Header: React.FC<HeaderProps> = ({
                     className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <HelpCircle className="w-4 h-4 mr-3" />
-                    Aide et support
+                    {t.header.helpSupport}
                   </button>
                 </div>
 
                 {/* Theme Selector */}
                 <div className="border-t border-slate-100 py-2">
                   <div className="px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wide">
-                    Thème
+                    {t.header.theme}
                   </div>
                   <div className="px-4 py-1 flex items-center space-x-2">
                     <button
@@ -1066,7 +1066,7 @@ const Header: React.FC<HeaderProps> = ({
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                   >
                     <LogOut className="w-4 h-4 mr-3" />
-                    Se déconnecter
+                    {t.header.signOut}
                   </button>
                 </div>
               </div>
@@ -1085,7 +1085,7 @@ const Header: React.FC<HeaderProps> = ({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Rechercher..."
+                  placeholder={t.common.search}
                   value={searchQuery || ''}
                   onChange={handleSearchChange}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(searchQuery)}
@@ -1170,7 +1170,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <h3 className="text-xl font-semibold text-slate-900 flex items-center space-x-2">
                 <Keyboard className="w-6 h-6 text-purple-500" />
-                <span>Raccourcis clavier</span>
+                <span>{t.header.keyboardShortcuts}</span>
               </h3>
               <button
                 onClick={() => setShowKeyboardShortcuts(false)}
@@ -1183,7 +1183,7 @@ const Header: React.FC<HeaderProps> = ({
             <div className="p-6 overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-semibold text-slate-900 mb-3">Navigation</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3">{t.header.navigation}</h4>
                   <div className="space-y-2">
                     {keyboardShortcuts.slice(0, 5).map((shortcut, index) => (
                       <div key={index} className="flex items-center justify-between">
@@ -1197,7 +1197,7 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-slate-900 mb-3">Pages</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3">{t.header.pages}</h4>
                   <div className="space-y-2">
                     {keyboardShortcuts.slice(5).map((shortcut, index) => (
                       <div key={index} className="flex items-center justify-between">
@@ -1212,7 +1212,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="font-semibold text-slate-900 mb-3">Commandes vocales disponibles</h4>
+                <h4 className="font-semibold text-slate-900 mb-3">{t.header.availableCommands}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {voiceCommands.map((command, index) => (
                     <div key={index} className="p-3 bg-slate-50 rounded-lg">
@@ -1235,7 +1235,7 @@ const Header: React.FC<HeaderProps> = ({
             {isListening ? (
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-slate-900">Écoute en cours...</span>
+                <span className="text-sm font-medium text-slate-900">{t.header.listening}</span>
                 <div className="flex space-x-1">
                   <div className="w-1 h-4 bg-red-500 rounded animate-pulse"></div>
                   <div className="w-1 h-6 bg-red-500 rounded animate-pulse" style={{ animationDelay: '0.1s' }}></div>
@@ -1245,15 +1245,15 @@ const Header: React.FC<HeaderProps> = ({
             ) : lastVoiceCommand && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-900">Commande détectée</span>
-                  <span className="text-xs text-slate-500">{voiceConfidence}% confiance</span>
+                  <span className="text-sm font-medium text-slate-900">{t.header.commandDetected}</span>
+                  <span className="text-xs text-slate-500">{voiceConfidence}% {t.header.confidence}</span>
                 </div>
                 <div className="text-sm text-slate-600">"{lastVoiceCommand}"</div>
                 <button
                   onClick={() => setLastVoiceCommand('')}
                   className="mt-2 text-xs text-purple-600 hover:text-purple-800"
                 >
-                  Fermer
+                  {t.common.close}
                 </button>
               </div>
             )}

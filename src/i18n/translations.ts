@@ -70,6 +70,98 @@ export interface Translations {
     welcome: string;
     offline: string;
     online: string;
+    // Page titles
+    pageSmartDashboard: string;
+    pageAiInsights: string;
+    pageClassicDashboard: string;
+    pageProjects: string;
+    pageTasks: string;
+    pageTeam: string;
+    pageCalendar: string;
+    pageBlog: string;
+    pageSettings: string;
+    pageHelpSupport: string;
+    pageAiPremium: string;
+    pageAiDashboard: string;
+    // Search
+    searchPlaceholder: string;
+    searchResults: string;
+    recentSearches: string;
+    noResults: string;
+    // Voice commands
+    voiceRecognition: string;
+    voiceCommands: string;
+    listening: string;
+    commandDetected: string;
+    confidence: string;
+    voiceNotSupported: string;
+    voiceError: string;
+    commandNotRecognized: string;
+    commandExecuted: string;
+    // Keyboard shortcuts
+    keyboardShortcuts: string;
+    globalSearch: string;
+    newProject: string;
+    newTask: string;
+    toggleSidebar: string;
+    shortcuts: string;
+    navigation: string;
+    pages: string;
+    availableCommands: string;
+    // Notifications
+    notificationsAI: string;
+    markAllRead: string;
+    noNotifications: string;
+    navigationToItem: string;
+    opening: string;
+    // Profile menu
+    viewProfile: string;
+    keyboardShortcutsMenu: string;
+    helpSupport: string;
+    theme: string;
+    signOut: string;
+    // AI status
+    aiActive: string;
+    aiOptimized: string;
+    aiPremiumUser: string;
+    // Connection status
+    connectionOnline: string;
+    connectionOffline: string;
+    // Voice command categories
+    categoryNavigation: string;
+    categoryIA: string;
+    categorySearch: string;
+    categoryInterface: string;
+    // AI Floating Indicator
+    aiActiveRealtime: string;
+  };
+
+  // Voice Commands
+  voiceCommands: {
+    createNewProject: string;
+    createProjectDesc: string;
+    showTasks: string;
+    showTasksDesc: string;
+    openCalendar: string;
+    openCalendarDesc: string;
+    showBlog: string;
+    showBlogDesc: string;
+    analyzePerformance: string;
+    analyzePerformanceDesc: string;
+    aiInsights: string;
+    aiInsightsDesc: string;
+    teamPage: string;
+    teamPageDesc: string;
+    settingsPage: string;
+    settingsPageDesc: string;
+    helpPage: string;
+    helpPageDesc: string;
+    searchGlobal: string;
+    searchGlobalDesc: string;
+    notificationsPanel: string;
+    notificationsPanelDesc: string;
+    profileMenu: string;
+    profileMenuDesc: string;
   };
 
   // Dashboard
@@ -430,6 +522,198 @@ export interface Translations {
     darkMode: string;
     lightMode: string;
     systemMode: string;
+    // AI Settings
+    aiIntelligence: string;
+    aiConfiguration: string;
+    enableAI: string;
+    enableAIDesc: string;
+    autoOptimization: string;
+    autoOptimizationDesc: string;
+    predictiveAnalytics: string;
+    predictiveAnalyticsDesc: string;
+    smartNotifications: string;
+    smartNotificationsDesc: string;
+    voiceCommands: string;
+    voiceCommandsDesc: string;
+    dataSharing: string;
+    dataSharingDesc: string;
+    aiModel: string;
+    modelVersion: string;
+    responseSpeed: string;
+    fast: string;
+    balanced: string;
+    accurate: string;
+    recommended: string;
+    faster: string;
+    alternative: string;
+    // Database
+    databaseLabel: string;
+    databaseConnections: string;
+    testConnection: string;
+    lastConnection: string;
+    connected: string;
+    disconnected: string;
+    error: string;
+    addConnection: string;
+    databaseStats: string;
+    totalSize: string;
+    queriesPerSec: string;
+    responseTime: string;
+    average: string;
+    thisMonth: string;
+    average24h: string;
+    // Backup
+    backupConfigurations: string;
+    completeDatabase: string;
+    userFiles: string;
+    systemConfiguration: string;
+    daily: string;
+    weekly: string;
+    monthly: string;
+    cloud: string;
+    amazonS3: string;
+    local: string;
+    lastBackup: string;
+    size: string;
+    runNow: string;
+    newConfiguration: string;
+    restore: string;
+    dangerZone: string;
+    restoreWarning: string;
+    restoreFromBackup: string;
+    // Profile
+    fullName: string;
+    telephone: string;
+    location: string;
+    bio: string;
+    bioPlaceholder: string;
+    website: string;
+    linkedin: string;
+    github: string;
+    // Security
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+    twoFactorAuthentication: string;
+    twoFactorStatus: string;
+    enabled: string;
+    disabled: string;
+    secure: string;
+    notSecure: string;
+    scanQR: string;
+    verificationCode: string;
+    enable2FA: string;
+    disable2FA: string;
+    securityLog: string;
+    successfulLogin: string;
+    failedLoginAttempt: string;
+    passwordChanged: string;
+    twoFactorEnabled: string;
+    // Notifications
+    notificationPreferences: string;
+    generalNotifications: string;
+    generalNotificationsDesc: string;
+    notificationChannels: string;
+    notificationTypes: string;
+    taskUpdates: string;
+    taskUpdatesDesc: string;
+    projectDeadlines: string;
+    projectDeadlinesDesc: string;
+    teamMentions: string;
+    teamMentionsDesc: string;
+    desktopNotifications: string;
+    // Languages
+    languageAndRegion: string;
+    timeFormat: string;
+    hours24: string;
+    hours12: string;
+    // Integrations
+    availableIntegrations: string;
+    syncNotifications: string;
+    repositoryIntegration: string;
+    syncDesigns: string;
+    fileStorage: string;
+    lastSync: string;
+    disconnect: string;
+    connect: string;
+    webhooks: string;
+    notificationWebhook: string;
+    active: string;
+    addWebhook: string;
+  };
+
+  // AI Assistant
+  aiAssistant: {
+    title: string;
+    poweredBy: string;
+    placeholder: string;
+    // Welcome message
+    welcomeMessage: string;
+    welcomeHelp: string;
+    welcomePrompt: string;
+    // Capabilities
+    realtimeAnalysis: string;
+    intelligentInsights: string;
+    personalizedAdvice: string;
+    processOptimization: string;
+    projectManagementQuestions: string;
+    // Suggestions
+    teamPerformance: string;
+    currentRisks: string;
+    optimizationAdvice: string;
+    analyzeProjects: string;
+    improveThis: string;
+    nextSteps: string;
+    risksToWatch: string;
+    explainDetail: string;
+    // Responses
+    performanceAnalysis: string;
+    completionRate: string;
+    tasksCompleted: string;
+    recommendations: string;
+    teamPerformsWell: string;
+    topPerformer: string;
+    redistributeTasks: string;
+    // Default response
+    aiCapabilities: string;
+    predictiveAnalysis: string;
+    automaticOptimization: string;
+    proactiveRiskDetection: string;
+    personalizedRecommendations: string;
+    askSpecificQuestion: string;
+    // Error handling
+    technicalDifficulties: string;
+    tryAgainLater: string;
+    // Voice
+    analyzeTeamPerformance: string;
+  };
+
+  // Voice Commands Panel
+  voiceCommandsPanel: {
+    title: string;
+    listening: string;
+    speaking: string;
+    clickToSpeak: string;
+    lastCommand: string;
+    confidence: string;
+    availableCommands: string;
+    testVoice: string;
+    clear: string;
+    // Commands
+    createNewProject: string;
+    showTasks: string;
+    analyzePerformance: string;
+    intelligentReport: string;
+    // Responses
+    creatingProject: string;
+    showingTasks: string;
+    analyzingPerformance: string;
+    generatingReport: string;
+    // Voice messages
+    voiceNotSupported: string;
+    didNotUnderstand: string;
+    commandNotRecognized: string;
+    voiceTestMessage: string;
   };
 
   // Help & Support
@@ -909,6 +1193,96 @@ export const translations: Record<Language, Translations> = {
       welcome: 'Bienvenue',
       offline: 'Hors ligne',
       online: 'En ligne',
+      // Page titles
+      pageSmartDashboard: 'Dashboard IA Intelligent',
+      pageAiInsights: 'Insights IA Avancés',
+      pageClassicDashboard: 'Dashboard Classic',
+      pageProjects: 'Projets',
+      pageTasks: 'Tâches',
+      pageTeam: 'Équipe',
+      pageCalendar: 'Calendrier',
+      pageBlog: 'Blog',
+      pageSettings: 'Paramètres',
+      pageHelpSupport: 'Aide et Support',
+      pageAiPremium: 'IA Premium',
+      pageAiDashboard: 'Dashboard IA',
+      // Search
+      searchPlaceholder: 'Recherche intelligente IA... (Ctrl+K)',
+      searchResults: 'Résultats de recherche',
+      recentSearches: 'Recherches récentes',
+      noResults: 'Aucun résultat',
+      // Voice commands
+      voiceRecognition: 'Reconnaissance vocale',
+      voiceCommands: 'Commandes vocales IA',
+      listening: 'Écoute en cours...',
+      commandDetected: 'Commande détectée',
+      confidence: 'confiance',
+      voiceNotSupported: 'Reconnaissance vocale non supportée dans ce navigateur',
+      voiceError: 'Impossible de comprendre la commande vocale',
+      commandNotRecognized: 'Commande non reconnue',
+      commandExecuted: 'Commande vocale exécutée',
+      // Keyboard shortcuts
+      keyboardShortcuts: 'Raccourcis clavier',
+      globalSearch: 'Recherche globale',
+      newProject: 'Nouveau projet',
+      newTask: 'Nouvelle tâche',
+      toggleSidebar: 'Toggle sidebar',
+      shortcuts: 'Raccourcis clavier (Ctrl+/)',
+      navigation: 'Navigation',
+      pages: 'Pages',
+      availableCommands: 'Commandes vocales disponibles',
+      // Notifications
+      notificationsAI: 'Notifications IA',
+      markAllRead: 'Tout marquer lu',
+      noNotifications: 'Aucune notification',
+      navigationToItem: 'Navigation vers l\'élément',
+      opening: 'Ouverture de',
+      // Profile menu
+      viewProfile: 'Voir le profil',
+      keyboardShortcutsMenu: 'Raccourcis clavier',
+      helpSupport: 'Aide et support',
+      theme: 'Thème',
+      signOut: 'Se déconnecter',
+      // AI status
+      aiActive: 'IA ACTIVE',
+      aiOptimized: 'IA Optimisée',
+      aiPremiumUser: 'Utilisateur IA Premium',
+      // Connection status
+      connectionOnline: 'En ligne',
+      connectionOffline: 'Hors ligne',
+      // Voice command categories
+      categoryNavigation: 'Navigation',
+      categoryIA: 'IA',
+      categorySearch: 'Recherche',
+      categoryInterface: 'Interface',
+      // AI Floating Indicator
+      aiActiveRealtime: '🤖 IA Active • Analyse en temps réel',
+    },
+    voiceCommands: {
+      createNewProject: 'créer un nouveau projet',
+      createProjectDesc: 'Ouvre le formulaire de création de projet',
+      showTasks: 'afficher les tâches',
+      showTasksDesc: 'Navigue vers la page des tâches',
+      openCalendar: 'ouvrir le calendrier',
+      openCalendarDesc: 'Navigue vers le calendrier',
+      showBlog: 'afficher le blog',
+      showBlogDesc: 'Navigue vers le blog',
+      analyzePerformance: 'analyser les performances',
+      analyzePerformanceDesc: 'Ouvre le dashboard IA',
+      aiInsights: 'insights ia',
+      aiInsightsDesc: 'Ouvre les insights IA avancés',
+      teamPage: 'équipe',
+      teamPageDesc: 'Navigue vers la page équipe',
+      settingsPage: 'paramètres',
+      settingsPageDesc: 'Ouvre les paramètres',
+      helpPage: 'aide',
+      helpPageDesc: 'Ouvre la page d\'aide',
+      searchGlobal: 'rechercher',
+      searchGlobalDesc: 'Active la recherche globale',
+      notificationsPanel: 'notifications',
+      notificationsPanelDesc: 'Ouvre le panneau des notifications',
+      profileMenu: 'profil',
+      profileMenuDesc: 'Ouvre le menu profil',
     },
     dashboard: {
       title: 'Tableau de Bord',
@@ -1306,6 +1680,194 @@ export const translations: Record<Language, Translations> = {
       darkMode: 'Mode Sombre',
       lightMode: 'Mode Clair',
       systemMode: 'Mode Système',
+      // AI Settings
+      aiIntelligence: 'Intelligence Artificielle',
+      aiConfiguration: 'Configuration IA',
+      enableAI: 'Activer l\'IA',
+      enableAIDesc: 'Utiliser l\'intelligence artificielle pour optimiser vos projets',
+      autoOptimization: 'Optimisation automatique',
+      autoOptimizationDesc: 'Permettre à l\'IA d\'optimiser automatiquement vos workflows',
+      predictiveAnalytics: 'Analyses prédictives',
+      predictiveAnalyticsDesc: 'Prédictions sur les performances et les risques',
+      smartNotifications: 'Notifications intelligentes',
+      smartNotificationsDesc: 'Notifications personnalisées basées sur l\'IA',
+      voiceCommands: 'Commandes vocales',
+      voiceCommandsDesc: 'Contrôler l\'application avec la voix',
+      dataSharing: 'Partage de données',
+      dataSharingDesc: 'Partager des données anonymes pour améliorer l\'IA',
+      aiModel: 'Modèle IA',
+      modelVersion: 'Version du modèle',
+      responseSpeed: 'Vitesse de réponse',
+      fast: 'Rapide',
+      balanced: 'Équilibré',
+      accurate: 'Précis',
+      recommended: 'Recommandé',
+      faster: 'Plus rapide',
+      alternative: 'Alternatif',
+      // Database
+      databaseLabel: 'Base de données',
+      databaseConnections: 'Connexions de base de données',
+      testConnection: 'Tester la connexion',
+      lastConnection: 'Dernière connexion',
+      connected: 'Connecté',
+      disconnected: 'Déconnecté',
+      error: 'Erreur',
+      addConnection: 'Ajouter une connexion',
+      databaseStats: 'Statistiques de la base de données',
+      totalSize: 'Taille totale',
+      queriesPerSec: 'Requêtes/sec',
+      responseTime: 'Temps de réponse',
+      average: 'Moyenne',
+      thisMonth: 'ce mois',
+      average24h: 'Moyenne 24h',
+      // Backup
+      backupConfigurations: 'Configurations de sauvegarde',
+      completeDatabase: 'Base de données complète',
+      userFiles: 'Fichiers utilisateurs',
+      systemConfiguration: 'Configuration système',
+      daily: 'Quotidienne',
+      weekly: 'Hebdomadaire',
+      monthly: 'Mensuelle',
+      cloud: 'Cloud',
+      amazonS3: 'Amazon S3',
+      local: 'Local',
+      lastBackup: 'Dernière sauvegarde',
+      size: 'Taille',
+      runNow: 'Lancer maintenant',
+      newConfiguration: 'Nouvelle configuration',
+      restore: 'Restauration',
+      dangerZone: 'Zone de danger',
+      restoreWarning: 'La restauration remplacera toutes les données actuelles. Cette action est irréversible.',
+      restoreFromBackup: 'Restaurer depuis une sauvegarde',
+      // Profile
+      fullName: 'Nom complet',
+      telephone: 'Téléphone',
+      location: 'Localisation',
+      bio: 'Bio',
+      bioPlaceholder: 'Parlez-nous de vous...',
+      website: 'Site web',
+      linkedin: 'LinkedIn',
+      github: 'GitHub',
+      // Security
+      currentPassword: 'Mot de passe actuel',
+      newPassword: 'Nouveau mot de passe',
+      confirmNewPassword: 'Confirmer le nouveau mot de passe',
+      twoFactorAuthentication: 'Authentification à deux facteurs (2FA)',
+      twoFactorStatus: '2FA Status',
+      enabled: 'Activée',
+      disabled: 'Désactivée',
+      secure: 'Sécurisé',
+      notSecure: 'Non sécurisé',
+      scanQR: 'Scannez ce QR code avec votre application d\'authentification',
+      verificationCode: 'Code de vérification',
+      enable2FA: 'Activer la 2FA',
+      disable2FA: 'Désactiver la 2FA',
+      securityLog: 'Journal de sécurité',
+      successfulLogin: 'Connexion réussie',
+      failedLoginAttempt: 'Tentative de connexion échouée',
+      passwordChanged: 'Mot de passe modifié',
+      twoFactorEnabled: '2FA activée',
+      // Notifications
+      notificationPreferences: 'Préférences de notification',
+      generalNotifications: 'Notifications générales',
+      generalNotificationsDesc: 'Activer ou désactiver toutes les notifications',
+      notificationChannels: 'Canaux de notification',
+      notificationTypes: 'Types de notification',
+      taskUpdates: 'Mises à jour des tâches',
+      taskUpdatesDesc: 'Nouvelles tâches, changements de statut',
+      projectDeadlines: 'Échéances de projet',
+      projectDeadlinesDesc: 'Rappels avant les dates limites',
+      teamMentions: 'Mentions d\'équipe',
+      teamMentionsDesc: 'Quand vous êtes mentionné dans les commentaires',
+      desktopNotifications: 'Notifications bureau',
+      // Languages
+      languageAndRegion: 'Langue et région',
+      timeFormat: 'Format d\'heure',
+      hours24: '24 heures',
+      hours12: '12 heures (AM/PM)',
+      // Integrations
+      availableIntegrations: 'Intégrations disponibles',
+      syncNotifications: 'Synchroniser les notifications et messages',
+      repositoryIntegration: 'Intégration avec les repositories',
+      syncDesigns: 'Synchroniser les designs et prototypes',
+      fileStorage: 'Stockage et partage de fichiers',
+      lastSync: 'Dernière sync',
+      disconnect: 'Déconnecter',
+      connect: 'Connecter',
+      webhooks: 'Webhooks',
+      notificationWebhook: 'Webhook de notification',
+      active: 'Actif',
+      addWebhook: 'Ajouter un webhook',
+    },
+    aiAssistant: {
+      title: 'Assistant IA',
+      poweredBy: 'Propulsé par IA Avancée',
+      placeholder: 'Demandez à l\'IA...',
+      // Welcome message
+      welcomeMessage: '👋 Bonjour ! Je suis votre assistant IA conversationnel pour la gestion de projet.',
+      welcomeHelp: '🤖 Je peux vous aider avec :',
+      welcomePrompt: '💬 Posez-moi n\'importe quelle question ou utilisez les suggestions ci-dessous.',
+      // Capabilities
+      realtimeAnalysis: '• Analyses en temps réel de vos projets',
+      intelligentInsights: '• Prédictions et insights intelligents',
+      personalizedAdvice: '• Conseils stratégiques personnalisés',
+      processOptimization: '• Optimisation de vos processus',
+      projectManagementQuestions: '• Et toute question sur la gestion de projet !',
+      // Suggestions
+      teamPerformance: 'Comment va mon équipe ?',
+      currentRisks: 'Quels sont les risques actuels ?',
+      optimizationAdvice: 'Donne-moi des conseils pour optimiser',
+      analyzeProjects: 'Analyse mes projets en cours',
+      improveThis: 'Comment puis-je améliorer ça ?',
+      nextSteps: 'Quelles sont les prochaines étapes ?',
+      risksToWatch: 'Y a-t-il des risques à surveiller ?',
+      explainDetail: 'Peux-tu m\'expliquer plus en détail ?',
+      // Responses
+      performanceAnalysis: '📊 **Analyse de Performance**',
+      completionRate: '✅ Taux de completion:',
+      tasksCompleted: 'tâches terminées',
+      recommendations: '🎯 **Recommandations:**',
+      teamPerformsWell: '• L\'équipe performe bien avec',
+      topPerformer: 'est votre top performer',
+      redistributeTasks: '• Considérez redistribuer les tâches pour optimiser l\'efficacité',
+      // Default response
+      aiCapabilities: '🤖 Je comprends votre demande ! Voici ce que je peux faire pour vous:',
+      predictiveAnalysis: '• Analyse prédictive des projets',
+      automaticOptimization: '• Optimisation automatique des ressources',
+      proactiveRiskDetection: '• Détection proactive des risques',
+      personalizedRecommendations: '• Recommandations personnalisées',
+      askSpecificQuestion: 'Posez-moi une question spécifique ou utilisez les suggestions ci-dessous !',
+      // Error handling
+      technicalDifficulties: 'Désolé, je rencontre des difficultés techniques.',
+      tryAgainLater: 'Veuillez réessayer plus tard.',
+      // Voice
+      analyzeTeamPerformance: 'Analyser la performance de mon équipe',
+    },
+    voiceCommandsPanel: {
+      title: 'Commandes Vocales IA',
+      listening: '🎤 Écoute en cours...',
+      speaking: '🔊 Réponse en cours...',
+      clickToSpeak: 'Cliquez pour parler',
+      lastCommand: 'Dernière commande:',
+      confidence: 'Confiance:',
+      availableCommands: 'Commandes disponibles:',
+      testVoice: 'Test vocal',
+      clear: 'Effacer',
+      // Commands
+      createNewProject: 'créer un nouveau projet',
+      showTasks: 'afficher les tâches',
+      analyzePerformance: 'analyser les performances',
+      intelligentReport: 'rapport intelligent',
+      // Responses
+      creatingProject: 'Création d\'un nouveau projet en cours...',
+      showingTasks: 'Affichage des tâches...',
+      analyzingPerformance: 'Analyse des performances de l\'équipe en cours...',
+      generatingReport: 'Génération du rapport intelligent...',
+      // Voice messages
+      voiceNotSupported: 'Reconnaissance vocale non supportée dans ce navigateur',
+      didNotUnderstand: 'Désolé, je n\'ai pas compris. Pouvez-vous répéter ?',
+      commandNotRecognized: 'Commande non reconnue. Dites \'aide\' pour voir les commandes disponibles.',
+      voiceTestMessage: 'Bonjour ! Je suis votre assistant vocal IA. Comment puis-je vous aider aujourd\'hui ?',
     },
     helpSupport: {
       title: 'Aide et Support',
@@ -1763,6 +2325,96 @@ export const translations: Record<Language, Translations> = {
       welcome: 'Welcome',
       offline: 'Offline',
       online: 'Online',
+      // Page titles
+      pageSmartDashboard: 'Smart AI Dashboard',
+      pageAiInsights: 'Advanced AI Insights',
+      pageClassicDashboard: 'Classic Dashboard',
+      pageProjects: 'Projects',
+      pageTasks: 'Tasks',
+      pageTeam: 'Team',
+      pageCalendar: 'Calendar',
+      pageBlog: 'Blog',
+      pageSettings: 'Settings',
+      pageHelpSupport: 'Help & Support',
+      pageAiPremium: 'AI Premium',
+      pageAiDashboard: 'AI Dashboard',
+      // Search
+      searchPlaceholder: 'Smart AI search... (Ctrl+K)',
+      searchResults: 'Search results',
+      recentSearches: 'Recent searches',
+      noResults: 'No results',
+      // Voice commands
+      voiceRecognition: 'Voice recognition',
+      voiceCommands: 'AI Voice Commands',
+      listening: 'Listening...',
+      commandDetected: 'Command detected',
+      confidence: 'confidence',
+      voiceNotSupported: 'Voice recognition not supported in this browser',
+      voiceError: 'Unable to understand voice command',
+      commandNotRecognized: 'Command not recognized',
+      commandExecuted: 'Voice command executed',
+      // Keyboard shortcuts
+      keyboardShortcuts: 'Keyboard shortcuts',
+      globalSearch: 'Global search',
+      newProject: 'New project',
+      newTask: 'New task',
+      toggleSidebar: 'Toggle sidebar',
+      shortcuts: 'Keyboard shortcuts (Ctrl+/)',
+      navigation: 'Navigation',
+      pages: 'Pages',
+      availableCommands: 'Available voice commands',
+      // Notifications
+      notificationsAI: 'AI Notifications',
+      markAllRead: 'Mark all read',
+      noNotifications: 'No notifications',
+      navigationToItem: 'Navigation to item',
+      opening: 'Opening',
+      // Profile menu
+      viewProfile: 'View profile',
+      keyboardShortcutsMenu: 'Keyboard shortcuts',
+      helpSupport: 'Help & support',
+      theme: 'Theme',
+      signOut: 'Sign out',
+      // AI status
+      aiActive: 'AI ACTIVE',
+      aiOptimized: 'AI Optimized',
+      aiPremiumUser: 'AI Premium User',
+      // Connection status
+      connectionOnline: 'Online',
+      connectionOffline: 'Offline',
+      // Voice command categories
+      categoryNavigation: 'Navigation',
+      categoryIA: 'AI',
+      categorySearch: 'Search',
+      categoryInterface: 'Interface',
+      // AI Floating Indicator
+      aiActiveRealtime: '🤖 AI Active • Real-time Analysis',
+    },
+    voiceCommands: {
+      createNewProject: 'create new project',
+      createProjectDesc: 'Opens the project creation form',
+      showTasks: 'show tasks',
+      showTasksDesc: 'Navigate to tasks page',
+      openCalendar: 'open calendar',
+      openCalendarDesc: 'Navigate to calendar',
+      showBlog: 'show blog',
+      showBlogDesc: 'Navigate to blog',
+      analyzePerformance: 'analyze performance',
+      analyzePerformanceDesc: 'Opens AI dashboard',
+      aiInsights: 'ai insights',
+      aiInsightsDesc: 'Opens advanced AI insights',
+      teamPage: 'team',
+      teamPageDesc: 'Navigate to team page',
+      settingsPage: 'settings',
+      settingsPageDesc: 'Opens settings',
+      helpPage: 'help',
+      helpPageDesc: 'Opens help page',
+      searchGlobal: 'search',
+      searchGlobalDesc: 'Activates global search',
+      notificationsPanel: 'notifications',
+      notificationsPanelDesc: 'Opens notifications panel',
+      profileMenu: 'profile',
+      profileMenuDesc: 'Opens profile menu',
     },
     dashboard: {
       title: 'Dashboard',
@@ -2160,6 +2812,194 @@ export const translations: Record<Language, Translations> = {
       darkMode: 'Dark Mode',
       lightMode: 'Light Mode',
       systemMode: 'System Mode',
+      // AI Settings
+      aiIntelligence: 'Artificial Intelligence',
+      aiConfiguration: 'AI Configuration',
+      enableAI: 'Enable AI',
+      enableAIDesc: 'Use artificial intelligence to optimize your projects',
+      autoOptimization: 'Auto optimization',
+      autoOptimizationDesc: 'Allow AI to automatically optimize your workflows',
+      predictiveAnalytics: 'Predictive analytics',
+      predictiveAnalyticsDesc: 'Performance and risk predictions',
+      smartNotifications: 'Smart notifications',
+      smartNotificationsDesc: 'AI-powered personalized notifications',
+      voiceCommands: 'Voice commands',
+      voiceCommandsDesc: 'Control the application with voice',
+      dataSharing: 'Data sharing',
+      dataSharingDesc: 'Share anonymous data to improve AI',
+      aiModel: 'AI Model',
+      modelVersion: 'Model version',
+      responseSpeed: 'Response speed',
+      fast: 'Fast',
+      balanced: 'Balanced',
+      accurate: 'Accurate',
+      recommended: 'Recommended',
+      faster: 'Faster',
+      alternative: 'Alternative',
+      // Database
+      databaseLabel: 'Database',
+      databaseConnections: 'Database connections',
+      testConnection: 'Test connection',
+      lastConnection: 'Last connection',
+      connected: 'Connected',
+      disconnected: 'Disconnected',
+      error: 'Error',
+      addConnection: 'Add connection',
+      databaseStats: 'Database statistics',
+      totalSize: 'Total size',
+      queriesPerSec: 'Queries/sec',
+      responseTime: 'Response time',
+      average: 'Average',
+      thisMonth: 'this month',
+      average24h: '24h average',
+      // Backup
+      backupConfigurations: 'Backup configurations',
+      completeDatabase: 'Complete database',
+      userFiles: 'User files',
+      systemConfiguration: 'System configuration',
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      cloud: 'Cloud',
+      amazonS3: 'Amazon S3',
+      local: 'Local',
+      lastBackup: 'Last backup',
+      size: 'Size',
+      runNow: 'Run now',
+      newConfiguration: 'New configuration',
+      restore: 'Restore',
+      dangerZone: 'Danger zone',
+      restoreWarning: 'Restore will replace all current data. This action is irreversible.',
+      restoreFromBackup: 'Restore from backup',
+      // Profile
+      fullName: 'Full name',
+      telephone: 'Phone',
+      location: 'Location',
+      bio: 'Bio',
+      bioPlaceholder: 'Tell us about yourself...',
+      website: 'Website',
+      linkedin: 'LinkedIn',
+      github: 'GitHub',
+      // Security
+      currentPassword: 'Current password',
+      newPassword: 'New password',
+      confirmNewPassword: 'Confirm new password',
+      twoFactorAuthentication: 'Two-Factor Authentication (2FA)',
+      twoFactorStatus: '2FA Status',
+      enabled: 'Enabled',
+      disabled: 'Disabled',
+      secure: 'Secure',
+      notSecure: 'Not secure',
+      scanQR: 'Scan this QR code with your authentication app',
+      verificationCode: 'Verification code',
+      enable2FA: 'Enable 2FA',
+      disable2FA: 'Disable 2FA',
+      securityLog: 'Security log',
+      successfulLogin: 'Successful login',
+      failedLoginAttempt: 'Failed login attempt',
+      passwordChanged: 'Password changed',
+      twoFactorEnabled: '2FA enabled',
+      // Notifications
+      notificationPreferences: 'Notification preferences',
+      generalNotifications: 'General notifications',
+      generalNotificationsDesc: 'Enable or disable all notifications',
+      notificationChannels: 'Notification channels',
+      notificationTypes: 'Notification types',
+      taskUpdates: 'Task updates',
+      taskUpdatesDesc: 'New tasks, status changes',
+      projectDeadlines: 'Project deadlines',
+      projectDeadlinesDesc: 'Reminders before due dates',
+      teamMentions: 'Team mentions',
+      teamMentionsDesc: 'When you are mentioned in comments',
+      desktopNotifications: 'Desktop notifications',
+      // Languages
+      languageAndRegion: 'Language and region',
+      timeFormat: 'Time format',
+      hours24: '24 hours',
+      hours12: '12 hours (AM/PM)',
+      // Integrations
+      availableIntegrations: 'Available integrations',
+      syncNotifications: 'Sync notifications and messages',
+      repositoryIntegration: 'Repository integration',
+      syncDesigns: 'Sync designs and prototypes',
+      fileStorage: 'File storage and sharing',
+      lastSync: 'Last sync',
+      disconnect: 'Disconnect',
+      connect: 'Connect',
+      webhooks: 'Webhooks',
+      notificationWebhook: 'Notification webhook',
+      active: 'Active',
+      addWebhook: 'Add webhook',
+    },
+    aiAssistant: {
+      title: 'AI Assistant',
+      poweredBy: 'Powered by Advanced AI',
+      placeholder: 'Ask the AI...',
+      // Welcome message
+      welcomeMessage: '👋 Hello! I am your conversational AI assistant for project management.',
+      welcomeHelp: '🤖 I can help you with:',
+      welcomePrompt: '💬 Ask me anything or use the suggestions below.',
+      // Capabilities
+      realtimeAnalysis: '• Real-time analysis of your projects',
+      intelligentInsights: '• Predictions and intelligent insights',
+      personalizedAdvice: '• Personalized strategic advice',
+      processOptimization: '• Process optimization',
+      projectManagementQuestions: '• And any project management questions!',
+      // Suggestions
+      teamPerformance: 'How is my team doing?',
+      currentRisks: 'What are the current risks?',
+      optimizationAdvice: 'Give me optimization advice',
+      analyzeProjects: 'Analyze my current projects',
+      improveThis: 'How can I improve this?',
+      nextSteps: 'What are the next steps?',
+      risksToWatch: 'Are there risks to watch?',
+      explainDetail: 'Can you explain in more detail?',
+      // Responses
+      performanceAnalysis: '📊 **Performance Analysis**',
+      completionRate: '✅ Completion rate:',
+      tasksCompleted: 'tasks completed',
+      recommendations: '🎯 **Recommendations:**',
+      teamPerformsWell: '• The team performs well with',
+      topPerformer: 'is your top performer',
+      redistributeTasks: '• Consider redistributing tasks to optimize efficiency',
+      // Default response
+      aiCapabilities: '🤖 I understand your request! Here\'s what I can do for you:',
+      predictiveAnalysis: '• Predictive project analysis',
+      automaticOptimization: '• Automatic resource optimization',
+      proactiveRiskDetection: '• Proactive risk detection',
+      personalizedRecommendations: '• Personalized recommendations',
+      askSpecificQuestion: 'Ask me a specific question or use the suggestions below!',
+      // Error handling
+      technicalDifficulties: 'Sorry, I\'m experiencing technical difficulties.',
+      tryAgainLater: 'Please try again later.',
+      // Voice
+      analyzeTeamPerformance: 'Analyze my team performance',
+    },
+    voiceCommandsPanel: {
+      title: 'AI Voice Commands',
+      listening: '🎤 Listening...',
+      speaking: '🔊 Responding...',
+      clickToSpeak: 'Click to speak',
+      lastCommand: 'Last command:',
+      confidence: 'Confidence:',
+      availableCommands: 'Available commands:',
+      testVoice: 'Voice test',
+      clear: 'Clear',
+      // Commands
+      createNewProject: 'create new project',
+      showTasks: 'show tasks',
+      analyzePerformance: 'analyze performance',
+      intelligentReport: 'intelligent report',
+      // Responses
+      creatingProject: 'Creating a new project...',
+      showingTasks: 'Showing tasks...',
+      analyzingPerformance: 'Analyzing team performance...',
+      generatingReport: 'Generating intelligent report...',
+      // Voice messages
+      voiceNotSupported: 'Voice recognition not supported in this browser',
+      didNotUnderstand: 'Sorry, I didn\'t understand. Can you repeat?',
+      commandNotRecognized: 'Command not recognized. Say \'help\' to see available commands.',
+      voiceTestMessage: 'Hello! I am your AI voice assistant. How can I help you today?',
     },
     helpSupport: {
       title: 'Help & Support',
