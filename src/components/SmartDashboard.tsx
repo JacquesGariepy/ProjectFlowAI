@@ -170,74 +170,186 @@ const SmartDashboard: React.FC = () => {
     setPredictiveData(data);
   };
 
-  const generateSmartAlerts = () => {
+  const generateSmartAlerts = async () => {
+    setIsAnalyzing(true);
+    
+    try {
+      if (isAvailable) {
+        const completionRate = Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100);
+        const overdueTasks = tasks.filter(t => t.status !== 'completed' && new Date(t.dueDate) < new Date()).length;
+        const activeProjects = projects.filter(p => p.status === 'in-progress').length;
+        const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+        const avgProgress = Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length);
+
+        const alertPrompt = `En tant qu'expert en gestion de projet, analysez ces données et générez 4 alertes intelligentes RÉELLES au format JSON:
+
+        **DONNÉES ACTUELLES:**
+        - Taux de completion: ${completionRate}%
+        - Tâches en retard: ${overdueTasks}
+        - Projets actifs: ${activeProjects}
+        - Budget total: $${totalBudget.toLocaleString()}
+        - Progression moyenne: ${avgProgress}%
+        - Équipe: ${users.length} membres
+
+        **FORMAT REQUIS:**
+        {
+          "alerts": [
+            {
+              "id": 1,
+              "type": "critical|opportunity|prediction|warning",
+              "title": "Titre spécifique avec chiffres",
+              "message": "Message détaillé basé sur les vraies données",
+              "action": "Action concrète et réalisable",
+              "urgency": "high|medium|low"
+            }
+          ]
+        }
+
+        **INSTRUCTIONS:**
+        1. Générez EXACTEMENT 4 alertes différentes
+        2. Basez-vous sur les VRAIES données fournies
+        3. Variez les types: critical, opportunity, prediction, warning
+        4. Donnez des actions CONCRÈTES et RÉALISABLES
+        5. Calculez l'urgence selon l'impact réel`;
+
+        const aiResponse = await generateResponse(alertPrompt);
+        console.log('AI Alerts Response:', aiResponse);
+        
+        try {
+          const parsedResponse = JSON.parse(aiResponse);
+          if (parsedResponse.alerts && Array.isArray(parsedResponse.alerts)) {
+            const enrichedAlerts = parsedResponse.alerts.map((alert: any) => ({
+              ...alert,
+              generatedByAI: true,
+              generatedAt: new Date().toISOString()
+            }));
+            
+            setSmartAlerts(enrichedAlerts);
+            console.log(`✅ ${enrichedAlerts.length} alertes IA générées`);
+            return;
+          }
+        } catch (parseError) {
+          console.error('Failed to parse AI alerts, using fallback:', parseError);
+        }
+      }
+    } catch (error) {
+      console.error('AI alerts generation failed:', error);
+    }
+    
+    // Fallback basé sur les vraies données
+    generateStaticAlerts();
+    
+  };
+
+  const generateStaticAlerts = () => {
+    const overdueTasks = tasks.filter(t => t.status !== 'completed' && new Date(t.dueDate) < new Date()).length;
+    const completionRate = Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100);
+    const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status !== 'completed').length;
+    const budgetConcern = projects.some(p => p.budget > 75000);
+    
     const alerts = [
       {
         id: 1,
-        type: 'critical',
-        title: 'Budget Critique',
-        message: 'Projet Analytics: 95% du budget utilisé',
-        action: 'Réviser le budget',
-        urgency: 'high'
+        type: overdueTasks > 2 ? 'critical' : overdueTasks > 0 ? 'warning' : 'opportunity',
+        title: overdueTasks > 0 ? `${overdueTasks} Tâche(s) en Retard Critique` : `Performance Excellente: ${completionRate}%`,
+        message: overdueTasks > 0 
+          ? `${overdueTasks} tâches dépassent leur deadline et nécessitent une attention immédiate`
+          : `Équipe performante avec ${completionRate}% de taux de réussite`,
+        action: overdueTasks > 0 ? 'Reprioriser immédiatement' : 'Maintenir le cap',
+        urgency: overdueTasks > 2 ? 'high' : overdueTasks > 0 ? 'medium' : 'low',
+        generatedByAI: false
       },
       {
         id: 2,
-        type: 'opportunity',
-        title: 'Opportunité Détectée',
-        message: 'Emily Davis disponible pour nouveau projet',
-        action: 'Assigner des tâches',
-        urgency: 'medium'
+        type: highPriorityTasks > 3 ? 'warning' : 'opportunity',
+        title: `Charge Critique: ${highPriorityTasks} Tâches Haute Priorité`,
+        message: `${highPriorityTasks} tâches haute priorité en attente. ${highPriorityTasks > 3 ? 'Risque de surcharge' : 'Charge maîtrisée'}`,
+        action: highPriorityTasks > 3 ? 'Redistribuer la charge' : 'Optimiser l\'efficacité',
+        urgency: highPriorityTasks > 3 ? 'high' : 'medium',
+        generatedByAI: false
       },
       {
         id: 3,
+        type: budgetConcern ? 'warning' : 'prediction',
+        title: budgetConcern ? 'Surveillance Budget Critique' : 'Prédiction Budgétaire Positive',
+        message: budgetConcern 
+          ? 'Projets à gros budget détectés, surveillance renforcée recommandée'
+          : 'Allocation budgétaire équilibrée, projections favorables',
+        action: budgetConcern ? 'Réviser allocations' : 'Maintenir stratégie',
+        urgency: budgetConcern ? 'medium' : 'low',
+        generatedByAI: false
+      },
+      {
+        id: 4,
         type: 'prediction',
-        title: 'Prédiction IA',
-        message: 'Sprint actuel: livraison 2 jours en avance',
-        action: 'Planifier le suivant',
-        urgency: 'low'
+        title: `Prédiction Sprint: Livraison ${completionRate > 80 ? 'En Avance' : 'Surveillée'}`,
+        message: `Basé sur le taux actuel de ${completionRate}%, ${completionRate > 80 ? 'livraison anticipée probable' : 'attention requise pour respecter les délais'}`,
+        action: completionRate > 80 ? 'Planifier le prochain sprint' : 'Intensifier le suivi',
+        urgency: 'low',
+        generatedByAI: false
       }
     ];
+    
     setSmartAlerts(alerts);
+    setIsAnalyzing(false);
   };
 
-  const aiMetrics = [
-    {
-      title: 'Score IA Global',
-      value: '94.2',
-      unit: '/100',
-      change: '+5.2',
-      icon: Brain,
-      color: 'from-purple-500 to-purple-600',
-      description: 'Performance globale optimisée par IA'
-    },
-    {
-      title: 'Prédiction Précision',
-      value: '87.5',
-      unit: '%',
-      change: '+2.1',
-      icon: Target,
-      color: 'from-blue-500 to-blue-600',
-      description: 'Précision des prédictions IA'
-    },
-    {
-      title: 'Efficacité Optimisée',
-      value: '+23.4',
-      unit: '%',
-      change: '+8.2',
-      icon: Zap,
-      color: 'from-emerald-500 to-emerald-600',
-      description: 'Amélioration grâce à l\'IA'
-    },
-    {
-      title: 'ROI Intelligent',
-      value: '156',
-      unit: '%',
-      change: '+12.3',
-      icon: DollarSign,
-      color: 'from-orange-500 to-orange-600',
-      description: 'Retour sur investissement IA'
-    }
-  ];
+  // Calcul des métriques IA réelles basées sur les données
+  const calculateAIMetrics = () => {
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const totalTasks = tasks.length;
+    const completionRate = Math.round((completedTasks / totalTasks) * 100);
+    
+    const overdueTasks = tasks.filter(t => t.status !== 'completed' && new Date(t.dueDate) < new Date()).length;
+    const onTimeRate = Math.round(((totalTasks - overdueTasks) / totalTasks) * 100);
+    
+    const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+    const avgBudgetPerProject = Math.round(totalBudget / projects.length);
+    
+    const highPerformanceUsers = users.filter(u => u.performance > 90).length;
+    const teamEfficiency = Math.round((highPerformanceUsers / users.length) * 100);
+    
+    return [
+      {
+        title: 'Score Performance Global',
+        value: completionRate.toString(),
+        unit: '%',
+        change: completionRate > 80 ? '+' + (completionRate - 75) : '-' + (80 - completionRate),
+        icon: Brain,
+        color: completionRate > 80 ? 'from-emerald-500 to-emerald-600' : 'from-orange-500 to-red-500',
+        description: `${completedTasks}/${totalTasks} tâches terminées`
+      },
+      {
+        title: 'Respect des Délais',
+        value: onTimeRate.toString(),
+        unit: '%',
+        change: overdueTasks === 0 ? '+100' : '-' + (overdueTasks * 5),
+        icon: Target,
+        color: overdueTasks === 0 ? 'from-green-500 to-emerald-600' : 'from-orange-500 to-red-500',
+        description: `${overdueTasks} tâche(s) en retard`
+      },
+      {
+        title: 'Efficacité Équipe',
+        value: teamEfficiency.toString(),
+        unit: '%',
+        change: teamEfficiency > 75 ? '+' + (teamEfficiency - 70) : '-' + (75 - teamEfficiency),
+        icon: Zap,
+        color: teamEfficiency > 75 ? 'from-blue-500 to-purple-600' : 'from-yellow-500 to-orange-500',
+        description: `${highPerformanceUsers}/${users.length} top performers`
+      },
+      {
+        title: 'Budget Moyen/Projet',
+        value: (avgBudgetPerProject / 1000).toFixed(0),
+        unit: 'k$',
+        change: avgBudgetPerProject > 50000 ? '+15' : '-5',
+        icon: DollarSign,
+        color: 'from-emerald-500 to-teal-600',
+        description: `${projects.length} projets actifs`
+      }
+    ];
+  };
+
+  const aiMetrics = calculateAIMetrics();
 
   const teamPerformanceData = users.map(user => ({
     name: user.name.split(' ')[0],

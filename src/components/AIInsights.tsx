@@ -118,45 +118,88 @@ const AIInsights: React.FC = () => {
           }))
         };
 
-        const analysisPrompt = `Analysez ce contexte de projet et générez 5 insights IA détaillés au format JSON suivant:
+        const completionRate = Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100);
+        const overdueTasks = tasks.filter(t => t.status !== 'completed' && new Date(t.dueDate) < new Date()).length;
+        const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status !== 'completed').length;
+        const activeProjects = projects.filter(p => p.status === 'in-progress').length;
+        const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+
+        const analysisPrompt = `En tant qu'expert en gestion de projet et analyste de données, analysez ce contexte et générez exactement 6 insights IA distincts au format JSON:
+
+        **DONNÉES ACTUELLES:**
+        - Taux de completion: ${completionRate}%
+        - Tâches en retard: ${overdueTasks}
+        - Tâches haute priorité: ${highPriorityTasks}
+        - Projets actifs: ${activeProjects}
+        - Budget total: $${totalBudget.toLocaleString()}
+        - Équipe: ${users.length} membres
+
+        **FORMAT DE RÉPONSE REQUIS:**
         {
           "insights": [
             {
-              "id": "unique_id",
-              "type": "prediction|risk|optimization|opportunity",
-              "title": "Titre de l'insight",
-              "description": "Description détaillée",
+              "id": "insight_1",
+              "type": "prediction",
+              "title": "Titre spécifique et actionnable",
+              "description": "Analyse détaillée avec chiffres précis",
               "confidence": 85,
-              "impact": "high|medium|low",
-              "category": "Catégorie",
+              "impact": "high",
+              "category": "Performance",
               "actionable": true,
-              "data": { "données_pertinentes": "valeur" }
+              "data": {
+                "metric": "valeur_specifique",
+                "recommendation": "action_concrete",
+                "timeline": "delai_prevu"
+              }
             }
           ]
         }
+
+        **INSTRUCTIONS:**
+        1. Générez EXACTEMENT 6 insights variés (prediction, risk, optimization, opportunity)
+        2. Basez-vous sur les VRAIES données fournies
+        3. Donnez des titres SPÉCIFIQUES avec des chiffres
+        4. Proposez des actions CONCRÈTES et RÉALISABLES
+        5. Variez les niveaux d'impact (high/medium/low)
+        6. Utilisez des catégories: Performance, Budget, Ressources, Qualité, Risques, Opportunités
+
+        Contexte détaillé: ${JSON.stringify(projectContext)}`;
         
-        Contexte: ${JSON.stringify(projectContext)}
-        
-        Générez des insights pertinents, actionables et basés sur les données réelles. Incluez des prédictions, des risques, des optimisations et des opportunités.`;
+        console.log('Envoi du prompt IA:', analysisPrompt);
 
         const aiResponse = await generateResponse(analysisPrompt);
         
         try {
           const parsedResponse = JSON.parse(aiResponse);
           if (parsedResponse.insights && Array.isArray(parsedResponse.insights)) {
-            // Ajouter un timestamp pour identifier les insights générés par IA
-            const aiInsights = parsedResponse.insights.map((insight: any) => ({
+            // Ajouter un timestamp et un ID unique pour identifier les insights générés par IA
+            const newAIInsights = parsedResponse.insights.map((insight: any, index: number) => ({
               ...insight,
+              id: `ai_${Date.now()}_${index}`, // ID unique basé sur timestamp
               generatedByAI: true,
-              generatedAt: new Date().toISOString()
+              generatedAt: new Date().toISOString(),
+              sessionId: Date.now() // Pour grouper les insights d'une même session
             }));
-            setInsights(aiInsights);
-            saveInsights(aiInsights);
+            
+            // Supprimer les anciens insights de bienvenue et ajouter les nouveaux
+            const filteredOldInsights = insights.filter(insight => 
+              !(insight.data as any)?.isWelcomeMessage && 
+              !insight.id.startsWith('welcome-')
+            );
+            
+            // Combiner les anciens insights (non-bienvenue) avec les nouveaux
+            const combinedInsights = [...filteredOldInsights, ...newAIInsights];
+            
+            setInsights(combinedInsights);
+            saveInsights(combinedInsights);
+            
+            console.log(`✅ ${newAIInsights.length} nouveaux insights générés et sauvegardés`);
           } else {
             throw new Error('Invalid AI response format');
           }
         } catch (parseError) {
           console.error('Failed to parse AI response, using fallback:', parseError);
+          console.log('Raw AI response:', aiResponse);
           generateStaticInsights();
         }
       } else {
@@ -308,6 +351,14 @@ const AIInsights: React.FC = () => {
     }
   };
 
+  const clearInsights = () => {
+    if (confirm('Êtes-vous sûr de vouloir vider tout l\'historique des insights ?')) {
+      setInsights([]);
+      localStorage.removeItem('ai-insights');
+      generateInitialInsights(); // Remettre le message de bienvenue
+    }
+  };
+
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'prediction': return TrendingUp;
@@ -357,19 +408,28 @@ const AIInsights: React.FC = () => {
                   Mode Dégradé
                 </span>
               )}
-              {insights.length > 0 && (insights[0] as any).generatedByAI && (
+              {insights.some(insight => (insight as any).generatedByAI) && (
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  ✨ IA Activée
+                  ✨ IA Activée ({insights.filter(insight => (insight as any).generatedByAI).length} insights)
                 </span>
               )}
             </div>
-            <button
-              onClick={generateAIInsights}
-              disabled={isAnalyzing || aiLoading}
-              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
-              {isAnalyzing || aiLoading ? 'Analyse...' : 'Actualiser IA'}
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={clearInsights}
+                className="bg-red-500/20 hover:bg-red-500/30 px-3 py-1 text-xs rounded-lg font-medium transition-colors text-white"
+                title="Vider l'historique des insights"
+              >
+                Vider
+              </button>
+              <button
+                onClick={generateAIInsights}
+                disabled={isAnalyzing || aiLoading}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {isAnalyzing || aiLoading ? 'Analyse...' : 'Générer Insights IA'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
