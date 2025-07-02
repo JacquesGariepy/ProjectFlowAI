@@ -3,33 +3,23 @@ import {
   FileText, 
   Plus, 
   Search, 
-  Filter, 
   Edit, 
   Trash2, 
   Eye, 
-  Calendar, 
   Clock, 
-  Tag, 
-  User,
   MoreHorizontal,
   Save,
   X,
-  ArrowRight,
-  BookOpen,
-  TrendingUp,
   MessageSquare,
   Heart,
   Share2,
   Bookmark,
-  ChevronDown,
   Globe,
   Lock,
   Users,
   Send,
   Reply,
   ThumbsUp,
-  Flag,
-  Link,
   Facebook,
   Twitter,
   Linkedin,
@@ -38,6 +28,7 @@ import {
   Star
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 import { BlogPost, BlogComment } from '../types';
 import { formatDate, getRelativeTime } from '../utils/dateUtils';
 
@@ -53,6 +44,7 @@ interface BlogProps {
 const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) => {
   const { state, dispatch } = useAppContext();
   const { users, currentUser, blogPosts } = state;
+  const { t } = useLanguage();
   
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -121,11 +113,11 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   const createPost = () => {
     const newPost: BlogPost = {
       id: Date.now().toString(),
-      title: 'Nouveau post',
-      content: '# Nouveau post\n\nContenu du post...',
+      title: t.blog.newPost,
+      content: t.blog.articleContent,
       excerpt: '',
       status: 'draft',
-      author: currentUser.id,
+      author: currentUser?.id || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       tags: [],
@@ -179,8 +171,8 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: isCreating ? 'Article créé' : 'Article mis à jour',
-          message: `L'article "${selectedPost.title}" a été ${isCreating ? 'créé' : 'mis à jour'} avec succès`,
+          title: isCreating ? t.blog.postCreated : t.blog.postUpdated,
+          message: `${t.blog.postMessage} "${selectedPost.title}" ${isCreating ? t.blog.hasBeenCreated : t.blog.hasBeenUpdated}`,
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -198,8 +190,8 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Article supprimé',
-        message: `L'article "${post?.title}" a été supprimé avec succès`,
+        title: t.blog.postDeleted,
+        message: `${t.blog.postMessage} "${post?.title}" ${t.blog.hasBeenDeleted}`,
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -210,8 +202,8 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   // Like system - one like per user per post
   const toggleLike = (postId: string) => {
     dispatch({ 
-      type: 'TOGGLE_BLOG_LIKE', 
-      payload: { postId, userId: currentUser.id } 
+      type: 'TOGGLE_BLOG_LIKE',
+      payload: { postId, userId: currentUser?.id || '' }
     });
   };
 
@@ -230,7 +222,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
       const comment: BlogComment = {
         id: Date.now().toString(),
         postId: selectedPost.id,
-        authorId: currentUser.id,
+        authorId: currentUser?.id || '',
         content: newComment,
         createdAt: new Date().toISOString(),
         likes: [],
@@ -269,7 +261,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
       const reply: BlogComment = {
         id: Date.now().toString(),
         postId: selectedPost.id,
-        authorId: currentUser.id,
+        authorId: currentUser?.id || '',
         content: replyContent,
         createdAt: new Date().toISOString(),
         likes: [],
@@ -407,9 +399,9 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
           comment.id === commentId
             ? {
                 ...comment,
-                likes: comment.likes.includes(currentUser.id)
-                  ? comment.likes.filter(id => id !== currentUser.id)
-                  : [...comment.likes, currentUser.id]
+                likes: comment.likes.includes(currentUser?.id || '')
+                  ? comment.likes.filter(id => id !== (currentUser?.id || ''))
+                  : [...comment.likes, currentUser?.id || '']
               }
             : comment
         )
@@ -435,9 +427,9 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                   reply.id === replyId
                     ? {
                         ...reply,
-                        likes: reply.likes.includes(currentUser.id)
-                          ? reply.likes.filter(id => id !== currentUser.id)
-                          : [...reply.likes, currentUser.id]
+                        likes: reply.likes.includes(currentUser?.id || '')
+                          ? reply.likes.filter(id => id !== (currentUser?.id || ''))
+                          : [...reply.likes, currentUser?.id || '']
                       }
                     : reply
                 )
@@ -458,6 +450,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   const sharePost = (post: BlogPost) => {
     const url = `${window.location.origin}/blog/${post.id}`;
     setShareUrl(url);
+    setSelectedPost(post);
     setShowShareModal(true);
   };
 
@@ -514,13 +507,13 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   const renderPostCard = (post: BlogPost) => {
     const author = users.find(u => u.id === post.author);
     const VisibilityIcon = getVisibilityIcon(post.visibility);
-    const isLiked = post.likes.includes(currentUser.id);
+    const isLiked = post.likes.includes(currentUser?.id || '');
 
     return (
       <div key={post.id} className="bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
         {post.featured && (
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium px-3 py-1">
-            ⭐ Article en vedette
+            {t.blog.featured}
           </div>
         )}
         
@@ -558,7 +551,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                     className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Edit className="w-4 h-4 mr-3" />
-                    Modifier
+                    {t.blog.edit}
                   </button>
                   <button
                     onClick={() => {
@@ -568,7 +561,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                     className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <Share2 className="w-4 h-4 mr-3" />
-                    Partager
+                    {t.blog.share}
                   </button>
                   <button
                     onClick={() => toggleFeatured(post.id)}
@@ -583,7 +576,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4 mr-3" />
-                    Supprimer
+                    {t.blog.delete}
                   </button>
                 </div>
               )}
@@ -593,8 +586,8 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(post.status)}`}>
-                {post.status === 'published' ? 'Publié' :
-                 post.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                {post.status === 'published' ? t.blog.statusPublished :
+                 post.status === 'draft' ? t.blog.draft : t.blog.archived}
               </span>
               <div className="flex items-center space-x-1 text-slate-500">
                 <VisibilityIcon className="w-3 h-3" />
@@ -658,7 +651,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               onClick={() => viewPost(post)}
               className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
             >
-              Lire l'article
+              {t.blog.readMore}
             </button>
             <button
               onClick={() => toggleLike(post.id)}
@@ -685,7 +678,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   const renderPostList = (post: BlogPost) => {
     const author = users.find(u => u.id === post.author);
     const VisibilityIcon = getVisibilityIcon(post.visibility);
-    const isLiked = post.likes.includes(currentUser.id);
+    const isLiked = post.likes.includes(currentUser?.id || '');
 
     return (
       <div key={post.id} className="bg-white rounded-xl border border-slate-200 hover:shadow-md transition-all duration-300 p-6">
@@ -698,8 +691,8 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                 </span>
               )}
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(post.status)}`}>
-                {post.status === 'published' ? 'Publié' :
-                 post.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                {post.status === 'published' ? t.blog.statusPublished :
+                 post.status === 'draft' ? t.blog.draft : t.blog.archived}
               </span>
               <div className="flex items-center space-x-1 text-slate-500">
                 <VisibilityIcon className="w-3 h-3" />
@@ -769,7 +762,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               onClick={() => viewPost(post)}
               className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
             >
-              Lire
+              {t.blog.read}
             </button>
             <button
               onClick={() => toggleLike(post.id)}
@@ -810,7 +803,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center space-x-3">
             <FileText className="w-8 h-8 text-blue-600" />
-            <span>Blog</span>
+            <span>{t.blog.title}</span>
           </h1>
           <p className="text-slate-600 mt-1">Partagez vos connaissances et découvertes</p>
         </div>
@@ -820,7 +813,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
           className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
         >
           <Plus className="w-5 h-5" />
-          <span>Nouvel article</span>
+          <span>{t.blog.newArticle}</span>
         </button>
       </div>
 
@@ -832,7 +825,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               <FileText className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Articles</p>
+              <p className="text-sm font-medium text-slate-600">{t.blog.totalArticles}</p>
               <p className="text-2xl font-bold text-slate-900">{blogPosts.length}</p>
             </div>
           </div>
@@ -844,7 +837,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               <Eye className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Vues totales</p>
+              <p className="text-sm font-medium text-slate-600">{t.blog.totalViews}</p>
               <p className="text-2xl font-bold text-slate-900">{blogPosts.reduce((sum, p) => sum + p.views, 0)}</p>
             </div>
           </div>
@@ -856,7 +849,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               <Heart className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Likes totaux</p>
+              <p className="text-sm font-medium text-slate-600">{t.blog.totalLikes}</p>
               <p className="text-2xl font-bold text-slate-900">{blogPosts.reduce((sum, p) => sum + p.likes.length, 0)}</p>
             </div>
           </div>
@@ -868,7 +861,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               <MessageSquare className="w-6 h-6 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">Commentaires</p>
+              <p className="text-sm font-medium text-slate-600">{t.blog.totalComments}</p>
               <p className="text-2xl font-bold text-slate-900">{blogPosts.reduce((sum, p) => sum + p.comments.length, 0)}</p>
             </div>
           </div>
@@ -883,7 +876,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Rechercher des articles..."
+                placeholder={t.blog.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -895,10 +888,10 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">Tous les statuts</option>
-              <option value="published">Publié</option>
-              <option value="draft">Brouillon</option>
-              <option value="archived">Archivé</option>
+              <option value="all">{t.status.allStatuses || 'Tous les statuts'}</option>
+              <option value="published">{t.blog.statusPublished}</option>
+              <option value="draft">{t.blog.statusDraft}</option>
+              <option value="archived">{t.blog.statusArchived}</option>
             </select>
 
             <select
@@ -963,13 +956,13 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
       {filteredPosts.length === 0 && (
         <div className="text-center py-12">
           <FileText className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 mb-2">Aucun article trouvé</h3>
-          <p className="text-slate-600 mb-4">Aucun article ne correspond à vos critères de recherche.</p>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">{t.blog.noPostsFound}</h3>
+          <p className="text-slate-600 mb-4">{t.blog.noPostsFiltered}</p>
           <button
             onClick={createPost}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Créer le premier article
+            {t.blog.createFirstPost}
           </button>
         </div>
       )}
@@ -980,7 +973,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
           <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <h3 className="text-xl font-semibold text-slate-900">
-                {isCreating ? 'Nouvel article' : 'Modifier l\'article'}
+                {isCreating ? t.blog.newArticle : t.blog.editArticle}
               </h3>
               <button
                 onClick={() => setShowEditor(false)}
@@ -1011,7 +1004,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                       onChange={(e) => setSelectedPost({ ...selectedPost, excerpt: e.target.value })}
                       rows={3}
                       className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Résumé de l'article..."
+                      placeholder={t.blog.articleSummary}
                     />
                   </div>
 
@@ -1023,9 +1016,9 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                         onChange={(e) => setSelectedPost({ ...selectedPost, status: e.target.value as any })}
                         className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="draft">Brouillon</option>
-                        <option value="published">Publié</option>
-                        <option value="archived">Archivé</option>
+                        <option value="draft">{t.blog.statusDraft}</option>
+                        <option value="published">{t.blog.statusPublished}</option>
+                        <option value="archived">{t.blog.statusArchived}</option>
                       </select>
                     </div>
 
@@ -1074,16 +1067,14 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                       value={selectedPost.content}
                       onChange={(e) => setSelectedPost({ ...selectedPost, content: e.target.value })}
                       className="w-full h-96 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
-                      placeholder="# Titre de l'article
-
-Votre contenu en Markdown..."
+                      placeholder={t.blog.articleContent}
                     />
                   </div>
                 </div>
 
                 {/* Preview */}
                 <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
-                  <h4 className="font-medium text-slate-900 mb-4">Aperçu</h4>
+                  <h4 className="font-medium text-slate-900 mb-4">{t.blog.preview}</h4>
                   <div className="bg-white rounded-lg p-6 h-full overflow-y-auto">
                     <h1 className="text-2xl font-bold text-slate-900 mb-4">{selectedPost.title}</h1>
                     {selectedPost.excerpt && (
@@ -1121,7 +1112,7 @@ Votre contenu en Markdown..."
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{isCreating ? 'Créer' : 'Sauvegarder'}</span>
+                <span>{isCreating ? t.blog.create : t.blog.save}</span>
               </button>
             </div>
           </div>
@@ -1136,8 +1127,8 @@ Votre contenu en Markdown..."
               <div className="flex items-center space-x-4">
                 <h3 className="text-xl font-semibold text-slate-900">{selectedPost.title}</h3>
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(selectedPost.status)}`}>
-                  {selectedPost.status === 'published' ? 'Publié' :
-                   selectedPost.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                  {selectedPost.status === 'published' ? t.blog.statusPublished :
+                   selectedPost.status === 'draft' ? t.blog.draft : t.blog.archived}
                 </span>
               </div>
               <button
@@ -1217,8 +1208,8 @@ Votre contenu en Markdown..."
                   <div className="mb-6">
                     <div className="flex space-x-3">
                       <img
-                        src={currentUser.avatar}
-                        alt={currentUser.name}
+                        src={currentUser?.avatar || '/default-avatar.png'}
+                        alt={currentUser?.name || 'User'}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                       <div className="flex-1">
@@ -1236,7 +1227,7 @@ Votre contenu en Markdown..."
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                           >
                             <Send className="w-4 h-4" />
-                            <span>Commenter</span>
+                            <span>{t.blog.comment}</span>
                           </button>
                         </div>
                       </div>
@@ -1247,8 +1238,8 @@ Votre contenu en Markdown..."
                   <div className="space-y-6">
                     {selectedPost.comments.map((comment) => {
                       const author = users.find(u => u.id === comment.authorId);
-                      const isLiked = comment.likes.includes(currentUser.id);
-                      const isOwner = comment.authorId === currentUser.id;
+                      const isLiked = comment.likes.includes(currentUser?.id || '');
+                      const isOwner = comment.authorId === (currentUser?.id || '');
 
                       return (
                         <div key={comment.id} className="flex space-x-3">
@@ -1347,8 +1338,8 @@ Votre contenu en Markdown..."
                               <div className="mt-3 ml-4">
                                 <div className="flex space-x-2">
                                   <img
-                                    src={currentUser.avatar}
-                                    alt={currentUser.name}
+                                    src={currentUser?.avatar || '/default-avatar.png'}
+                                    alt={currentUser?.name || 'User'}
                                     className="w-6 h-6 rounded-full object-cover"
                                   />
                                   <div className="flex-1">
@@ -1387,8 +1378,8 @@ Votre contenu en Markdown..."
                               <div className="ml-4 mt-4 space-y-3">
                                 {comment.replies.map((reply) => {
                                   const replyAuthor = users.find(u => u.id === reply.authorId);
-                                  const isReplyLiked = reply.likes.includes(currentUser.id);
-                                  const isReplyOwner = reply.authorId === currentUser.id;
+                                  const isReplyLiked = reply.likes.includes(currentUser?.id || '');
+                                  const isReplyOwner = reply.authorId === (currentUser?.id || '');
 
                                   return (
                                     <div key={reply.id} className="flex space-x-2">
@@ -1446,24 +1437,24 @@ Votre contenu en Markdown..."
                 <button
                   onClick={() => toggleLike(selectedPost.id)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    selectedPost.likes.includes(currentUser.id)
+                    selectedPost.likes.includes(currentUser?.id || '')
                       ? 'bg-red-100 text-red-700'
                       : 'bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-700'
                   }`}
                 >
-                  <Heart className={`w-4 h-4 ${selectedPost.likes.includes(currentUser.id) ? 'fill-current' : ''}`} />
-                  <span>J'aime ({selectedPost.likes.length})</span>
+                  <Heart className={`w-4 h-4 ${selectedPost.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
+                  <span>{t.blog.likes} ({selectedPost.likes.length})</span>
                 </button>
                 <button 
                   onClick={() => sharePost(selectedPost)}
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
-                  <span>Partager</span>
+                  <span>{t.blog.share}</span>
                 </button>
                 <button className="flex items-center space-x-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">
                   <Bookmark className="w-4 h-4" />
-                  <span>Sauvegarder</span>
+                  <span>{t.blog.save}</span>
                 </button>
               </div>
               
@@ -1475,7 +1466,7 @@ Votre contenu en Markdown..."
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
               >
                 <Edit className="w-4 h-4" />
-                <span>Modifier</span>
+                <span>{t.blog.edit}</span>
               </button>
             </div>
           </div>
@@ -1487,9 +1478,12 @@ Votre contenu en Markdown..."
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-900">Partager l'article</h3>
+              <h3 className="text-lg font-semibold text-slate-900">{t.blog.shareArticle}</h3>
               <button
-                onClick={() => setShowShareModal(false)}
+                onClick={() => {
+                  setShowShareModal(false);
+                  setCopied(false);
+                }}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-slate-500" />
@@ -1520,7 +1514,7 @@ Votre contenu en Markdown..."
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-3">Partager sur les réseaux sociaux</label>
+                <label className="block text-sm font-medium text-slate-700 mb-3">{t.blog.shareOnSocial}</label>
                 <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => shareToSocial('twitter', selectedPost)}

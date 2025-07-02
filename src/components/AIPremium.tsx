@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Sparkles, 
   Brain, 
   Zap, 
-  Target, 
   TrendingUp, 
-  Users, 
   Calendar, 
-  BarChart3, 
   Shield, 
-  Clock, 
   CheckCircle, 
   Star, 
   Crown, 
@@ -17,10 +14,6 @@ import {
   Globe, 
   Headphones, 
   Download, 
-  Smartphone, 
-  Monitor, 
-  ArrowRight, 
-  X,
   Play,
   Pause,
   Volume2
@@ -47,63 +40,63 @@ interface AIFeature {
 }
 
 const AIPremium: React.FC = () => {
-  const [selectedPlan, setSelectedPlan] = useState<string>('pro');
+  const { t } = useLanguage();
+  const [selectedPlan] = useState<string>('pro');
   const [showDemo, setShowDemo] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const pricingPlans: PricingPlan[] = [
     {
       id: 'starter',
-      name: 'IA Starter',
+      name: t.aiPremium.starterPlan,
       price: '29',
-      period: '/mois',
-      description: 'Parfait pour les petites équipes qui découvrent l\'IA',
+      period: t.aiPremium.monthlyPrice,
+      description: t.aiPremium.starterDesc,
       features: [
-        'Dashboard IA basique',
-        'Analyse prédictive simple',
-        'Commandes vocales limitées',
-        '5 projets IA',
-        'Support email',
-        'Intégrations de base'
+        t.aiPremium.basicDashboard,
+        t.aiPremium.simplePredictive,
+        t.aiPremium.limitedCommands,
+        t.aiPremium.aiProjects,
+        t.aiPremium.emailSupport,
+        t.aiPremium.basicIntegrations
       ],
       color: 'from-blue-500 to-blue-600'
     },
     {
       id: 'pro',
-      name: 'IA Professional',
+      name: t.aiPremium.professionalPlan,
       price: '79',
-      period: '/mois',
-      description: 'Solution complète pour les équipes professionnelles',
+      period: t.aiPremium.monthlyPrice,
+      description: t.aiPremium.professionalDesc,
       features: [
-        'Dashboard IA avancé',
-        'Analyse prédictive complète',
-        'Commandes vocales illimitées',
-        'Projets IA illimités',
-        'Optimisation automatique',
-        'Recommandations personnalisées',
-        'Support prioritaire 24/7',
-        'Intégrations avancées',
-        'API IA complète'
+        t.aiPremium.advancedDashboard,
+        t.aiPremium.completePredictive,
+        t.aiPremium.unlimitedCommands,
+        t.aiPremium.unlimitedProjects,
+        t.aiPremium.automaticOptimization,
+        t.aiPremium.personalizedRecommendations,
+        t.aiPremium.prioritySupport24,
+        t.aiPremium.advancedIntegrations,
+        t.aiPremium.completeApiAI
       ],
       popular: true,
       color: 'from-purple-500 to-pink-500'
     },
     {
       id: 'enterprise',
-      name: 'IA Enterprise',
+      name: t.aiPremium.enterprisePlan,
       price: '199',
-      period: '/mois',
-      description: 'Solution sur mesure pour les grandes entreprises',
+      period: t.aiPremium.monthlyPrice,
+      description: t.aiPremium.enterpriseDesc,
       features: [
-        'Toutes les fonctionnalités Pro',
-        'IA personnalisée',
-        'Modèles d\'apprentissage privés',
-        'Déploiement on-premise',
-        'Sécurité renforcée',
-        'Formation équipe dédiée',
-        'Support dédié',
-        'SLA garanti',
-        'Intégrations sur mesure'
+        t.aiPremium.allProFeatures,
+        t.aiPremium.customAI,
+        t.aiPremium.privateLearning,
+        t.aiPremium.onPremiseDeployment,
+        t.aiPremium.enhancedSecurity,
+        t.aiPremium.dedicatedTraining,
+        t.aiPremium.dedicatedSupport,
+        t.aiPremium.guaranteedSLA,
+        t.aiPremium.customIntegrations
       ],
       color: 'from-emerald-500 to-teal-500'
     }
@@ -112,61 +105,62 @@ const AIPremium: React.FC = () => {
   const aiFeatures: AIFeature[] = [
     {
       id: 'predictive',
-      title: 'Analyse Prédictive Avancée',
-      description: 'Anticipez les retards, optimisez les ressources et prédisez les performances avec une précision de 94%',
+      title: t.aiPremium.predictiveAnalysisTitle,
+      description: t.aiPremium.predictiveAnalysisDesc,
       icon: TrendingUp,
-      demo: 'Démonstration de l\'analyse prédictive en temps réel',
+      demo: t.aiPremium.viewDemo,
       benefits: [
-        'Prédiction des retards avec 94% de précision',
-        'Optimisation automatique des ressources',
-        'Alertes proactives intelligentes',
-        'Recommandations d\'amélioration'
+        t.aiPremium.delayPrediction,
+        t.aiPremium.resourceOptimization,
+        t.aiPremium.proactiveAlerts,
+        t.aiPremium.improvementRecommendations
       ]
     },
     {
       id: 'optimization',
-      title: 'Optimisation Automatique',
-      description: 'L\'IA réorganise automatiquement vos projets pour maximiser l\'efficacité et réduire les coûts',
+      title: t.aiPremium.automaticOptimizationTitle,
+      description: t.aiPremium.automaticOptimizationDesc,
       icon: Zap,
-      demo: 'Voir l\'optimisation automatique en action',
+      demo: t.aiPremium.viewDemo,
       benefits: [
-        'Réallocation intelligente des tâches',
-        'Optimisation du planning automatique',
-        'Réduction des coûts jusqu\'à 25%',
-        'Amélioration de la productivité'
+        t.aiPremium.taskReallocation,
+        t.aiPremium.planningOptimization,
+        t.aiPremium.costsReduction,
+        t.aiPremium.productivityIncrease
       ]
     },
     {
       id: 'insights',
-      title: 'Insights Intelligents',
-      description: 'Découvrez des patterns cachés dans vos données et obtenez des recommandations personnalisées',
+      title: t.aiPremium.intelligentInsightsTitle,
+      description: t.aiPremium.intelligentInsightsDesc,
       icon: Brain,
-      demo: 'Explorer les insights IA personnalisés',
+      demo: t.aiPremium.viewDemo,
       benefits: [
-        'Détection automatique des tendances',
-        'Recommandations personnalisées',
-        'Analyse comportementale avancée',
-        'Rapports intelligents automatisés'
+        t.aiPremium.trendDetection,
+        t.aiPremium.personalizedRecommendations,
+        t.aiPremium.behavioralAnalysis,
+        t.aiPremium.automatedReports
       ]
     },
     {
       id: 'voice',
-      title: 'Assistant Vocal Avancé',
-      description: 'Contrôlez ProjectFlow entièrement par la voix avec notre IA conversationnelle',
+      title: t.aiPremium.advancedVoiceTitle,
+      description: t.aiPremium.advancedVoiceDesc,
       icon: Volume2,
-      demo: 'Tester l\'assistant vocal IA',
+      demo: t.aiPremium.viewDemo,
       benefits: [
-        'Reconnaissance vocale multilingue',
-        'Commandes naturelles complexes',
-        'Réponses contextuelles intelligentes',
-        'Intégration complète'
+        t.aiPremium.voiceRecognition,
+        t.aiPremium.complexCommands,
+        t.aiPremium.contextualResponses,
+        t.aiPremium.fullIntegration
       ]
     }
   ];
 
   const handleUpgrade = (planId: string) => {
     // Simulate upgrade process
-    alert(`Mise à niveau vers ${pricingPlans.find(p => p.id === planId)?.name} en cours...`);
+    const planName = pricingPlans.find(p => p.id === planId)?.name;
+    alert(`${t.aiPremium.upgradingTo} ${planName} ${t.aiPremium.upgradeInProgress}`);
   };
 
   const toggleDemo = (featureId: string) => {
@@ -189,24 +183,24 @@ const AIPremium: React.FC = () => {
             <div className="max-w-2xl">
               <div className="flex items-center space-x-3 mb-4">
                 <Crown className="w-10 h-10 text-yellow-300" />
-                <h1 className="text-4xl font-bold">ProjectFlow IA Premium</h1>
+                <h1 className="text-4xl font-bold">{t.aiPremium.heroTitle}</h1>
                 <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
               </div>
               <p className="text-xl text-purple-100 mb-6">
-                Révolutionnez votre gestion de projet avec l'intelligence artificielle la plus avancée du marché
+                {t.aiPremium.heroSubtitle}
               </p>
               <div className="flex items-center space-x-6">
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-emerald-300" />
-                  <span className="text-purple-100">94% de précision prédictive</span>
+                  <span className="text-purple-100">{t.aiPremium.accuracyPredictive}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-emerald-300" />
-                  <span className="text-purple-100">+40% de productivité</span>
+                  <span className="text-purple-100">{t.aiPremium.productivityIncrease}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-emerald-300" />
-                  <span className="text-purple-100">-25% de coûts</span>
+                  <span className="text-purple-100">{t.aiPremium.costsReduction}</span>
                 </div>
               </div>
             </div>
@@ -222,8 +216,8 @@ const AIPremium: React.FC = () => {
       {/* AI Features Showcase */}
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Fonctionnalités IA Exclusives</h2>
-          <p className="text-xl text-slate-600">Découvrez comment l'IA transforme votre façon de travailler</p>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">{t.aiPremium.exclusiveFeatures}</h2>
+          <p className="text-xl text-slate-600">{t.aiPremium.exclusiveFeaturesDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -257,17 +251,17 @@ const AIPremium: React.FC = () => {
                   className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
                 >
                   {isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  <span>{isActive ? 'Arrêter la démo' : feature.demo}</span>
+                  <span>{isActive ? t.aiPremium.stopDemo : feature.demo}</span>
                 </button>
 
                 {isActive && (
                   <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
                     <div className="flex items-center space-x-2 mb-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-purple-700">Démonstration en cours...</span>
+                      <span className="text-sm font-medium text-purple-700">{t.aiPremium.demoInProgress}</span>
                     </div>
                     <p className="text-sm text-purple-600">
-                      Simulation de {feature.title.toLowerCase()} avec vos données de projet en temps réel.
+                      {t.aiPremium.demoSimulation} {feature.title.toLowerCase()}.
                     </p>
                   </div>
                 )}
@@ -280,8 +274,8 @@ const AIPremium: React.FC = () => {
       {/* Pricing Plans */}
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Choisissez votre plan IA</h2>
-          <p className="text-xl text-slate-600">Des solutions adaptées à chaque taille d'équipe</p>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">{t.aiPremium.choosePlan}</h2>
+          <p className="text-xl text-slate-600">{t.aiPremium.adaptedSolutions}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -300,7 +294,7 @@ const AIPremium: React.FC = () => {
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-1">
                     <Star className="w-4 h-4" />
-                    <span>Plus populaire</span>
+                    <span>{t.aiPremium.mostPopular}</span>
                   </div>
                 </div>
               )}
@@ -332,7 +326,7 @@ const AIPremium: React.FC = () => {
                 }`}
               >
                 <Rocket className="w-4 h-4" />
-                <span>Choisir ce plan</span>
+                <span>{t.aiPremium.selectPlan}</span>
               </button>
             </div>
           ))}
@@ -342,8 +336,8 @@ const AIPremium: React.FC = () => {
       {/* Benefits Section */}
       <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl p-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Pourquoi choisir ProjectFlow IA Premium ?</h2>
-          <p className="text-xl text-slate-600">Les avantages qui font la différence</p>
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">{t.aiPremium.whyChoose}</h2>
+          <p className="text-xl text-slate-600">{t.aiPremium.whyChooseDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -351,32 +345,32 @@ const AIPremium: React.FC = () => {
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Shield className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Sécurité Enterprise</h3>
-            <p className="text-sm text-slate-600">Chiffrement de bout en bout et conformité RGPD</p>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.aiPremium.enterpriseSecurity}</h3>
+            <p className="text-sm text-slate-600">{t.aiPremium.enterpriseSecurityDesc}</p>
           </div>
 
           <div className="text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Headphones className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Support 24/7</h3>
-            <p className="text-sm text-slate-600">Équipe d'experts disponible en permanence</p>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.aiPremium.support247}</h3>
+            <p className="text-sm text-slate-600">{t.aiPremium.support247Desc}</p>
           </div>
 
           <div className="text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Globe className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Déploiement Global</h3>
-            <p className="text-sm text-slate-600">Serveurs dans le monde entier pour une performance optimale</p>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.aiPremium.globalDeployment}</h3>
+            <p className="text-sm text-slate-600">{t.aiPremium.globalDeploymentDesc}</p>
           </div>
 
           <div className="text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Download className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-semibold text-slate-900 mb-2">Migration Gratuite</h3>
-            <p className="text-sm text-slate-600">Nous migrons vos données gratuitement</p>
+            <h3 className="font-semibold text-slate-900 mb-2">{t.aiPremium.freeMigration}</h3>
+            <p className="text-sm text-slate-600">{t.aiPremium.freeMigrationDesc}</p>
           </div>
         </div>
       </div>
@@ -384,49 +378,49 @@ const AIPremium: React.FC = () => {
       {/* ROI Calculator */}
       <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Calculateur de ROI IA</h2>
-          <p className="text-slate-600">Découvrez les économies potentielles avec ProjectFlow IA</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">{t.aiPremium.roiCalculator}</h2>
+          <p className="text-slate-600">{t.aiPremium.roiDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-6 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg">
             <div className="text-3xl font-bold text-emerald-600 mb-2">+40%</div>
-            <div className="text-sm text-emerald-700 font-medium">Productivité</div>
-            <div className="text-xs text-emerald-600 mt-1">Gain moyen constaté</div>
+            <div className="text-sm text-emerald-700 font-medium">{t.aiPremium.productivityGain}</div>
+            <div className="text-xs text-emerald-600 mt-1">{t.aiPremium.averageGain}</div>
           </div>
 
           <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
             <div className="text-3xl font-bold text-blue-600 mb-2">-25%</div>
-            <div className="text-sm text-blue-700 font-medium">Coûts de projet</div>
-            <div className="text-xs text-blue-600 mt-1">Réduction moyenne</div>
+            <div className="text-sm text-blue-700 font-medium">{t.aiPremium.projectCosts}</div>
+            <div className="text-xs text-blue-600 mt-1">{t.aiPremium.averageReduction}</div>
           </div>
 
           <div className="text-center p-6 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
             <div className="text-3xl font-bold text-purple-600 mb-2">6 mois</div>
-            <div className="text-sm text-purple-700 font-medium">Retour sur investissement</div>
-            <div className="text-xs text-purple-600 mt-1">Délai moyen</div>
+            <div className="text-sm text-purple-700 font-medium">{t.aiPremium.returnInvestment}</div>
+            <div className="text-xs text-purple-600 mt-1">{t.aiPremium.averageDelay}</div>
           </div>
         </div>
       </div>
 
       {/* CTA Section */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-white text-center">
-        <h2 className="text-3xl font-bold mb-4">Prêt à révolutionner votre gestion de projet ?</h2>
+        <h2 className="text-3xl font-bold mb-4">{t.aiPremium.readyRevolutionize}</h2>
         <p className="text-xl text-purple-100 mb-6">
-          Rejoignez plus de 10,000 équipes qui utilisent déjà ProjectFlow IA Premium
+          {t.aiPremium.joinTeams}
         </p>
         <div className="flex items-center justify-center space-x-4">
           <button className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-colors flex items-center space-x-2">
             <Rocket className="w-5 h-5" />
-            <span>Essai gratuit 14 jours</span>
+            <span>{t.aiPremium.freeTrial14}</span>
           </button>
           <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors flex items-center space-x-2">
             <Calendar className="w-5 h-5" />
-            <span>Planifier une démo</span>
+            <span>{t.aiPremium.scheduleDemo}</span>
           </button>
         </div>
         <p className="text-sm text-purple-200 mt-4">
-          Aucune carte de crédit requise • Annulation à tout moment • Support inclus
+          {t.aiPremium.noCreditCard}
         </p>
       </div>
     </div>

@@ -36,6 +36,7 @@ import {
   FilterX
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Task, User as UserType, Project } from '../types';
 import { formatDate, getRelativeTime, isOverdue, getDaysUntilDeadline } from '../utils/dateUtils';
 import { useTableSort } from '../hooks/useTableSort';
@@ -52,6 +53,7 @@ interface TasksProps {
 
 const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete }) => {
   const { state, dispatch } = useAppContext();
+  const { t } = useLanguage();
   const { tasks, users, projects, currentUser } = state;
   
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -130,8 +132,8 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
     const reviewTasks = tasks.filter(t => t.status === 'review').length;
     const overdueTasks = tasks.filter(t => t.status !== 'completed' && isOverdue(t.dueDate)).length;
     
-    const myTasks = tasks.filter(t => t.assigneeId === currentUser.id).length;
-    const myCompletedTasks = tasks.filter(t => t.assigneeId === currentUser.id && t.status === 'completed').length;
+    const myTasks = tasks.filter(t => t.assigneeId === (currentUser?.id || '')).length;
+    const myCompletedTasks = tasks.filter(t => t.assigneeId === (currentUser?.id || '') && t.status === 'completed').length;
     const myProgress = myTasks > 0 ? Math.round((myCompletedTasks / myTasks) * 100) : 0;
     
     const totalTimeTracked = tasks.reduce((sum, t) => sum + t.timeTracked, 0);
@@ -163,7 +165,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       description: '',
       status: 'todo',
       priority: 'medium',
-      assigneeId: currentUser.id,
+      assigneeId: currentUser?.id || '',
       projectId: projects[0]?.id || '',
       dueDate: '',
       createdDate: '',
@@ -204,8 +206,8 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Tâche supprimée',
-          message: `La tâche "${task?.title}" a été supprimée avec succès`,
+          title: t.tasks.taskDeleted,
+          message: t.tasks.taskDeletedMessage.replace('{title}', task?.title || ''),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -224,8 +226,8 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Statut mis à jour',
-        message: `Le statut de la tâche a été changé vers "${newStatus}"`,
+        title: t.tasks.statusUpdated,
+        message: t.tasks.statusUpdatedMessage.replace('{status}', newStatus),
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -268,8 +270,10 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: selectedTask.id ? 'Tâche mise à jour' : 'Tâche créée',
-          message: `La tâche "${selectedTask.title}" a été ${selectedTask.id ? 'mise à jour' : 'créée'} avec succès`,
+          title: selectedTask.id ? t.tasks.taskUpdatedNotif : t.tasks.taskCreatedNotif,
+          message: selectedTask.id 
+            ? t.tasks.taskUpdatedMessage.replace('{title}', selectedTask.title)
+            : t.tasks.taskCreatedMessage.replace('{title}', selectedTask.title),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -283,7 +287,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       const comment = {
         id: Date.now().toString(),
         content: newComment,
-        authorId: currentUser.id,
+        authorId: currentUser?.id || '',
         createdAt: new Date().toISOString()
       };
       
@@ -329,16 +333,16 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       const project = projects.find(p => p.id === task.projectId);
       
       return {
-        'Titre': task.title,
-        'Description': task.description,
-        'Statut': task.status,
-        'Priorité': task.priority,
-        'Assigné à': assignee?.name || '',
-        'Projet': project?.name || '',
-        'Échéance': task.dueDate,
-        'Temps suivi': `${task.timeTracked}h`,
-        'Temps estimé': `${task.estimatedTime}h`,
-        'Tags': task.tags.join(', ')
+        [t.tasks.titleHeader]: task.title,
+        [t.tasks.descriptionHeader]: task.description,
+        [t.tasks.statusHeader]: task.status,
+        [t.tasks.priorityHeader]: task.priority,
+        [t.tasks.assignedToHeader]: assignee?.name || '',
+        [t.tasks.projectHeader]: project?.name || '',
+        [t.tasks.dueDateHeader]: task.dueDate,
+        [t.tasks.timeTrackedHeader]: `${task.timeTracked}${t.tasks.hours}`,
+        [t.tasks.estimatedTimeHeader]: `${task.estimatedTime}${t.tasks.hours}`,
+        [t.tasks.tagsHeader]: task.tags.join(', ')
       };
     });
 
@@ -377,8 +381,8 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Vue sauvegardée',
-          message: `La vue "${view.name}" a été sauvegardée`,
+          title: t.tasks.viewSaved,
+          message: t.tasks.viewSavedMessage.replace('{name}', view.name),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -395,8 +399,8 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Vue chargée',
-        message: `La vue "${view.name}" a été chargée`,
+        title: t.tasks.viewLoaded,
+        message: t.tasks.viewLoadedMessage.replace('{name}', view.name),
         type: 'info',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -437,23 +441,23 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
   const columnConfigs = {
     title: {
       type: 'text' as const,
-      placeholder: 'Rechercher par titre...'
+      placeholder: t.tasks.searchByTitle
     },
     status: {
       type: 'select' as const,
       options: [
-        { value: 'todo', label: 'À faire' },
-        { value: 'in-progress', label: 'En cours' },
-        { value: 'review', label: 'Révision' },
-        { value: 'completed', label: 'Terminé' }
+        { value: 'todo', label: t.tasks.statusTodo },
+        { value: 'in-progress', label: t.tasks.statusInProgress },
+        { value: 'review', label: t.tasks.statusReview },
+        { value: 'completed', label: t.tasks.statusCompleted }
       ]
     },
     priority: {
       type: 'select' as const,
       options: [
-        { value: 'low', label: 'Basse' },
-        { value: 'medium', label: 'Moyenne' },
-        { value: 'high', label: 'Haute' }
+        { value: 'low', label: t.tasks.priorityLow },
+        { value: 'medium', label: t.tasks.priorityMedium },
+        { value: 'high', label: t.tasks.priorityHigh }
       ]
     },
     assigneeId: {
@@ -469,11 +473,11 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
     },
     timeTracked: {
       type: 'number' as const,
-      placeholder: 'Heures...'
+      placeholder: t.tasks.hoursLabel + '...'
     },
     estimatedTime: {
       type: 'number' as const,
-      placeholder: 'Heures...'
+      placeholder: t.tasks.hoursLabel + '...'
     }
   };
 
@@ -484,16 +488,16 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center space-x-3">
             <CheckSquare className="w-8 h-8 text-blue-600" />
-            <span>Tâches</span>
+            <span>{t.tasks.title}</span>
           </h1>
-          <p className="text-slate-600 mt-1">Gérez vos tâches avec l'intelligence artificielle</p>
+          <p className="text-slate-600 mt-1">{t.tasks.manageWithAI}</p>
         </div>
         <button
           onClick={handleCreateTask}
           className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
         >
           <Plus className="w-5 h-5" />
-          <span>Nouvelle Tâche</span>
+          <span>{t.tasks.newTask}</span>
         </button>
       </div>
 
@@ -502,9 +506,9 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Tâches</p>
+              <p className="text-sm font-medium text-slate-600">{t.tasks.totalTasks}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.totalTasks}</p>
-              <p className="text-sm text-slate-500">{metrics.completedTasks} terminées</p>
+              <p className="text-sm text-slate-500">{metrics.completedTasks} {t.tasks.completedTasks}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <CheckSquare className="w-6 h-6 text-blue-600" />
@@ -515,9 +519,9 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">Mes Tâches</p>
+              <p className="text-sm font-medium text-slate-600">{t.tasks.myTasksCount}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.myTasks}</p>
-              <p className="text-sm text-slate-500">{metrics.myProgress}% complétées</p>
+              <p className="text-sm text-slate-500">{metrics.myProgress}% {t.tasks.progressCompleted}</p>
             </div>
             <div className="p-3 bg-emerald-100 rounded-lg">
               <User className="w-6 h-6 text-emerald-600" />
@@ -528,9 +532,9 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">Temps Suivi</p>
-              <p className="text-3xl font-bold text-slate-900">{metrics.totalTimeTracked}h</p>
-              <p className="text-sm text-slate-500">{metrics.timeEfficiency}% efficacité</p>
+              <p className="text-sm font-medium text-slate-600">{t.tasks.timeTracked}</p>
+              <p className="text-3xl font-bold text-slate-900">{metrics.totalTimeTracked}{t.tasks.hours}</p>
+              <p className="text-sm text-slate-500">{metrics.timeEfficiency}% {t.tasks.efficiency}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
               <Clock className="w-6 h-6 text-orange-600" />
@@ -541,9 +545,9 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">En Retard</p>
+              <p className="text-sm font-medium text-slate-600">{t.tasks.overdueTasks}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.overdueTasks}</p>
-              <p className="text-sm text-slate-500">Nécessitent attention</p>
+              <p className="text-sm text-slate-500">{t.tasks.needsAttention}</p>
             </div>
             <div className="p-3 bg-red-100 rounded-lg">
               <AlertTriangle className="w-6 h-6 text-red-600" />
@@ -558,33 +562,33 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
           <div>
             <div className="flex items-center space-x-2 mb-2">
               <Brain className="w-6 h-6" />
-              <h3 className="text-xl font-bold">Insights IA sur les Tâches</h3>
+              <h3 className="text-xl font-bold">{t.tasks.aiInsightsTitle}</h3>
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <div className="bg-white/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <TrendingUp className="w-5 h-5" />
-                  <span className="font-medium">Productivité</span>
+                  <span className="font-medium">{t.tasks.productivity}</span>
                 </div>
                 <p className="text-2xl font-bold">+23%</p>
-                <p className="text-sm opacity-90">vs mois dernier</p>
+                <p className="text-sm opacity-90">{t.tasks.vsLastMonth}</p>
               </div>
               <div className="bg-white/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Target className="w-5 h-5" />
-                  <span className="font-medium">Précision IA</span>
+                  <span className="font-medium">{t.tasks.aiAccuracy}</span>
                 </div>
                 <p className="text-2xl font-bold">94.2%</p>
-                <p className="text-sm opacity-90">Prédictions exactes</p>
+                <p className="text-sm opacity-90">{t.tasks.exactPredictions}</p>
               </div>
               <div className="bg-white/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <Users className="w-5 h-5" />
-                  <span className="font-medium">Collaboration</span>
+                  <span className="font-medium">{t.tasks.collaboration}</span>
                 </div>
                 <p className="text-2xl font-bold">87%</p>
-                <p className="text-sm opacity-90">Score d'équipe</p>
+                <p className="text-sm opacity-90">{t.tasks.teamScore}</p>
               </div>
             </div>
           </div>
@@ -600,7 +604,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Recherche globale..."
+                placeholder={t.tasks.globalSearch}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -610,16 +614,16 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
             {/* Filter Status */}
             <div className="flex items-center space-x-2">
               <span className="text-sm text-slate-600">
-                {filteredItems} / {totalItems} tâches
+                {filteredItems} / {totalItems} {t.tasks.tasksCount}
               </span>
               {isFiltered && (
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                  Filtré
+                  {t.tasks.filtered}
                 </span>
               )}
               {isSorted && (
                 <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                  Trié
+                  {t.tasks.sorted}
                 </span>
               )}
             </div>
@@ -637,7 +641,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 }}
                 className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
-                <option value="">Vues sauvegardées</option>
+                <option value="">{t.tasks.savedViews}</option>
                 {savedViews.map(view => (
                   <option key={view.id} value={view.id}>{view.name}</option>
                 ))}
@@ -648,7 +652,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
             <div className="flex items-center space-x-2">
               <input
                 type="text"
-                placeholder="Nom de la vue..."
+                placeholder={t.tasks.viewName}
                 value={currentViewName}
                 onChange={(e) => setCurrentViewName(e.target.value)}
                 className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-32"
@@ -668,7 +672,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
               className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm flex items-center space-x-1"
             >
               <Download className="w-4 h-4" />
-              <span>Export</span>
+              <span>{t.tasks.export}</span>
             </button>
 
             {/* Reset */}
@@ -677,7 +681,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
               className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm flex items-center space-x-1"
             >
               <RefreshCw className="w-4 h-4" />
-              <span>Reset</span>
+              <span>{t.tasks.reset}</span>
             </button>
           </div>
         </div>
@@ -690,7 +694,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <TableHeader
-                  title="Tâche"
+                  title={t.tasks.task}
                   sortKey="title"
                   sortConfig={getSortConfig('title')}
                   filterConfig={getFilterConfig('title')}
@@ -699,7 +703,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   onFilter={handleFilter}
                 />
                 <TableHeader
-                  title="Statut"
+                  title={t.tasks.status}
                   sortKey="status"
                   sortConfig={getSortConfig('status')}
                   filterConfig={getFilterConfig('status')}
@@ -708,7 +712,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   onFilter={handleFilter}
                 />
                 <TableHeader
-                  title="Priorité"
+                  title={t.tasks.priority}
                   sortKey="priority"
                   sortConfig={getSortConfig('priority')}
                   filterConfig={getFilterConfig('priority')}
@@ -717,7 +721,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   onFilter={handleFilter}
                 />
                 <TableHeader
-                  title="Assigné"
+                  title={t.tasks.assigned}
                   sortKey="assigneeId"
                   sortConfig={getSortConfig('assigneeId')}
                   filterConfig={getFilterConfig('assigneeId')}
@@ -726,7 +730,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   onFilter={handleFilter}
                 />
                 <TableHeader
-                  title="Projet"
+                  title={t.tasks.project}
                   sortKey="projectId"
                   sortConfig={getSortConfig('projectId')}
                   filterConfig={getFilterConfig('projectId')}
@@ -735,7 +739,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   onFilter={handleFilter}
                 />
                 <TableHeader
-                  title="Échéance"
+                  title={t.tasks.deadline}
                   sortKey="dueDate"
                   sortConfig={getSortConfig('dueDate')}
                   filterConfig={getFilterConfig('dueDate')}
@@ -744,7 +748,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   onFilter={handleFilter}
                 />
                 <TableHeader
-                  title="Temps"
+                  title={t.tasks.time}
                   sortKey="timeTracked"
                   sortConfig={getSortConfig('timeTracked')}
                   filterConfig={getFilterConfig('timeTracked')}
@@ -752,7 +756,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   onSort={handleSort}
                   onFilter={handleFilter}
                 />
-                <th className="text-center py-4 px-6 font-medium text-slate-900">Actions</th>
+                <th className="text-center py-4 px-6 font-medium text-slate-900">{t.tasks.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -807,17 +811,17 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                     
                     <td className="py-4 px-6">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(task.status)}`}>
-                        {task.status === 'todo' ? 'À faire' :
-                         task.status === 'in-progress' ? 'En cours' :
-                         task.status === 'review' ? 'Révision' :
-                         'Terminé'}
+                        {task.status === 'todo' ? t.tasks.statusTodo :
+                         task.status === 'in-progress' ? t.tasks.statusInProgress :
+                         task.status === 'review' ? t.tasks.statusReview :
+                         t.tasks.statusCompleted}
                       </span>
                     </td>
                     
                     <td className="py-4 px-6">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(task.priority)}`}>
-                        {task.priority === 'high' ? 'Haute' :
-                         task.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                        {task.priority === 'high' ? t.tasks.priorityHigh :
+                         task.priority === 'medium' ? t.tasks.priorityMedium : t.tasks.priorityLow}
                       </span>
                     </td>
                     
@@ -847,16 +851,16 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                           daysLeft < 0 ? 'text-red-600' :
                           daysLeft <= 3 ? 'text-orange-600' : 'text-slate-500'
                         }`}>
-                          {daysLeft < 0 ? `${Math.abs(daysLeft)} jours de retard` :
-                           daysLeft === 0 ? 'Aujourd\'hui' :
-                           `${daysLeft} jours restants`}
+                          {daysLeft < 0 ? `${Math.abs(daysLeft)} ${t.tasks.daysLate}` :
+                           daysLeft === 0 ? t.tasks.todayDeadline :
+                           `${daysLeft} ${t.tasks.daysRemaining}`}
                         </div>
                       </div>
                     </td>
                     
                     <td className="py-4 px-6">
                       <div className="text-sm">
-                        <div className="text-slate-900">{task.timeTracked}h / {task.estimatedTime}h</div>
+                        <div className="text-slate-900">{task.timeTracked}{t.tasks.hours} / {task.estimatedTime}{t.tasks.hours}</div>
                         <div className="w-16 h-1 bg-slate-200 rounded-full mt-1">
                           <div
                             className={`h-1 rounded-full ${
@@ -886,14 +890,14 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                               className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                             >
                               <Eye className="w-4 h-4 mr-3" />
-                              Visualiser
+                              {t.tasks.view}
                             </button>
                             <button
                               onClick={() => handleEditTask(task)}
                               className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                             >
                               <Edit className="w-4 h-4 mr-3" />
-                              Modifier
+                              {t.tasks.edit}
                             </button>
                             <hr className="my-2" />
                             <button
@@ -901,7 +905,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                             >
                               <Trash2 className="w-4 h-4 mr-3" />
-                              Supprimer
+                              {t.tasks.delete}
                             </button>
                           </div>
                         )}
@@ -917,18 +921,18 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         {filteredTasks.length === 0 && (
           <div className="text-center py-12">
             <CheckSquare className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">Aucune tâche trouvée</h3>
+            <h3 className="text-lg font-medium text-slate-900 mb-2">{t.tasks.noTasksFound}</h3>
             <p className="text-slate-600 mb-4">
               {isFiltered 
-                ? 'Aucune tâche ne correspond à vos critères de recherche.'
-                : 'Commencez par créer votre première tâche.'
+                ? t.tasks.noTasksFiltered
+                : t.tasks.createFirstTask
               }
             </p>
             <button
               onClick={isFiltered ? resetAll : handleCreateTask}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              {isFiltered ? 'Réinitialiser les filtres' : 'Créer une tâche'}
+              {isFiltered ? t.tasks.resetFilters : t.tasks.createTask}
             </button>
           </div>
         )}
@@ -940,7 +944,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {selectedTask.id ? 'Modifier la Tâche' : 'Nouvelle Tâche'}
+                {selectedTask.id ? t.tasks.editTaskTitle : t.tasks.newTaskTitle}
               </h3>
               <button
                 onClick={() => setShowTaskModal(false)}
@@ -952,7 +956,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Titre</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.taskTitle}</label>
                 <input
                   type="text"
                   value={selectedTask.title}
@@ -962,7 +966,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.description}</label>
                 <textarea
                   value={selectedTask.description}
                   onChange={(e) => setSelectedTask({ ...selectedTask, description: e.target.value })}
@@ -973,36 +977,36 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.status}</label>
                   <select
                     value={selectedTask.status}
                     onChange={(e) => setSelectedTask({ ...selectedTask, status: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="todo">À faire</option>
-                    <option value="in-progress">En cours</option>
-                    <option value="review">Révision</option>
-                    <option value="completed">Terminé</option>
+                    <option value="todo">{t.tasks.statusTodo}</option>
+                    <option value="in-progress">{t.tasks.statusInProgress}</option>
+                    <option value="review">{t.tasks.statusReview}</option>
+                    <option value="completed">{t.tasks.statusCompleted}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Priorité</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.priority}</label>
                   <select
                     value={selectedTask.priority}
                     onChange={(e) => setSelectedTask({ ...selectedTask, priority: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="low">Basse</option>
-                    <option value="medium">Moyenne</option>
-                    <option value="high">Haute</option>
+                    <option value="low">{t.tasks.priorityLow}</option>
+                    <option value="medium">{t.tasks.priorityMedium}</option>
+                    <option value="high">{t.tasks.priorityHigh}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Assigné à</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.assignee}</label>
                   <select
                     value={selectedTask.assigneeId}
                     onChange={(e) => setSelectedTask({ ...selectedTask, assigneeId: e.target.value })}
@@ -1015,7 +1019,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Projet</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.project}</label>
                   <select
                     value={selectedTask.projectId}
                     onChange={(e) => setSelectedTask({ ...selectedTask, projectId: e.target.value })}
@@ -1030,7 +1034,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Date d'échéance</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.dueDate}</label>
                   <input
                     type="date"
                     value={selectedTask.dueDate}
@@ -1040,7 +1044,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Temps estimé (heures)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.estimatedTime}</label>
                   <input
                     type="number"
                     value={selectedTask.estimatedTime}
@@ -1051,7 +1055,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Tags (séparés par des virgules)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.tagsSeparator}</label>
                 <input
                   type="text"
                   value={selectedTask.tags.join(', ')}
@@ -1060,7 +1064,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                     tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag) 
                   })}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="frontend, urgent, bug"
+                  placeholder={t.tasks.tagsPlaceholder}
                 />
               </div>
             </div>
@@ -1070,14 +1074,14 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 onClick={() => setShowTaskModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.tasks.cancel}
               </button>
               <button
                 onClick={saveTask}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>Sauvegarder</span>
+                <span>{t.tasks.save}</span>
               </button>
             </div>
           </div>
@@ -1096,8 +1100,8 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 <div>
                   <h3 className="text-xl font-semibold text-slate-900">{viewingTask.title}</h3>
                   <p className="text-sm text-slate-600">
-                    Créée le {formatDate(viewingTask.createdDate)} • 
-                    {viewingTask.completedDate && ` Terminée le ${formatDate(viewingTask.completedDate)}`}
+                    {t.tasks.createdOn} {formatDate(viewingTask.createdDate)} • 
+                    {viewingTask.completedDate && ` ${t.tasks.completedOn} ${formatDate(viewingTask.completedDate)}`}
                   </p>
                 </div>
               </div>
@@ -1116,7 +1120,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 <div>
                   <h4 className="font-semibold text-slate-900 mb-3 flex items-center space-x-2">
                     <FileText className="w-4 h-4" />
-                    <span>Description</span>
+                    <span>{t.tasks.description}</span>
                   </h4>
                   <p className="text-slate-700 bg-slate-50 p-4 rounded-lg">{viewingTask.description}</p>
                 </div>
@@ -1125,7 +1129,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 <div>
                   <h4 className="font-semibold text-slate-900 mb-3 flex items-center space-x-2">
                     <MessageSquare className="w-4 h-4" />
-                    <span>Commentaires ({viewingTask.comments.length})</span>
+                    <span>{t.tasks.comments} ({viewingTask.comments.length})</span>
                   </h4>
                   
                   <div className="space-y-3 mb-4">
@@ -1155,7 +1159,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                       type="text"
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Ajouter un commentaire..."
+                      placeholder={t.tasks.addComment}
                       className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       onKeyPress={(e) => e.key === 'Enter' && addComment()}
                     />
@@ -1163,7 +1167,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                       onClick={addComment}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                      Envoyer
+                      {t.tasks.send}
                     </button>
                   </div>
                 </div>
@@ -1173,32 +1177,32 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
               <div className="space-y-6">
                 {/* Details */}
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-slate-900 mb-3">Détails</h4>
+                  <h4 className="font-semibold text-slate-900 mb-3">{t.tasks.details}</h4>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm text-slate-600">Statut:</span>
+                      <span className="text-sm text-slate-600">{t.tasks.status}:</span>
                       <div className="mt-1">
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(viewingTask.status)}`}>
-                          {viewingTask.status === 'todo' ? 'À faire' :
-                           viewingTask.status === 'in-progress' ? 'En cours' :
-                           viewingTask.status === 'review' ? 'Révision' :
-                           'Terminé'}
+                          {viewingTask.status === 'todo' ? t.tasks.statusTodo :
+                           viewingTask.status === 'in-progress' ? t.tasks.statusInProgress :
+                           viewingTask.status === 'review' ? t.tasks.statusReview :
+                           t.tasks.statusCompleted}
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <span className="text-sm text-slate-600">Priorité:</span>
+                      <span className="text-sm text-slate-600">{t.tasks.priority}:</span>
                       <div className="mt-1">
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${getPriorityColor(viewingTask.priority)}`}>
-                          {viewingTask.priority === 'high' ? 'Haute' :
-                           viewingTask.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                          {viewingTask.priority === 'high' ? t.tasks.priorityHigh :
+                           viewingTask.priority === 'medium' ? t.tasks.priorityMedium : t.tasks.priorityLow}
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <span className="text-sm text-slate-600">Assigné à:</span>
+                      <span className="text-sm text-slate-600">{t.tasks.assignee}:</span>
                       <div className="mt-1 flex items-center space-x-2">
                         {(() => {
                           const assignee = users.find(u => u.id === viewingTask.assigneeId);
@@ -1213,7 +1217,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                     </div>
 
                     <div>
-                      <span className="text-sm text-slate-600">Projet:</span>
+                      <span className="text-sm text-slate-600">{t.tasks.project}:</span>
                       <div className="mt-1">
                         <span className="text-sm text-slate-900">
                           {projects.find(p => p.id === viewingTask.projectId)?.name}
@@ -1222,7 +1226,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                     </div>
 
                     <div>
-                      <span className="text-sm text-slate-600">Échéance:</span>
+                      <span className="text-sm text-slate-600">{t.tasks.dueDate}:</span>
                       <div className="mt-1">
                         <span className="text-sm text-slate-900">{formatDate(viewingTask.dueDate)}</span>
                       </div>
@@ -1234,17 +1238,17 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 <div className="bg-slate-50 rounded-lg p-4">
                   <h4 className="font-semibold text-slate-900 mb-3 flex items-center space-x-2">
                     <Timer className="w-4 h-4" />
-                    <span>Suivi du temps</span>
+                    <span>{t.tasks.timeTracking}</span>
                   </h4>
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-600">Temps suivi:</span>
-                        <span className="font-medium text-slate-900">{viewingTask.timeTracked}h</span>
+                        <span className="text-slate-600">{t.tasks.timeTrackedLabel}</span>
+                        <span className="font-medium text-slate-900">{viewingTask.timeTracked}{t.tasks.hours}</span>
                       </div>
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-slate-600">Temps estimé:</span>
-                        <span className="font-medium text-slate-900">{viewingTask.estimatedTime}h</span>
+                        <span className="text-slate-600">{t.tasks.estimatedTimeLabel}</span>
+                        <span className="font-medium text-slate-900">{viewingTask.estimatedTime}{t.tasks.hours}</span>
                       </div>
                       <div className="w-full h-2 bg-slate-200 rounded-full">
                         <div
@@ -1264,14 +1268,14 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                         step="0.5"
                         value={timeEntry}
                         onChange={(e) => setTimeEntry(e.target.value)}
-                        placeholder="Heures"
+                        placeholder={t.tasks.hoursLabel}
                         className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       />
                       <button
                         onClick={addTimeEntry}
                         className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                       >
-                        Ajouter
+                        {t.tasks.addTime}
                       </button>
                     </div>
                   </div>
@@ -1282,7 +1286,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   <div className="bg-slate-50 rounded-lg p-4">
                     <h4 className="font-semibold text-slate-900 mb-3 flex items-center space-x-2">
                       <Tag className="w-4 h-4" />
-                      <span>Tags</span>
+                      <span>{t.tasks.tags}</span>
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {viewingTask.tags.map((tag, index) => (
@@ -1304,7 +1308,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
                   >
                     <Edit className="w-4 h-4" />
-                    <span>Modifier</span>
+                    <span>{t.tasks.edit}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -1314,7 +1318,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                     className="w-full px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center space-x-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span>Supprimer</span>
+                    <span>{t.tasks.delete}</span>
                   </button>
                 </div>
               </div>
@@ -1332,13 +1336,13 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Supprimer la tâche</h3>
-                <p className="text-sm text-slate-600">Cette action est irréversible</p>
+                <h3 className="text-lg font-semibold text-slate-900">{t.tasks.deleteTaskTitle}</h3>
+                <p className="text-sm text-slate-600">{t.tasks.irreversibleAction}</p>
               </div>
             </div>
 
             <p className="text-slate-700 mb-6">
-              Êtes-vous sûr de vouloir supprimer cette tâche ? Toutes les données associées seront perdues.
+              {t.tasks.deleteConfirmation}
             </p>
 
             <div className="flex space-x-3">
@@ -1346,13 +1350,13 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.tasks.cancel}
               </button>
               <button
                 onClick={confirmDeleteTask}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Supprimer
+                {t.tasks.delete}
               </button>
             </div>
           </div>

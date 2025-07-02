@@ -4,32 +4,23 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Plus, 
-  Clock, 
   MapPin, 
-  Users, 
-  Edit, 
   Trash2, 
   X, 
   Save,
-  MoreHorizontal,
-  Filter,
   Search,
-  Eye,
-  Bell,
-  Repeat,
-  Video,
-  Phone,
-  FileText,
   ChevronDown
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { CalendarEvent, User as UserType } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import { CalendarEvent } from '../types';
 import { formatDate, formatDateTime } from '../utils/dateUtils';
 
 type ViewMode = 'month' | 'week' | 'day';
 
 const Calendar: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { t, language } = useLanguage();
   const { calendarEvents, users, currentUser } = state;
   
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -49,6 +40,9 @@ const Calendar: React.FC = () => {
 
   const calendarRef = useRef<HTMLDivElement>(null);
   const yearSelectorRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to get locale for date formatting
+  const getLocale = () => language === 'fr' ? 'fr-FR' : 'en-US';
 
   // Close year selector when clicking outside
   useEffect(() => {
@@ -87,7 +81,7 @@ const Calendar: React.FC = () => {
       endTime: `${(startHour + 1).toString().padStart(2, '0')}:00`,
       date: normalizeDate(eventDate),
       type: 'meeting',
-      attendees: [currentUser.id],
+      attendees: [currentUser?.id || 'unknown-user'],
       location: '',
       isRecurring: false,
       reminderMinutes: 15
@@ -106,18 +100,6 @@ const Calendar: React.FC = () => {
     });
   };
 
-  // Get events for current view with date range filtering
-  const getEventsForView = () => {
-    const start = getViewStartDate();
-    const end = getViewEndDate();
-    
-    const filteredEvents = filterEvents(calendarEvents);
-    
-    return filteredEvents.filter(event => {
-      const eventDate = new Date(event.date + 'T00:00:00');
-      return eventDate >= start && eventDate <= end;
-    });
-  };
 
   // Get events for a specific date (used in day view and individual day cells)
   const getEventsForDate = (date: Date): CalendarEvent[] => {
@@ -262,8 +244,8 @@ const Calendar: React.FC = () => {
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Événement supprimé',
-          message: 'L\'événement a été supprimé avec succès',
+          title: t.calendar.eventDeleted,
+          message: t.messages.actionSuccessful,
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -292,8 +274,8 @@ const Calendar: React.FC = () => {
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: isCreating ? 'Événement créé' : 'Événement mis à jour',
-          message: `L'événement "${selectedEvent.title}" a été ${isCreating ? 'créé' : 'mis à jour'} avec succès`,
+          title: isCreating ? t.calendar.eventCreated : t.calendar.eventUpdated,
+          message: `"${selectedEvent.title}" ${isCreating ? t.calendar.eventCreatedMessage : t.calendar.eventUpdatedMessage}`,
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -336,7 +318,7 @@ const Calendar: React.FC = () => {
   // Render functions
   const renderMonthView = () => {
     const startDate = getViewStartDate();
-    const days = [];
+    const days: Date[] = [];
     
     // Generate calendar days
     for (let i = 0; i < 42; i++) {
@@ -398,7 +380,7 @@ const Calendar: React.FC = () => {
             ))}
             {dayEvents.length > 3 && (
               <div className="text-xs text-slate-500">
-                +{dayEvents.length - 3} more
+                +{dayEvents.length - 3} {t.calendar.moreEvents}
               </div>
             )}
           </div>
@@ -408,7 +390,7 @@ const Calendar: React.FC = () => {
     
     return (
       <div className="grid grid-cols-7 gap-0 border border-slate-200 rounded-lg overflow-hidden">
-        {['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'].map((day) => (
+        {[t.calendar.sun, t.calendar.mon, t.calendar.tue, t.calendar.wed, t.calendar.thu, t.calendar.fri, t.calendar.sat].map((day) => (
           <div key={day} className="bg-slate-100 p-3 text-center font-medium text-slate-700 border-b border-slate-200">
             {day}
           </div>
@@ -420,7 +402,7 @@ const Calendar: React.FC = () => {
 
   const renderWeekView = () => {
     const startDate = getViewStartDate();
-    const days = [];
+    const days: Date[] = [];
     const hours = Array.from({ length: 24 }, (_, i) => i);
     
     for (let i = 0; i < 7; i++) {
@@ -439,7 +421,7 @@ const Calendar: React.FC = () => {
             return (
               <div key={index} className={`bg-slate-100 p-3 text-center border-r border-slate-200 ${isToday ? 'bg-blue-100' : ''}`}>
                 <div className="font-medium text-slate-700">
-                  {date.toLocaleDateString('fr-FR', { weekday: 'short' })}
+                  {date.toLocaleDateString(getLocale(), { weekday: 'short' })}
                 </div>
                 <div className={`text-lg font-bold ${isToday ? 'text-blue-600' : 'text-slate-900'}`}>
                   {date.getDate()}
@@ -510,8 +492,6 @@ const Calendar: React.FC = () => {
   };
 
   const renderDayView = () => {
-    // Utiliser getEventsForDate pour une cohérence parfaite
-    const eventsForDay = getEventsForDate(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const isToday = isSameDate(currentDate, new Date());
     
@@ -520,10 +500,10 @@ const Calendar: React.FC = () => {
         {/* Header */}
         <div className={`bg-slate-100 p-4 text-center border border-slate-200 rounded-t-lg ${isToday ? 'bg-blue-100' : ''}`}>
           <div className="font-medium text-slate-700">
-            {currentDate.toLocaleDateString('fr-FR', { weekday: 'long' })}
+            {currentDate.toLocaleDateString(getLocale(), { weekday: 'long' })}
           </div>
           <div className={`text-2xl font-bold ${isToday ? 'text-blue-600' : 'text-slate-900'}`}>
-            {currentDate.getDate()} {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+            {currentDate.getDate()} {currentDate.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}
           </div>
         </div>
         
@@ -598,28 +578,18 @@ const Calendar: React.FC = () => {
   const getViewTitle = () => {
     switch (viewMode) {
       case 'month':
-        return currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        return currentDate.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' });
       case 'week':
         const startWeek = getViewStartDate();
         const endWeek = getViewEndDate();
-        return `${startWeek.getDate()} - ${endWeek.getDate()} ${currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
+        return `${startWeek.getDate()} - ${endWeek.getDate()} ${currentDate.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' })}`;
       case 'day':
-        return currentDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        return currentDate.toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
       default:
         return '';
     }
   };
 
-  const getEventTypeColor = (type: string) => {
-    switch (type) {
-      case 'meeting': return 'bg-blue-100 text-blue-700';
-      case 'deadline': return 'bg-red-100 text-red-700';
-      case 'presentation': return 'bg-purple-100 text-purple-700';
-      case 'review': return 'bg-orange-100 text-orange-700';
-      case 'personal': return 'bg-green-100 text-green-700';
-      default: return 'bg-slate-100 text-slate-700';
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -628,9 +598,9 @@ const Calendar: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center space-x-3">
             <CalendarIcon className="w-8 h-8 text-blue-600" />
-            <span>Calendrier</span>
+            <span>{t.calendar.title}</span>
           </h1>
-          <p className="text-slate-600 mt-1">Gérez vos événements et rendez-vous</p>
+          <p className="text-slate-600 mt-1">{t.calendar.subtitle}</p>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -639,7 +609,7 @@ const Calendar: React.FC = () => {
             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
           >
             <Plus className="w-5 h-5" />
-            <span>Nouvel Événement</span>
+            <span>{t.calendar.newEvent}</span>
           </button>
         </div>
       </div>
@@ -659,7 +629,7 @@ const Calendar: React.FC = () => {
               onClick={navigateToday}
               className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              Aujourd'hui
+{t.calendar.today}
             </button>
             <button
               onClick={navigateNext}
@@ -709,7 +679,7 @@ const Calendar: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher..."
+              placeholder={t.calendar.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -722,12 +692,12 @@ const Calendar: React.FC = () => {
             onChange={(e) => setFilterType(e.target.value)}
             className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           >
-            <option value="all">Tous les types</option>
-            <option value="meeting">Réunions</option>
-            <option value="deadline">Échéances</option>
-            <option value="presentation">Présentations</option>
-            <option value="review">Révisions</option>
-            <option value="personal">Personnel</option>
+            <option value="all">{t.calendar.allTypes}</option>
+            <option value="meeting">{t.calendar.meetings}</option>
+            <option value="deadline">{t.calendar.deadlines}</option>
+            <option value="presentation">{t.calendar.presentations}</option>
+            <option value="review">{t.calendar.reviews}</option>
+            <option value="personal">{t.calendar.personalEvents}</option>
           </select>
 
           {/* View Mode */}
@@ -742,7 +712,7 @@ const Calendar: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {mode === 'month' ? 'Mois' : mode === 'week' ? 'Semaine' : 'Jour'}
+                {mode === 'month' ? t.calendar.monthView : mode === 'week' ? t.calendar.weekView : t.calendar.dayView}
               </button>
             ))}
           </div>
@@ -762,7 +732,7 @@ const Calendar: React.FC = () => {
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {isCreating ? 'Nouvel Événement' : 'Modifier l\'Événement'}
+                {isCreating ? t.calendar.newEventModal : t.calendar.editEventModal}
               </h3>
               <button
                 onClick={() => setShowEventModal(false)}
@@ -774,30 +744,30 @@ const Calendar: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Titre</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.eventTitle}</label>
                 <input
                   type="text"
                   value={selectedEvent.title}
                   onChange={(e) => setSelectedEvent({ ...selectedEvent, title: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Titre de l'événement"
+                  placeholder={t.calendar.eventTitlePlaceholder}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.eventDescription}</label>
                 <textarea
                   value={selectedEvent.description}
                   onChange={(e) => setSelectedEvent({ ...selectedEvent, description: e.target.value })}
                   rows={3}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Description de l'événement"
+                  placeholder={t.calendar.eventDescriptionPlaceholder}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Date</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.eventDate}</label>
                   <input
                     type="date"
                     value={selectedEvent.date}
@@ -807,24 +777,24 @@ const Calendar: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.eventType}</label>
                   <select
                     value={selectedEvent.type}
                     onChange={(e) => setSelectedEvent({ ...selectedEvent, type: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="meeting">Réunion</option>
-                    <option value="deadline">Échéance</option>
-                    <option value="presentation">Présentation</option>
-                    <option value="review">Révision</option>
-                    <option value="personal">Personnel</option>
+                    <option value="meeting">{t.calendar.meeting}</option>
+                    <option value="deadline">{t.calendar.deadline}</option>
+                    <option value="presentation">{t.calendar.presentation}</option>
+                    <option value="review">{t.calendar.review}</option>
+                    <option value="personal">{t.calendar.personal}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Heure de début</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.startTime}</label>
                   <input
                     type="time"
                     value={selectedEvent.startTime}
@@ -834,7 +804,7 @@ const Calendar: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Heure de fin</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.endTime}</label>
                   <input
                     type="time"
                     value={selectedEvent.endTime}
@@ -845,18 +815,18 @@ const Calendar: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Lieu</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.location}</label>
                 <input
                   type="text"
                   value={selectedEvent.location || ''}
                   onChange={(e) => setSelectedEvent({ ...selectedEvent, location: e.target.value })}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Lieu de l'événement"
+                  placeholder={t.calendar.eventLocationPlaceholder}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Participants</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.attendees}</label>
                 <div className="space-y-2 max-h-32 overflow-y-auto">
                   {users.map((user) => (
                     <label key={user.id} className="flex items-center space-x-2">
@@ -887,18 +857,18 @@ const Calendar: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Rappel (minutes)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.calendar.reminderMinutes}</label>
                   <select
                     value={selectedEvent.reminderMinutes}
                     onChange={(e) => setSelectedEvent({ ...selectedEvent, reminderMinutes: Number(e.target.value) })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value={0}>Aucun rappel</option>
-                    <option value={5}>5 minutes</option>
-                    <option value={15}>15 minutes</option>
-                    <option value={30}>30 minutes</option>
-                    <option value={60}>1 heure</option>
-                    <option value={1440}>1 jour</option>
+                    <option value={0}>{t.calendar.noReminder}</option>
+                    <option value={5}>{t.calendar.fiveMinutes}</option>
+                    <option value={15}>{t.calendar.fifteenMinutes}</option>
+                    <option value={30}>{t.calendar.thirtyMinutes}</option>
+                    <option value={60}>{t.calendar.oneHour}</option>
+                    <option value={1440}>{t.calendar.oneDay}</option>
                   </select>
                 </div>
 
@@ -910,7 +880,7 @@ const Calendar: React.FC = () => {
                     onChange={(e) => setSelectedEvent({ ...selectedEvent, isRecurring: e.target.checked })}
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <label htmlFor="recurring" className="text-sm text-slate-700">Événement récurrent</label>
+                  <label htmlFor="recurring" className="text-sm text-slate-700">{t.calendar.recurringEvent}</label>
                 </div>
               </div>
             </div>
@@ -920,7 +890,7 @@ const Calendar: React.FC = () => {
                 onClick={() => setShowEventModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               {!isCreating && (
                 <button
@@ -930,7 +900,7 @@ const Calendar: React.FC = () => {
                   }}
                   className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
                 >
-                  Supprimer
+                  {t.common.delete}
                 </button>
               )}
               <button
@@ -938,7 +908,7 @@ const Calendar: React.FC = () => {
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{isCreating ? 'Créer' : 'Sauvegarder'}</span>
+                <span>{isCreating ? t.calendar.createEvent : t.calendar.saveEvent}</span>
               </button>
             </div>
           </div>
@@ -954,13 +924,13 @@ const Calendar: React.FC = () => {
                 <Trash2 className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Supprimer l'événement</h3>
-                <p className="text-sm text-slate-600">Cette action est irréversible</p>
+                <h3 className="text-lg font-semibold text-slate-900">{t.calendar.deleteEventModal}</h3>
+                <p className="text-sm text-slate-600">{t.calendar.deleteConfirmation}</p>
               </div>
             </div>
 
             <p className="text-slate-700 mb-6">
-              Êtes-vous sûr de vouloir supprimer cet événement ?
+              {t.calendar.deleteWarning}
             </p>
 
             <div className="flex space-x-3">
@@ -968,13 +938,13 @@ const Calendar: React.FC = () => {
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               <button
                 onClick={confirmDeleteEvent}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Supprimer
+                {t.common.delete}
               </button>
             </div>
           </div>

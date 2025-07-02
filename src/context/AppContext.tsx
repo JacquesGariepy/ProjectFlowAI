@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect, useState } from 'react';
 import { User, Project, Task, CalendarEvent, Notification, Team, BlogPost, BlogComment } from '../types';
-import { users, projects, tasks, calendarEvents, notifications, teams, blogPosts } from '../data/mockData';
+import { calculateProjectProgressById } from '../utils/calculations';
 
 interface AppState {
   currentUser: User;
@@ -50,17 +50,19 @@ type AppAction =
   | { type: 'ADD_BLOG_COMMENT'; payload: { postId: string; comment: BlogComment } }
   | { type: 'UPDATE_BLOG_COMMENT'; payload: { postId: string; comment: BlogComment } }
   | { type: 'DELETE_BLOG_COMMENT'; payload: { postId: string; commentId: string } }
-  | { type: 'TOGGLE_COMMENT_LIKE'; payload: { postId: string; commentId: string; userId: string } };
+  | { type: 'TOGGLE_COMMENT_LIKE'; payload: { postId: string; commentId: string; userId: string } }
+  | { type: 'INIT_STATE'; payload: AppState };
 
 const initialState: AppState = {
-  currentUser: users[0],
-  users,
-  projects,
-  tasks,
-  calendarEvents,
-  notifications,
-  teams,
-  blogPosts,
+  // Initial state will be populated from the server
+  currentUser: {} as User,
+  users: [],
+  projects: [],
+  tasks: [],
+  calendarEvents: [],
+  notifications: [],
+  teams: [],
+  blogPosts: [],
   searchQuery: '',
   filters: {
     projectStatus: 'all',
@@ -71,31 +73,98 @@ const initialState: AppState = {
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
+    case 'INIT_STATE':
+      return { ...action.payload };
     case 'UPDATE_TASK_STATUS':
+      const updatedTasks = state.tasks.map(task =>
+        task.id === action.payload.taskId
+          ? {
+              ...task,
+              status: action.payload.status,
+              completedDate: action.payload.status === 'completed' ? new Date().toISOString() : undefined
+            }
+          : task
+      );
+
+      // Update the associated project's progress
+      const updatedTask = updatedTasks.find(task => task.id === action.payload.taskId);
+      let updatedProjects = state.projects;
+      
+      if (updatedTask) {
+        updatedProjects = state.projects.map(project => {
+          if (project.id === updatedTask.projectId) {
+            const newProgress = calculateProjectProgressById(project.id, updatedTasks);
+            
+            return {
+              ...project,
+              progress: newProgress,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return project;
+        });
+      }
+
       return {
         ...state,
-        tasks: state.tasks.map(task =>
-          task.id === action.payload.taskId
-            ? { 
-                ...task, 
-                status: action.payload.status,
-                completedDate: action.payload.status === 'completed' ? new Date().toISOString() : undefined
-              }
-            : task
-        )
+        tasks: updatedTasks,
+        projects: updatedProjects
       };
 
     case 'ADD_TASK':
-      return {
+      const newTaskState = {
         ...state,
         tasks: [...state.tasks, action.payload]
       };
 
-    case 'DELETE_TASK':
+      // Update the associated project's progress
+      const updatedProjectsForAdd = newTaskState.projects.map(project => {
+        if (project.id === action.payload.projectId) {
+          const newProgress = calculateProjectProgressById(project.id, newTaskState.tasks);
+          
+          return {
+            ...project,
+            progress: newProgress,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return project;
+      });
+
       return {
+        ...newTaskState,
+        projects: updatedProjectsForAdd
+      };
+
+    case 'DELETE_TASK':
+      const taskToDelete = state.tasks.find(task => task.id === action.payload);
+      const deletedTaskState = {
         ...state,
         tasks: state.tasks.filter(task => task.id !== action.payload)
       };
+
+      // Update the associated project's progress if task was found
+      if (taskToDelete) {
+        const updatedProjectsForDelete = deletedTaskState.projects.map(project => {
+          if (project.id === taskToDelete.projectId) {
+            const newProgress = calculateProjectProgressById(project.id, deletedTaskState.tasks);
+            
+            return {
+              ...project,
+              progress: newProgress,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return project;
+        });
+
+        return {
+          ...deletedTaskState,
+          projects: updatedProjectsForDelete
+        };
+      }
+
+      return deletedTaskState;
 
     case 'UPDATE_PROJECT':
       return {
@@ -191,7 +260,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         currentUser: { ...state.currentUser, ...action.payload },
         users: state.users.map(user =>
-          user.id === state.currentUser.id
+          user.id === state.currentUser?.id
             ? { ...user, ...action.payload }
             : user
         )
@@ -203,7 +272,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         users: state.users.map(user =>
           user.id === action.payload.id ? action.payload : user
         ),
-        currentUser: state.currentUser.id === action.payload.id ? action.payload : state.currentUser
+        currentUser: state.currentUser?.id === action.payload.id ? action.payload : state.currentUser
       };
 
     case 'ADD_USER':
@@ -353,6 +422,27 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/state')
+      .then(res => res.json())
+      .then(data => {
+        dispatch({ type: 'INIT_STATE', payload: data });
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (loaded) {
+      fetch('http://localhost:3000/api/state', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state)
+      });
+    }
+  }, [state, loaded]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

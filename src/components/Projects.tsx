@@ -3,7 +3,6 @@ import {
   FolderOpen, 
   Plus, 
   Search, 
-  Filter, 
   MoreHorizontal, 
   Calendar, 
   Users, 
@@ -21,16 +20,14 @@ import {
   Save,
   Brain,
   Zap,
-  Eye,
-  Settings,
-  User,
   ArrowRight,
   Sparkles
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { Project, User as UserType } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import { Project } from '../types';
 import { formatDate, getDaysUntilDeadline, isOverdue } from '../utils/dateUtils';
-import { calculateBudgetUtilization } from '../utils/calculations';
+import { calculateBudgetUtilization, calculateProjectProgress } from '../utils/calculations';
 
 interface ProjectsProps {
   navigationParams?: {
@@ -55,6 +52,7 @@ interface AIRecommendation {
 
 const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationComplete }) => {
   const { state, dispatch } = useAppContext();
+  const { t } = useLanguage();
   const { projects, tasks, users, searchQuery } = state;
   
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -184,7 +182,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
     const totalProjects = projects.length;
     const activeProjects = projects.filter(p => p.status === 'in-progress').length;
     const completedProjects = projects.filter(p => p.status === 'completed').length;
-    const overdueProjects = projects.filter(p => 
+    const overdueProjects = projects.filter(p =>
       p.status !== 'completed' && isOverdue(p.deadline)
     ).length;
     
@@ -192,11 +190,15 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
     const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
     const budgetUtilization = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
     
-    const avgProgress = Math.round(
-      projects.reduce((sum, p) => sum + p.progress, 0) / projects.length
-    );
+    // Calculate average progress based on actual task completion
+    const avgProgress = totalProjects > 0 ? Math.round(
+      projects.reduce((sum, project) => {
+        const projectProgress = calculateProjectProgress(project, tasks);
+        return sum + projectProgress;
+      }, 0) / totalProjects
+    ) : 0;
     
-    const completionRate = Math.round((completedProjects / totalProjects) * 100);
+    const completionRate = totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0;
 
     return {
       totalProjects,
@@ -215,8 +217,13 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
   // Filter projects
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchQuery.toLowerCase());
+    // Debug logging to identify the undefined property
+    console.log('Debug - searchQuery:', searchQuery, 'type:', typeof searchQuery);
+    console.log('Debug - project.name:', project.name, 'project.description:', project.description);
+    
+    const safeSearchQuery = searchQuery?.toLowerCase() || '';
+    const matchesSearch = (project.name?.toLowerCase() || '').includes(safeSearchQuery) ||
+                         (project.description?.toLowerCase() || '').includes(safeSearchQuery);
     const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
     const matchesPriority = filterPriority === 'all' || project.priority === filterPriority;
     
@@ -256,7 +263,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
     const duplicatedProject: Project = {
       ...project,
       id: Date.now().toString(),
-      name: `${project.name} (Copy)`,
+      name: `${project.name} (${t.projects.copy})`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'planning',
@@ -272,8 +279,8 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Projet dupliqué',
-        message: `Le projet "${project.name}" a été dupliqué avec succès`,
+        title: t.projects.projectDuplicated,
+        message: t.projects.projectDuplicatedMessage.replace('{name}', project.name),
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -314,8 +321,8 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Projet exporté',
-        message: `Les données du projet "${project.name}" ont été exportées`,
+        title: t.projects.projectExported,
+        message: t.projects.projectExportedMessage.replace('{name}', project.name),
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -341,8 +348,8 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Projet supprimé',
-          message: `Le projet "${project?.name}" a été supprimé avec succès`,
+          title: t.projects.projectDeleted,
+          message: t.projects.projectDeletedMessage.replace('{name}', project?.name || ''),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -374,8 +381,8 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: 'Réallocation effectuée',
-          message: `L'équipe du projet "${reallocationProject.name}" a été réallouée avec succès`,
+          title: t.projects.reallocationCompleted,
+          message: t.projects.reallocationCompletedMessage.replace('{name}', reallocationProject.name),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -429,7 +436,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       type: 'ADD_NOTIFICATION',
       payload: {
         id: Date.now().toString(),
-        title: 'Recommandation supprimée',
+        title: t.projects.recommendationDeleted,
         message: 'La recommandation IA a été supprimée avec succès',
         type: 'success',
         isRead: false,
@@ -449,7 +456,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           tasks: [],
-          createdBy: state.currentUser.id
+          createdBy: state.currentUser?.id || ''
         };
         dispatch({ type: 'ADD_PROJECT', payload: newProject });
       }
@@ -505,16 +512,16 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center space-x-3">
             <FolderOpen className="w-8 h-8 text-blue-600" />
-            <span>Projets</span>
+            <span>{t.projects.title}</span>
           </h1>
-          <p className="text-slate-600 mt-1">Gérez vos projets avec l'intelligence artificielle</p>
+          <p className="text-slate-600 mt-1">{t.projects.manageWithAI}</p>
         </div>
         <button
           onClick={handleCreateProject}
           className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
         >
           <Plus className="w-5 h-5" />
-          <span>Nouveau Projet</span>
+          <span>{t.projects.newProject}</span>
         </button>
       </div>
 
@@ -523,9 +530,9 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">Total Projets</p>
+              <p className="text-sm font-medium text-slate-600">{t.projects.totalProjects}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.totalProjects}</p>
-              <p className="text-sm text-slate-500">{metrics.activeProjects} actifs</p>
+              <p className="text-sm text-slate-500">{metrics.activeProjects} {t.projects.activeProjects}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <FolderOpen className="w-6 h-6 text-blue-600" />
@@ -536,9 +543,9 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">Taux de Completion</p>
+              <p className="text-sm font-medium text-slate-600">{t.projects.completionRate}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.completionRate}%</p>
-              <p className="text-sm text-slate-500">{metrics.completedProjects} terminés</p>
+              <p className="text-sm text-slate-500">{metrics.completedProjects} {t.projects.completed}</p>
             </div>
             <div className="p-3 bg-emerald-100 rounded-lg">
               <CheckCircle className="w-6 h-6 text-emerald-600" />
@@ -549,9 +556,9 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">Budget Total</p>
+              <p className="text-sm font-medium text-slate-600">{t.projects.totalBudget}</p>
               <p className="text-3xl font-bold text-slate-900">${metrics.totalBudget.toLocaleString()}</p>
-              <p className="text-sm text-slate-500">{metrics.budgetUtilization}% utilisé</p>
+              <p className="text-sm text-slate-500">{metrics.budgetUtilization}% {t.projects.budgetUsed}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
               <DollarSign className="w-6 h-6 text-orange-600" />
@@ -562,9 +569,9 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">Progression Moyenne</p>
+              <p className="text-sm font-medium text-slate-600">{t.projects.averageProgress}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.avgProgress}%</p>
-              <p className="text-sm text-slate-500">{metrics.overdueProjects} en retard</p>
+              <p className="text-sm text-slate-500">{metrics.overdueProjects} {t.projects.overdue}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
               <TrendingUp className="w-6 h-6 text-purple-600" />
@@ -578,7 +585,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
             <Brain className="w-5 h-5 text-purple-500" />
-            <span>Recommandations IA</span>
+            <span>{t.projects.aiRecommendations}</span>
             <Sparkles className="w-4 h-4 text-purple-500 animate-pulse" />
           </h3>
           <button
@@ -586,7 +593,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
             className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Ajouter</span>
+            <span>{t.common.add}</span>
           </button>
         </div>
 
@@ -621,7 +628,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <span className="text-xs text-slate-500">
-                      Confiance: <span className="font-medium">{recommendation.confidence}%</span>
+                      {t.projects.confidence}: <span className="font-medium">{recommendation.confidence}%</span>
                     </span>
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       recommendation.impact === 'high' ? 'bg-red-100 text-red-700' :
@@ -639,7 +646,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                       }}
                       className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition-colors"
                     >
-                      Réallouer maintenant
+                      {t.projects.reallocateNow}
                     </button>
                   )}
                 </div>
@@ -655,7 +662,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Rechercher des projets..."
+            placeholder={t.projects.searchProjects}
             value={searchQuery}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: e.target.value })}
             className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -667,12 +674,12 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           onChange={(e) => setFilterStatus(e.target.value)}
           className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <option value="all">Tous les statuts</option>
-          <option value="planning">Planification</option>
-          <option value="in-progress">En cours</option>
-          <option value="review">Révision</option>
-          <option value="completed">Terminé</option>
-          <option value="on-hold">En pause</option>
+          <option value="all">{t.projects.allStatuses}</option>
+          <option value="planning">{t.projects.planning}</option>
+          <option value="in-progress">{t.projects.inProgress}</option>
+          <option value="review">{t.projects.review}</option>
+          <option value="completed">{t.projects.completed}</option>
+          <option value="on-hold">{t.projects.onHold}</option>
         </select>
 
         <select
@@ -680,10 +687,10 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           onChange={(e) => setFilterPriority(e.target.value)}
           className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <option value="all">Toutes les priorités</option>
-          <option value="high">Haute</option>
-          <option value="medium">Moyenne</option>
-          <option value="low">Basse</option>
+          <option value="all">{t.projects.allPriorities}</option>
+          <option value="high">{t.projects.priorityHigh}</option>
+          <option value="medium">{t.projects.priorityMedium}</option>
+          <option value="low">{t.projects.priorityLow}</option>
         </select>
       </div>
 
@@ -691,8 +698,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredProjects.map((project) => {
           const projectTasks = tasks.filter(t => t.projectId === project.id);
-          const completedTasks = projectTasks.filter(t => t.status === 'completed').length;
-          const progress = projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0;
+          const progress = calculateProjectProgress(project, tasks);
           const daysLeft = getDaysUntilDeadline(project.deadline);
           const budgetUtilization = calculateBudgetUtilization(project);
 
@@ -723,21 +729,21 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                         className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         <Edit className="w-4 h-4 mr-3" />
-                        Modifier
+                        {t.common.edit}
                       </button>
                       <button
                         onClick={() => handleDuplicateProject(project)}
                         className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         <Copy className="w-4 h-4 mr-3" />
-                        Dupliquer
+                        {t.projects.duplicate}
                       </button>
                       <button
                         onClick={() => handleExportProject(project)}
                         className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         <Download className="w-4 h-4 mr-3" />
-                        Exporter
+                        {t.projects.export}
                       </button>
                       <hr className="my-2" />
                       <button
@@ -745,7 +751,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4 mr-3" />
-                        Supprimer
+                        {t.common.delete}
                       </button>
                     </div>
                   )}
@@ -765,7 +771,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
               {/* Progress */}
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700">Progression</span>
+                  <span className="text-sm font-medium text-slate-700">{t.projects.progress}</span>
                   <span className="text-sm font-medium text-slate-900">{progress}%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 rounded-full">
@@ -780,18 +786,18 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="text-center p-3 bg-slate-50 rounded-lg">
                   <div className="text-lg font-bold text-slate-900">{projectTasks.length}</div>
-                  <div className="text-xs text-slate-600">Tâches</div>
+                  <div className="text-xs text-slate-600">{t.projects.tasks}</div>
                 </div>
                 <div className="text-center p-3 bg-slate-50 rounded-lg">
                   <div className="text-lg font-bold text-slate-900">{project.teamMembers.length}</div>
-                  <div className="text-xs text-slate-600">Membres</div>
+                  <div className="text-xs text-slate-600">{t.projects.members}</div>
                 </div>
               </div>
 
               {/* Budget */}
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-slate-600">Budget</span>
+                  <span className="text-sm text-slate-600">{t.projects.budget}</span>
                   <span className="text-sm font-medium text-slate-900">
                     ${project.spent.toLocaleString()} / ${project.budget.toLocaleString()}
                   </span>
@@ -817,9 +823,9 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                   daysLeft < 0 ? 'text-red-600' :
                   daysLeft <= 7 ? 'text-orange-600' : 'text-slate-600'
                 }`}>
-                  {daysLeft < 0 ? `${Math.abs(daysLeft)} jours de retard` :
-                   daysLeft === 0 ? 'Aujourd\'hui' :
-                   `${daysLeft} jours restants`}
+                  {daysLeft < 0 ? `${Math.abs(daysLeft)} ${t.projects.daysLate}` :
+                   daysLeft === 0 ? t.projects.today :
+                   `${daysLeft} ${t.projects.daysRemaining}`}
                 </span>
               </div>
 
@@ -850,7 +856,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                   onClick={() => handleEditProject(project)}
                   className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1"
                 >
-                  <span>Voir détails</span>
+                  <span>{t.projects.viewDetails}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -865,7 +871,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {selectedProject.id ? 'Modifier le Projet' : 'Nouveau Projet'}
+                {selectedProject.id ? t.projects.editProject : t.projects.newProject}
               </h3>
               <button
                 onClick={() => setShowProjectModal(false)}
@@ -877,7 +883,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Nom du projet</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.projectName}</label>
                 <input
                   type="text"
                   value={selectedProject.name}
@@ -887,7 +893,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.description}</label>
                 <textarea
                   value={selectedProject.description}
                   onChange={(e) => setSelectedProject({ ...selectedProject, description: e.target.value })}
@@ -898,37 +904,37 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.status}</label>
                   <select
                     value={selectedProject.status}
                     onChange={(e) => setSelectedProject({ ...selectedProject, status: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="planning">Planification</option>
-                    <option value="in-progress">En cours</option>
-                    <option value="review">Révision</option>
-                    <option value="completed">Terminé</option>
-                    <option value="on-hold">En pause</option>
+                    <option value="planning">{t.projects.planning}</option>
+                    <option value="in-progress">{t.projects.inProgress}</option>
+                    <option value="review">{t.projects.review}</option>
+                    <option value="completed">{t.projects.completed}</option>
+                    <option value="on-hold">{t.projects.onHold}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Priorité</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.priority}</label>
                   <select
                     value={selectedProject.priority}
                     onChange={(e) => setSelectedProject({ ...selectedProject, priority: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="low">Basse</option>
-                    <option value="medium">Moyenne</option>
-                    <option value="high">Haute</option>
+                    <option value="low">{t.projects.priorityLow}</option>
+                    <option value="medium">{t.projects.priorityMedium}</option>
+                    <option value="high">{t.projects.priorityHigh}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Date de début</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.startDate}</label>
                   <input
                     type="date"
                     value={selectedProject.startDate}
@@ -938,7 +944,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Date limite</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.deadline}</label>
                   <input
                     type="date"
                     value={selectedProject.deadline}
@@ -950,7 +956,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Budget</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.budget}</label>
                   <input
                     type="number"
                     value={selectedProject.budget}
@@ -960,7 +966,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Catégorie</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.category}</label>
                   <input
                     type="text"
                     value={selectedProject.category}
@@ -976,14 +982,14 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowProjectModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               <button
                 onClick={saveProject}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>Sauvegarder</span>
+                <span>{t.common.save}</span>
               </button>
             </div>
           </div>
@@ -999,13 +1005,13 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Supprimer le projet</h3>
-                <p className="text-sm text-slate-600">Cette action est irréversible</p>
+                <h3 className="text-lg font-semibold text-slate-900">{t.projects.deleteProjectTitle}</h3>
+                <p className="text-sm text-slate-600">{t.projects.irreversibleAction}</p>
               </div>
             </div>
 
             <p className="text-slate-700 mb-6">
-              Êtes-vous sûr de vouloir supprimer ce projet ? Toutes les tâches associées seront également supprimées.
+              {t.projects.deleteProjectConfirmation}
             </p>
 
             <div className="flex space-x-3">
@@ -1013,13 +1019,13 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               <button
                 onClick={confirmDeleteProject}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                Supprimer
+                {t.common.delete}
               </button>
             </div>
           </div>
@@ -1035,21 +1041,21 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Réallocation d'équipe</h3>
-                <p className="text-sm text-slate-600">Projet: {reallocationProject.name}</p>
+                <h3 className="text-lg font-semibold text-slate-900">{t.projects.teamReallocation}</h3>
+                <p className="text-sm text-slate-600">{t.projects.project}: {reallocationProject.name}</p>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
               <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Recommandation IA</h4>
+                <h4 className="font-medium text-blue-900 mb-2">{t.projects.aiRecommendation}</h4>
                 <p className="text-sm text-blue-700">
-                  Transférer 2 développeurs vers ce projet pour accélérer la livraison de 15%.
+                  {t.projects.transferDevelopers}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-slate-900">Membres suggérés:</h4>
+                <h4 className="font-medium text-slate-900">{t.projects.suggestedMembersColon}</h4>
                 <div className="space-y-2">
                   {users.slice(0, 2).map(user => (
                     <div key={user.id} className="flex items-center space-x-3 p-2 border border-slate-200 rounded-lg">
@@ -1069,14 +1075,14 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowReallocationModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               <button
                 onClick={executeReallocation}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <Zap className="w-4 h-4" />
-                <span>Exécuter</span>
+                <span>{t.projects.execute}</span>
               </button>
             </div>
           </div>
@@ -1089,7 +1095,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {editingRecommendation ? 'Modifier la Recommandation' : 'Nouvelle Recommandation IA'}
+                {editingRecommendation ? t.projects.editRecommendation : t.projects.newRecommendation}
               </h3>
               <button
                 onClick={() => setShowRecommendationModal(false)}
@@ -1101,7 +1107,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Titre</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.titleField}</label>
                 <input
                   type="text"
                   value={newRecommendation.title || ''}
@@ -1111,7 +1117,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.description}</label>
                 <textarea
                   value={newRecommendation.description || ''}
                   onChange={(e) => setNewRecommendation({ ...newRecommendation, description: e.target.value })}
@@ -1122,36 +1128,36 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.typeField}</label>
                   <select
                     value={newRecommendation.type || 'optimization'}
                     onChange={(e) => setNewRecommendation({ ...newRecommendation, type: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="reallocation">Réallocation</option>
-                    <option value="optimization">Optimisation</option>
-                    <option value="risk">Risque</option>
-                    <option value="opportunity">Opportunité</option>
+                    <option value="reallocation">{t.projects.reallocation}</option>
+                    <option value="optimization">{t.projects.optimization}</option>
+                    <option value="risk">{t.projects.risk}</option>
+                    <option value="opportunity">{t.projects.opportunity}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Impact</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.ai.impact}</label>
                   <select
                     value={newRecommendation.impact || 'medium'}
                     onChange={(e) => setNewRecommendation({ ...newRecommendation, impact: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="low">Faible</option>
-                    <option value="medium">Moyen</option>
-                    <option value="high">Élevé</option>
+                    <option value="low">{t.projects.lowImpact}</option>
+                    <option value="medium">{t.projects.mediumImpact}</option>
+                    <option value="high">{t.projects.highImpact}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Confiance (%)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.confidencePercent}</label>
                   <input
                     type="number"
                     min="0"
@@ -1163,13 +1169,13 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Projet</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.project}</label>
                   <select
                     value={newRecommendation.projectId || ''}
                     onChange={(e) => setNewRecommendation({ ...newRecommendation, projectId: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="">Sélectionner un projet</option>
+                    <option value="">{t.projects.selectProject}</option>
                     {projects.map(project => (
                       <option key={project.id} value={project.id}>{project.name}</option>
                     ))}
@@ -1185,7 +1191,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                   onChange={(e) => setNewRecommendation({ ...newRecommendation, actionable: e.target.checked })}
                   className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
                 />
-                <label htmlFor="actionable" className="text-sm text-slate-700">Recommandation actionnable</label>
+                <label htmlFor="actionable" className="text-sm text-slate-700">{t.projects.actionableRecommendation}</label>
               </div>
             </div>
 
@@ -1194,14 +1200,14 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowRecommendationModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleSaveRecommendation}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>Sauvegarder</span>
+                <span>{t.common.save}</span>
               </button>
             </div>
           </div>

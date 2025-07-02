@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider } from './context/AppContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { SettingsProvider } from './context/SettingsContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -17,6 +19,7 @@ import HelpSupport from './components/HelpSupport';
 import AIPremium from './components/AIPremium';
 
 function AppContent() {
+  const { t } = useLanguage();
   const [activeView, setActiveView] = useState('smart-dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showVoiceCommands, setShowVoiceCommands] = useState(false);
@@ -117,7 +120,7 @@ function AppContent() {
       {/* Floating AI Indicators */}
       <div className="fixed bottom-6 left-6 z-40">
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium animate-pulse">
-          🤖 IA Active • Analyse en temps réel
+          {t.header.aiActiveRealtime}
         </div>
       </div>
     </div>
@@ -126,9 +129,13 @@ function AppContent() {
 
 function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <LanguageProvider>
+      <SettingsProvider>
+        <AppProvider>
+          <AppContent />
+        </AppProvider>
+      </SettingsProvider>
+    </LanguageProvider>
   );
 }
 

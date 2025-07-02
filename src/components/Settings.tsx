@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -47,1452 +47,2234 @@ import {
   Github,
   Slack,
   Chrome,
-  Figma
+  Figma,
+  TestTube,
+  Activity,
+  BarChart3,
+  Settings2
 } from 'lucide-react';
+
 import { useAppContext } from '../context/AppContext';
-import { UserSettings } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import { useSettings } from '../context/SettingsContext';
 
-type SettingsSection = 'profile' | 'security' | 'notifications' | 'appearance' | 'ai' | 'integrations' | 'database' | 'backup' | 'blog';
+// Services
+import { ProfileService, UserProfile } from '../services/profileService';
+import { SecurityService, PasswordStrength, TwoFactorSetup } from '../services/securityService';
+import { AIService, AIModel, AIUsageStats } from '../services/aiService';
+import { BackupService, BackupJob, BackupHistory } from '../services/backupService';
+import { DatabaseService, DatabaseStats } from '../services/databaseService';
+import { NotificationService } from '../services/settingsService';
 
-interface Integration {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ComponentType<any>;
-  connected: boolean;
-  lastSync?: string;
-  status: 'active' | 'error' | 'pending';
-}
-
-interface DatabaseConnection {
-  id: string;
-  name: string;
-  type: 'postgresql' | 'mysql' | 'mongodb' | 'redis';
-  host: string;
-  port: number;
-  database: string;
-  status: 'connected' | 'disconnected' | 'error';
-  lastConnection?: string;
-}
-
-interface BackupConfig {
-  id: string;
-  name: string;
-  frequency: 'daily' | 'weekly' | 'monthly';
-  destination: 'local' | 'cloud' | 's3';
-  enabled: boolean;
-  lastBackup?: string;
-  size?: string;
-}
-
-interface BlogPost {
-  id: string;
-  title: string;
-  content: string;
-  excerpt: string;
-  status: 'draft' | 'published' | 'archived';
-  author: string;
-  createdAt: string;
-  updatedAt: string;
-  tags: string[];
-  readTime: number;
-}
+type SettingsSection = 'profile' | 'security' | 'notifications' | 'appearance' | 'ai' | 'integrations' | 'database' | 'backup' | 'advanced';
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { t } = useLanguage();
+  const { settings, dispatch: settingsDispatch, saveSettings } = useSettings();
   const { currentUser } = state;
   
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
-  const [settings, setSettings] = useState<UserSettings>(currentUser.settings || {
-    notifications: {
-      enabled: true,
-      email: true,
-      push: true,
-      desktop: false,
-      taskUpdates: true,
-      projectDeadlines: true,
-      teamMentions: true,
-    },
-    privacy: {
-      profileVisibility: 'team',
-      showOnlineStatus: true,
-      allowDirectMessages: true,
-    },
-    preferences: {
-      theme: 'system',
-      language: 'fr',
-      timezone: 'Europe/Paris',
-      dateFormat: 'DD/MM/YYYY',
-      timeFormat: '24h',
-    },
-  });
-
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Profile states
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  
   // Security states
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [qrCode, setQrCode] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState<PasswordStrength | null>(null);
+  const [twoFactorSetup, setTwoFactorSetup] = useState<TwoFactorSetup | null>(null);
   const [verificationCode, setVerificationCode] = useState('');
-
-  // Profile states
-  const [profileData, setProfileData] = useState({
-    name: currentUser.name,
-    email: currentUser.email,
-    phone: currentUser.phone || '',
-    location: currentUser.location || '',
-    bio: '',
-    website: '',
-    linkedin: '',
-    github: ''
-  });
-
-  // AI settings
-  const [aiSettings, setAiSettings] = useState({
-    enabled: true,
-    autoOptimization: true,
-    predictiveAnalytics: true,
-    smartNotifications: true,
-    voiceCommands: false,
-    dataSharing: true,
-    modelVersion: 'gpt-4',
-    responseSpeed: 'balanced'
-  });
-
-  // Integrations
-  const [integrations, setIntegrations] = useState<Integration[]>([
-    {
-      id: '1',
-      name: 'Slack',
-      description: 'Synchroniser les notifications et messages',
-      icon: Slack,
-      connected: true,
-      lastSync: '2024-01-20T10:30:00Z',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'GitHub',
-      description: 'Intégration avec les repositories',
-      icon: Github,
-      connected: false,
-      status: 'pending'
-    },
-    {
-      id: '3',
-      name: 'Figma',
-      description: 'Synchroniser les designs et prototypes',
-      icon: Figma,
-      connected: true,
-      lastSync: '2024-01-19T15:45:00Z',
-      status: 'error'
-    },
-    {
-      id: '4',
-      name: 'Google Drive',
-      description: 'Stockage et partage de fichiers',
-      icon: Cloud,
-      connected: true,
-      lastSync: '2024-01-20T09:15:00Z',
-      status: 'active'
-    }
-  ]);
-
-  // Database connections
-  const [databases, setDatabases] = useState<DatabaseConnection[]>([
-    {
-      id: '1',
-      name: 'Production DB',
-      type: 'postgresql',
-      host: 'prod-db.company.com',
-      port: 5432,
-      database: 'projectflow_prod',
-      status: 'connected',
-      lastConnection: '2024-01-20T10:00:00Z'
-    },
-    {
-      id: '2',
-      name: 'Analytics DB',
-      type: 'mongodb',
-      host: 'analytics.company.com',
-      port: 27017,
-      database: 'analytics',
-      status: 'connected',
-      lastConnection: '2024-01-20T09:45:00Z'
-    },
-    {
-      id: '3',
-      name: 'Cache Redis',
-      type: 'redis',
-      host: 'cache.company.com',
-      port: 6379,
-      database: '0',
-      status: 'error',
-      lastConnection: '2024-01-19T18:30:00Z'
-    }
-  ]);
-
-  // Backup configurations
-  const [backups, setBackups] = useState<BackupConfig[]>([
-    {
-      id: '1',
-      name: 'Base de données complète',
-      frequency: 'daily',
-      destination: 'cloud',
-      enabled: true,
-      lastBackup: '2024-01-20T02:00:00Z',
-      size: '2.3 GB'
-    },
-    {
-      id: '2',
-      name: 'Fichiers utilisateurs',
-      frequency: 'weekly',
-      destination: 's3',
-      enabled: true,
-      lastBackup: '2024-01-18T03:00:00Z',
-      size: '856 MB'
-    },
-    {
-      id: '3',
-      name: 'Configuration système',
-      frequency: 'monthly',
-      destination: 'local',
-      enabled: false,
-      lastBackup: '2024-01-01T01:00:00Z',
-      size: '45 MB'
-    }
-  ]);
-
-  // Blog posts
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([
-    {
-      id: '1',
-      title: 'Guide d\'utilisation de l\'IA dans ProjectFlow',
-      content: '# Guide d\'utilisation de l\'IA\n\nCe guide vous explique comment utiliser efficacement les fonctionnalités d\'intelligence artificielle...',
-      excerpt: 'Découvrez comment tirer parti de l\'IA pour optimiser vos projets',
-      status: 'published',
-      author: currentUser.id,
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      tags: ['IA', 'Guide', 'Productivité'],
-      readTime: 5
-    },
-    {
-      id: '2',
-      title: 'Nouvelles fonctionnalités - Janvier 2024',
-      content: '# Nouvelles fonctionnalités\n\n## Dashboard IA intelligent\n\nNous avons ajouté un nouveau dashboard...',
-      excerpt: 'Découvrez les dernières améliorations apportées à la plateforme',
-      status: 'draft',
-      author: currentUser.id,
-      createdAt: '2024-01-20T14:30:00Z',
-      updatedAt: '2024-01-20T16:45:00Z',
-      tags: ['Nouveautés', 'Fonctionnalités'],
-      readTime: 3
-    }
-  ]);
-
-  const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
-  const [showBlogEditor, setShowBlogEditor] = useState(false);
-  const [isCreatingPost, setIsCreatingPost] = useState(false);
-
-  useEffect(() => {
-    // Simulate 2FA status check
-    setTwoFactorEnabled(Math.random() > 0.5);
-    
-    // Generate QR code for 2FA setup
-    setQrCode('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2ZmZiIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iMTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE0Ij5RUiBDb2RlPC90ZXh0Pgo8L3N2Zz4K');
-  }, []);
+  
+  // AI states
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [aiUsageStats, setAiUsageStats] = useState<AIUsageStats | null>(null);
+  const [testingModel, setTestingModel] = useState(false);
+  const [testPrompt, setTestPrompt] = useState('Write a hello world function in Python');
+  const [testResult, setTestResult] = useState<string>('');
+  
+  // Database states
+  const [databaseStats, setDatabaseStats] = useState<Record<string, DatabaseStats>>({});
+  const [testingConnections, setTestingConnections] = useState<Set<string>>(new Set());
+  
+  // Backup states
+  const [activeBackups, setActiveBackups] = useState<BackupJob[]>([]);
+  const [backupHistory, setBackupHistory] = useState<BackupHistory[]>([]);
+  const [runningBackup, setRunningBackup] = useState<string | null>(null);
 
   const menuItems = [
-    { id: 'profile', label: 'Profil', icon: User },
-    { id: 'security', label: 'Sécurité', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'appearance', label: 'Apparence', icon: Palette },
-    { id: 'ai', label: 'Intelligence Artificielle', icon: Brain },
-    { id: 'integrations', label: 'Intégrations', icon: Plug },
-    { id: 'database', label: 'Base de données', icon: Database },
-    { id: 'backup', label: 'Sauvegarde', icon: Download },
-    { id: 'blog', label: 'Blog', icon: FileText }
+    { id: 'profile', label: t.settings.personalInfo, icon: User },
+    { id: 'security', label: t.settings.security, icon: Shield },
+    { id: 'notifications', label: t.settings.notifications, icon: Bell },
+    { id: 'appearance', label: t.settings.preferences, icon: Palette },
+    { id: 'ai', label: t.settings.aiIntelligence, icon: Brain },
+    { id: 'integrations', label: t.settings.integrations, icon: Plug },
+    { id: 'database', label: t.settings.databaseLabel, icon: Database },
+    { id: 'backup', label: t.settings.backupData, icon: Download },
+    { id: 'advanced', label: t.settings.advanced, icon: Settings2 }
   ];
 
-  const saveSettings = () => {
-    const updatedUser = {
-      ...currentUser,
-      ...profileData,
-      settings
-    };
-    
-    dispatch({ type: 'UPDATE_USER_PROFILE', payload: updatedUser });
-    
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: {
-        id: Date.now().toString(),
-        title: 'Paramètres sauvegardés',
-        message: 'Vos paramètres ont été mis à jour avec succès',
-        type: 'success',
-        isRead: false,
-        createdAt: new Date().toISOString()
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      // Load profile data with fallback
+      try {
+        const profileData = await ProfileService.getProfile();
+        if (profileData) setProfile(profileData);
+      } catch (error) {
+        console.warn('Profile service unavailable, using fallback data');
+        setProfile({
+          id: 'demo-user',
+          name: currentUser?.name || 'Demo User',
+          email: currentUser?.email || 'demo@example.com',
+          avatar: '',
+          jobTitle: 'Developer',
+          department: 'Engineering',
+          location: 'Remote',
+          timezone: 'UTC',
+          phone: '',
+          bio: 'Demo user profile',
+          isVerified: false,
+          lastActivity: new Date().toISOString(),
+          joinedAt: new Date().toISOString()
+        });
       }
-    });
+
+      // Load AI models with fallback
+      try {
+        const models = await AIService.getAvailableModels();
+        setAvailableModels(models);
+      } catch (error) {
+        console.warn('AI service unavailable, using fallback models');
+        setAvailableModels([
+          {
+            id: 'claude-3-opus',
+            name: 'Claude 3 Opus',
+            description: 'Most capable model for complex tasks',
+            maxTokens: 200000,
+            costPer1kTokens: 0.015,
+            recommended: true
+          },
+          {
+            id: 'claude-3-sonnet',
+            name: 'Claude 3 Sonnet',
+            description: 'Balanced performance and speed',
+            maxTokens: 200000,
+            costPer1kTokens: 0.003,
+            recommended: false
+          },
+          {
+            id: 'claude-3-haiku',
+            name: 'Claude 3 Haiku',
+            description: 'Fastest model for simple tasks',
+            maxTokens: 200000,
+            costPer1kTokens: 0.00025,
+            recommended: false
+          }
+        ]);
+      }
+
+      // Load AI usage stats with fallback
+      try {
+        const usage = await AIService.getUsageStats();
+        setAiUsageStats(usage);
+      } catch (error) {
+        console.warn('AI usage stats unavailable, using fallback data');
+        setAiUsageStats({
+          totalRequests: 1247,
+          totalTokens: 892456,
+          averageResponseTime: 1250,
+          totalCost: 24.67,
+          requestsThisMonth: 89,
+          tokensThisMonth: 45632,
+          costThisMonth: 3.21,
+          topModels: ['claude-3-sonnet', 'claude-3-opus'],
+          dailyUsage: [
+            { date: '2024-01-01', requests: 23, tokens: 12450 },
+            { date: '2024-01-02', requests: 18, tokens: 9876 }
+          ]
+        });
+      }
+
+      // Load backup data with fallback
+      try {
+        const jobs = await BackupService.getActiveJobs();
+        setActiveBackups(jobs);
+      } catch (error) {
+        console.warn('Backup service unavailable, using fallback data');
+        setActiveBackups([]);
+      }
+
+      try {
+        const history = await BackupService.getBackupHistory();
+        setBackupHistory(history);
+      } catch (error) {
+        console.warn('Backup history unavailable, using fallback data');
+        setBackupHistory([
+          {
+            id: 'backup-1',
+            configId: 'config-1',
+            configName: 'Daily Backup',
+            startTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+            endTime: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString(),
+            status: 'completed',
+            size: '2.4 GB',
+            type: 'full'
+          },
+          {
+            id: 'backup-2',
+            configId: 'config-2',
+            configName: 'Incremental Backup',
+            startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            endTime: new Date(Date.now() - 23.8 * 60 * 60 * 1000).toISOString(),
+            status: 'completed',
+            size: '450 MB',
+            type: 'incremental'
+          }
+        ]);
+      }
+
+      // Load database stats for each connection with fallback
+      const fallbackStats = {
+        tables: 24,
+        size: '1.2 GB',
+        connections: 5,
+        uptime: '15 days',
+        lastBackup: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        queries: {
+          total: 15423,
+          slow: 12,
+          failed: 3
+        }
+      };
+
+      for (const db of settings.databases) {
+        try {
+          const stats = await DatabaseService.getStats(db.id);
+          if (stats) {
+            setDatabaseStats(prev => ({ ...prev, [db.id]: stats }));
+          }
+        } catch (error) {
+          console.warn(`Database stats unavailable for ${db.name}, using fallback data`);
+          setDatabaseStats(prev => ({ ...prev, [db.id]: fallbackStats }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load initial data:', error);
+      // If everything fails, at least set basic fallback data
+      if (!profile) {
+        setProfile({
+          id: 'fallback-user',
+          name: 'Demo User',
+          email: 'demo@example.com',
+          avatar: '',
+          jobTitle: 'User',
+          department: 'General',
+          location: 'Unknown',
+          timezone: 'UTC',
+          phone: '',
+          bio: 'Fallback profile',
+          isVerified: false,
+          lastActivity: new Date().toISOString(),
+          joinedAt: new Date().toISOString()
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const changePassword = () => {
-    if (newPassword !== confirmPassword) {
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: {
-          id: Date.now().toString(),
-          title: 'Erreur',
-          message: 'Les mots de passe ne correspondent pas',
-          type: 'error',
-          isRead: false,
-          createdAt: new Date().toISOString()
+  // Profile handlers
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setAvatarPreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileSave = async () => {
+    if (!profile) return;
+
+    setLoading(true);
+    try {
+      // Upload avatar if selected
+      if (avatarFile) {
+        const resized = await ProfileService.resizeImage(avatarFile);
+        const uploadResult = await ProfileService.uploadAvatar(resized);
+        if (uploadResult.success && uploadResult.url) {
+          profile.avatar = uploadResult.url;
         }
-      });
+      }
+
+      // Update profile
+      const result = await ProfileService.updateProfile(profile);
+      if (result.success && result.profile) {
+        setProfile(result.profile);
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: {
+            id: Date.now().toString(),
+            title: t.common.success,
+            message: 'Profile updated successfully',
+            type: 'success',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          }
+        });
+      } else {
+        setErrors({ profile: result.error || 'Update failed' });
+      }
+    } catch (error) {
+      setErrors({ profile: 'Update failed' });
+    } finally {
+      setLoading(false);
+      setAvatarFile(null);
+      setAvatarPreview('');
+    }
+  };
+
+  // Security handlers
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      setErrors({ password: 'Passwords do not match' });
       return;
     }
 
-    // Simulate password change
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: {
-        id: Date.now().toString(),
-        title: 'Mot de passe modifié',
-        message: 'Votre mot de passe a été changé avec succès',
-        type: 'success',
-        isRead: false,
-        createdAt: new Date().toISOString()
-      }
-    });
-  };
+    if (!passwordStrength || passwordStrength.score < 70) {
+      setErrors({ password: 'Password is too weak' });
+      return;
+    }
 
-  const toggle2FA = () => {
-    if (!twoFactorEnabled && verificationCode.length === 6) {
-      setTwoFactorEnabled(true);
-      setVerificationCode('');
-      
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: {
-          id: Date.now().toString(),
-          title: '2FA activée',
-          message: 'L\'authentification à deux facteurs a été activée',
-          type: 'success',
-          isRead: false,
-          createdAt: new Date().toISOString()
-        }
-      });
-    } else if (twoFactorEnabled) {
-      setTwoFactorEnabled(false);
-      
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: {
-          id: Date.now().toString(),
-          title: '2FA désactivée',
-          message: 'L\'authentification à deux facteurs a été désactivée',
-          type: 'warning',
-          isRead: false,
-          createdAt: new Date().toISOString()
-        }
-      });
+    setLoading(true);
+    try {
+      const result = await SecurityService.changePassword(currentPassword, newPassword);
+      if (result.success) {
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setPasswordStrength(null);
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: {
+            id: Date.now().toString(),
+            title: t.common.success,
+            message: 'Password changed successfully',
+            type: 'success',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          }
+        });
+      } else {
+        setErrors({ password: result.error || 'Password change failed' });
+      }
+    } catch (error) {
+      setErrors({ password: 'Password change failed' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const toggleIntegration = (integrationId: string) => {
-    setIntegrations(prev => prev.map(integration => 
-      integration.id === integrationId 
-        ? { 
-            ...integration, 
-            connected: !integration.connected,
-            status: !integration.connected ? 'active' : 'pending',
-            lastSync: !integration.connected ? new Date().toISOString() : undefined
-          }
-        : integration
-    ));
+  const handlePasswordStrengthCheck = useCallback(async (password: string) => {
+    if (password.length > 0) {
+      const strength = await SecurityService.checkPasswordStrength(password);
+      setPasswordStrength(strength);
+    } else {
+      setPasswordStrength(null);
+    }
+  }, []);
+
+  const handleSetup2FA = async () => {
+    setLoading(true);
+    try {
+      const result = await SecurityService.setup2FA();
+      if (result.success && result.setup) {
+        setTwoFactorSetup(result.setup);
+      } else {
+        setErrors({ security: result.error || '2FA setup failed' });
+      }
+    } catch (error) {
+      setErrors({ security: '2FA setup failed' });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const testDatabaseConnection = (dbId: string) => {
-    setDatabases(prev => prev.map(db => 
-      db.id === dbId 
-        ? { 
-            ...db, 
-            status: Math.random() > 0.3 ? 'connected' : 'error',
+  const handleVerify2FA = async () => {
+    if (verificationCode.length !== 6) return;
+
+    setLoading(true);
+    try {
+      const result = await SecurityService.verify2FA(verificationCode);
+      if (result.success) {
+        settingsDispatch({
+          type: 'UPDATE_SECURITY_SETTINGS',
+          payload: { twoFactorEnabled: true }
+        });
+        setTwoFactorSetup(null);
+        setVerificationCode('');
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: {
+            id: Date.now().toString(),
+            title: t.common.success,
+            message: '2FA enabled successfully',
+            type: 'success',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          }
+        });
+      } else {
+        setErrors({ security: result.error || '2FA verification failed' });
+      }
+    } catch (error) {
+      setErrors({ security: '2FA verification failed' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // AI handlers
+  const handleTestModel = async () => {
+    if (!testPrompt.trim()) return;
+
+    setTestingModel(true);
+    try {
+      const result = await AIService.testModel(
+        settings.ai.modelVersion,
+        testPrompt,
+        settings.ai
+      );
+      
+      if (result.success && result.response) {
+        setTestResult(result.response.response);
+      } else {
+        setTestResult(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      setTestResult('Test failed');
+    } finally {
+      setTestingModel(false);
+    }
+  };
+
+  const handleAISettingsChange = (key: string, value: any) => {
+    settingsDispatch({
+      type: 'UPDATE_AI_SETTINGS',
+      payload: { [key]: value }
+    });
+  };
+
+  // Database handlers
+  const handleTestDatabaseConnection = async (connectionId: string) => {
+    const connection = settings.databases.find(db => db.id === connectionId);
+    if (!connection) return;
+
+    setTestingConnections(prev => new Set(prev).add(connectionId));
+    try {
+      const result = await DatabaseService.testConnection(connection);
+      
+      settingsDispatch({
+        type: 'UPDATE_DATABASE',
+        payload: {
+          id: connectionId,
+          updates: {
+            status: result.success ? 'connected' : 'error',
             lastConnection: new Date().toISOString()
           }
-        : db
-    ));
+        }
+      });
+
+      // Load stats if connected
+      if (result.success) {
+        const stats = await DatabaseService.getStats(connectionId);
+        if (stats) {
+          setDatabaseStats(prev => ({ ...prev, [connectionId]: stats }));
+        }
+      }
+    } catch (error) {
+      console.error('Database test failed:', error);
+    } finally {
+      setTestingConnections(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(connectionId);
+        return newSet;
+      });
+    }
   };
 
-  const runBackup = (backupId: string) => {
-    setBackups(prev => prev.map(backup => 
-      backup.id === backupId 
-        ? { 
-            ...backup, 
-            lastBackup: new Date().toISOString()
+  // Backup handlers
+  const handleRunBackup = async (configId: string) => {
+    setRunningBackup(configId);
+    try {
+      const result = await BackupService.runBackup(configId);
+      
+      if (result.success && result.jobId) {
+        // Refresh active jobs
+        const jobs = await BackupService.getActiveJobs();
+        setActiveBackups(jobs);
+        
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: {
+            id: Date.now().toString(),
+            title: t.common.success,
+            message: 'Backup started successfully',
+            type: 'info',
+            isRead: false,
+            createdAt: new Date().toISOString()
           }
-        : backup
-    ));
-    
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: {
-        id: Date.now().toString(),
-        title: 'Sauvegarde lancée',
-        message: 'La sauvegarde a été démarrée avec succès',
-        type: 'info',
-        isRead: false,
-        createdAt: new Date().toISOString()
-      }
-    });
-  };
-
-  const createBlogPost = () => {
-    const newPost: BlogPost = {
-      id: Date.now().toString(),
-      title: 'Nouveau post',
-      content: '# Nouveau post\n\nContenu du post...',
-      excerpt: '',
-      status: 'draft',
-      author: currentUser.id,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      tags: [],
-      readTime: 1
-    };
-    
-    setSelectedBlogPost(newPost);
-    setIsCreatingPost(true);
-    setShowBlogEditor(true);
-  };
-
-  const saveBlogPost = () => {
-    if (selectedBlogPost) {
-      if (isCreatingPost) {
-        setBlogPosts(prev => [...prev, selectedBlogPost]);
+        });
       } else {
-        setBlogPosts(prev => prev.map(post => 
-          post.id === selectedBlogPost.id ? selectedBlogPost : post
-        ));
+        setErrors({ backup: result.error || 'Backup failed to start' });
       }
-      
-      setShowBlogEditor(false);
-      setSelectedBlogPost(null);
-      setIsCreatingPost(false);
-      
+    } catch (error) {
+      setErrors({ backup: 'Backup failed to start' });
+    } finally {
+      setRunningBackup(null);
+    }
+  };
+
+  // Save settings
+  const handleSaveSettings = async () => {
+    setLoading(true);
+    try {
+      await saveSettings();
       dispatch({
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: isCreatingPost ? 'Post créé' : 'Post mis à jour',
-          message: `Le post "${selectedBlogPost.title}" a été ${isCreatingPost ? 'créé' : 'mis à jour'}`,
+          title: t.common.success,
+          message: 'Settings saved successfully',
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
         }
       });
+    } catch (error) {
+      setErrors({ save: 'Failed to save settings' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deleteBlogPost = (postId: string) => {
-    setBlogPosts(prev => prev.filter(post => post.id !== postId));
-    
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: {
-        id: Date.now().toString(),
-        title: 'Post supprimé',
-        message: 'Le post a été supprimé avec succès',
-        type: 'success',
-        isRead: false,
-        createdAt: new Date().toISOString()
-      }
-    });
-  };
-
-  const renderProfileSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Informations personnelles</h3>
-        
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <img
-                src={currentUser.avatar}
-                alt="Avatar"
-                className="w-20 h-20 rounded-full object-cover"
-              />
-              <button className="absolute bottom-0 right-0 p-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
-                <Camera className="w-4 h-4" />
-              </button>
-            </div>
-            <div>
-              <h4 className="font-medium text-slate-900">{currentUser.name}</h4>
-              <p className="text-sm text-slate-600">{currentUser.role}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Nom complet</label>
-              <input
-                type="text"
-                value={profileData.name}
-                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-              <input
-                type="email"
-                value={profileData.email}
-                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Téléphone</label>
-              <input
-                type="tel"
-                value={profileData.phone}
-                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Localisation</label>
-              <input
-                type="text"
-                value={profileData.location}
-                onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Bio</label>
-            <textarea
-              value={profileData.bio}
-              onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-              rows={3}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Parlez-nous de vous..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Site web</label>
-              <input
-                type="url"
-                value={profileData.website}
-                onChange={(e) => setProfileData({ ...profileData, website: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">LinkedIn</label>
-              <input
-                type="url"
-                value={profileData.linkedin}
-                onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://linkedin.com/in/..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">GitHub</label>
-              <input
-                type="url"
-                value={profileData.github}
-                onChange={(e) => setProfileData({ ...profileData, github: e.target.value })}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="https://github.com/..."
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSecuritySection = () => (
-    <div className="space-y-6">
-      {/* Change Password */}
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Changer le mot de passe</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Mot de passe actuel</label>
-            <div className="relative">
-              <input
-                type={showPasswords ? "text" : "password"}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-4 py-2 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPasswords(!showPasswords)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Nouveau mot de passe</label>
-            <input
-              type={showPasswords ? "text" : "password"}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Confirmer le nouveau mot de passe</label>
-            <input
-              type={showPasswords ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <button
-            onClick={changePassword}
-            disabled={!currentPassword || !newPassword || !confirmPassword}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Changer le mot de passe
-          </button>
-        </div>
-      </div>
-
-      {/* Two-Factor Authentication */}
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Authentification à deux facteurs (2FA)</h3>
-        
-        <div className="bg-slate-50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h4 className="font-medium text-slate-900">2FA Status</h4>
-              <p className="text-sm text-slate-600">
-                {twoFactorEnabled ? 'Activée' : 'Désactivée'}
-              </p>
-            </div>
-            <div className={`flex items-center space-x-2 ${twoFactorEnabled ? 'text-green-600' : 'text-red-600'}`}>
-              {twoFactorEnabled ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
-              <span className="font-medium">
-                {twoFactorEnabled ? 'Sécurisé' : 'Non sécurisé'}
-              </span>
-            </div>
-          </div>
-
-          {!twoFactorEnabled && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <img src={qrCode} alt="QR Code" className="mx-auto mb-4 border rounded-lg" />
-                <p className="text-sm text-slate-600 mb-4">
-                  Scannez ce QR code avec votre application d'authentification
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Code de vérification</label>
-                <input
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="123456"
-                  maxLength={6}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-mono"
-                />
-              </div>
-
-              <button
-                onClick={toggle2FA}
-                disabled={verificationCode.length !== 6}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Activer la 2FA
-              </button>
-            </div>
-          )}
-
-          {twoFactorEnabled && (
-            <button
-              onClick={toggle2FA}
-              className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Désactiver la 2FA
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Security Log */}
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Journal de sécurité</h3>
-        
-        <div className="space-y-3">
-          {[
-            { action: 'Connexion réussie', time: '2024-01-20 10:30', ip: '192.168.1.100', status: 'success' },
-            { action: 'Tentative de connexion échouée', time: '2024-01-19 15:45', ip: '203.0.113.1', status: 'error' },
-            { action: 'Mot de passe modifié', time: '2024-01-18 09:15', ip: '192.168.1.100', status: 'warning' },
-            { action: '2FA activée', time: '2024-01-17 14:20', ip: '192.168.1.100', status: 'success' }
-          ].map((log, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  log.status === 'success' ? 'bg-green-500' :
-                  log.status === 'error' ? 'bg-red-500' : 'bg-orange-500'
-                }`}></div>
-                <div>
-                  <p className="font-medium text-slate-900">{log.action}</p>
-                  <p className="text-sm text-slate-600">{log.time} • IP: {log.ip}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderNotificationsSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Préférences de notification</h3>
-        
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-            <div>
-              <h4 className="font-medium text-slate-900">Notifications générales</h4>
-              <p className="text-sm text-slate-600">Activer ou désactiver toutes les notifications</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.notifications.enabled}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  notifications: { ...settings.notifications, enabled: e.target.checked }
-                })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
-          {settings.notifications.enabled && (
-            <>
-              <div className="space-y-3">
-                <h4 className="font-medium text-slate-900">Canaux de notification</h4>
-                
-                {[
-                  { key: 'email', label: 'Email', icon: Mail },
-                  { key: 'push', label: 'Notifications push', icon: Smartphone },
-                  { key: 'desktop', label: 'Notifications bureau', icon: Monitor }
-                ].map(({ key, label, icon: Icon }) => (
-                  <div key={key} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Icon className="w-5 h-5 text-slate-500" />
-                      <span className="font-medium text-slate-900">{label}</span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'profile':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.personalInfo}</h3>
+            
+            {profile && (
+              <div className="space-y-4">
+                {/* Avatar Upload */}
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <img
+                      src={avatarPreview || profile.avatar || ProfileService.generateAvatarPlaceholder(profile.name)}
+                      alt="Avatar"
+                      className="w-20 h-20 rounded-full object-cover border-2 border-slate-200"
+                    />
+                    <label className="absolute bottom-0 right-0 p-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors cursor-pointer">
+                      <Camera className="w-4 h-4" />
                       <input
-                        type="checkbox"
-                        checked={settings.notifications[key as keyof typeof settings.notifications] as boolean}
-                        onChange={(e) => setSettings({
-                          ...settings,
-                          notifications: { ...settings.notifications, [key]: e.target.checked }
-                        })}
-                        className="sr-only peer"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
                       />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
-                ))}
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="font-medium text-slate-900">Types de notification</h4>
-                
-                {[
-                  { key: 'taskUpdates', label: 'Mises à jour des tâches', description: 'Nouvelles tâches, changements de statut' },
-                  { key: 'projectDeadlines', label: 'Échéances de projet', description: 'Rappels avant les dates limites' },
-                  { key: 'teamMentions', label: 'Mentions d\'équipe', description: 'Quand vous êtes mentionné dans les commentaires' }
-                ].map(({ key, label, description }) => (
-                  <div key={key} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
-                    <div>
-                      <h5 className="font-medium text-slate-900">{label}</h5>
-                      <p className="text-sm text-slate-600">{description}</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={settings.notifications[key as keyof typeof settings.notifications] as boolean}
-                        onChange={(e) => setSettings({
-                          ...settings,
-                          notifications: { ...settings.notifications, [key]: e.target.checked }
-                        })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                  <div>
+                    <h4 className="font-medium text-slate-900">{profile.name}</h4>
+                    <p className="text-sm text-slate-600">{profile.jobTitle || 'Member'}</p>
+                    {profile.isVerified && (
+                      <div className="flex items-center space-x-1 text-green-600">
+                        <Check className="w-4 h-4" />
+                        <span className="text-sm">Verified</span>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAppearanceSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Thème</h3>
-        
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { value: 'light', label: 'Clair', icon: Sun },
-            { value: 'dark', label: 'Sombre', icon: Moon },
-            { value: 'system', label: 'Système', icon: Monitor }
-          ].map(({ value, label, icon: Icon }) => (
-            <button
-              key={value}
-              onClick={() => setSettings({
-                ...settings,
-                preferences: { ...settings.preferences, theme: value as any }
-              })}
-              className={`p-4 border-2 rounded-lg transition-colors ${
-                settings.preferences.theme === value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <Icon className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-              <p className="font-medium text-slate-900">{label}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Langue et région</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Langue</label>
-            <select
-              value={settings.preferences.language}
-              onChange={(e) => setSettings({
-                ...settings,
-                preferences: { ...settings.preferences, language: e.target.value }
-              })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="fr">Français</option>
-              <option value="en">English</option>
-              <option value="es">Español</option>
-              <option value="de">Deutsch</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Fuseau horaire</label>
-            <select
-              value={settings.preferences.timezone}
-              onChange={(e) => setSettings({
-                ...settings,
-                preferences: { ...settings.preferences, timezone: e.target.value }
-              })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="Europe/Paris">Europe/Paris (GMT+1)</option>
-              <option value="America/New_York">America/New_York (GMT-5)</option>
-              <option value="America/Los_Angeles">America/Los_Angeles (GMT-8)</option>
-              <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Format de date</label>
-            <select
-              value={settings.preferences.dateFormat}
-              onChange={(e) => setSettings({
-                ...settings,
-                preferences: { ...settings.preferences, dateFormat: e.target.value }
-              })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Format d'heure</label>
-            <select
-              value={settings.preferences.timeFormat}
-              onChange={(e) => setSettings({
-                ...settings,
-                preferences: { ...settings.preferences, timeFormat: e.target.value as any }
-              })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="24h">24 heures</option>
-              <option value="12h">12 heures (AM/PM)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAISection = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Configuration IA</h3>
-        
-        <div className="space-y-4">
-          {[
-            { key: 'enabled', label: 'Activer l\'IA', description: 'Utiliser l\'intelligence artificielle pour optimiser vos projets' },
-            { key: 'autoOptimization', label: 'Optimisation automatique', description: 'Permettre à l\'IA d\'optimiser automatiquement vos workflows' },
-            { key: 'predictiveAnalytics', label: 'Analyses prédictives', description: 'Prédictions sur les performances et les risques' },
-            { key: 'smartNotifications', label: 'Notifications intelligentes', description: 'Notifications personnalisées basées sur l\'IA' },
-            { key: 'voiceCommands', label: 'Commandes vocales', description: 'Contrôler l\'application avec la voix' },
-            { key: 'dataSharing', label: 'Partage de données', description: 'Partager des données anonymes pour améliorer l\'IA' }
-          ].map(({ key, label, description }) => (
-            <div key={key} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
-              <div>
-                <h4 className="font-medium text-slate-900">{label}</h4>
-                <p className="text-sm text-slate-600">{description}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={aiSettings[key as keyof typeof aiSettings] as boolean}
-                  onChange={(e) => setAiSettings({ ...aiSettings, [key]: e.target.checked })}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Modèle IA</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Version du modèle</label>
-            <select
-              value={aiSettings.modelVersion}
-              onChange={(e) => setAiSettings({ ...aiSettings, modelVersion: e.target.value })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="gpt-4">GPT-4 (Recommandé)</option>
-              <option value="gpt-3.5">GPT-3.5 (Plus rapide)</option>
-              <option value="claude">Claude (Alternatif)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Vitesse de réponse</label>
-            <select
-              value={aiSettings.responseSpeed}
-              onChange={(e) => setAiSettings({ ...aiSettings, responseSpeed: e.target.value })}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="fast">Rapide</option>
-              <option value="balanced">Équilibré</option>
-              <option value="accurate">Précis</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderIntegrationsSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Intégrations disponibles</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {integrations.map((integration) => {
-            const Icon = integration.icon;
-            return (
-              <div key={integration.id} className="border border-slate-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <Icon className="w-8 h-8 text-slate-600" />
-                    <div>
-                      <h4 className="font-medium text-slate-900">{integration.name}</h4>
-                      <p className="text-sm text-slate-600">{integration.description}</p>
-                    </div>
-                  </div>
-                  <div className={`w-3 h-3 rounded-full ${
-                    integration.status === 'active' ? 'bg-green-500' :
-                    integration.status === 'error' ? 'bg-red-500' : 'bg-orange-500'
-                  }`}></div>
                 </div>
 
-                {integration.connected && integration.lastSync && (
-                  <p className="text-xs text-slate-500 mb-3">
-                    Dernière sync: {new Date(integration.lastSync).toLocaleString('fr-FR')}
-                  </p>
-                )}
+                {/* Profile Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.fullName}</label>
+                    <input
+                      type="text"
+                      value={profile.name}
+                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.email}</label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="email"
+                        value={profile.email}
+                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                        className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      {!profile.isVerified && (
+                        <button
+                          onClick={() => ProfileService.verifyEmail(profile.email)}
+                          className="px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                        >
+                          Verify
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 <button
-                  onClick={() => toggleIntegration(integration.id)}
-                  className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                    integration.connected
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
+                  onClick={handleProfileSave}
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  {integration.connected ? 'Déconnecter' : 'Connecter'}
+                  {loading ? 'Saving...' : t.common.save}
                 </button>
+
+                {errors.profile && (
+                  <div className="text-red-600 text-sm">{errors.profile}</div>
+                )}
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Webhooks</h3>
-        
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
-            <div>
-              <h4 className="font-medium text-slate-900">Webhook de notification</h4>
-              <p className="text-sm text-slate-600">https://api.company.com/webhooks/notifications</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Actif</span>
-              <button className="p-1 text-slate-400 hover:text-slate-600">
-                <Edit className="w-4 h-4" />
-              </button>
-            </div>
+            )}
           </div>
+        );
 
-          <button className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-700 transition-colors">
-            <Plus className="w-5 h-5 mx-auto mb-1" />
-            Ajouter un webhook
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderDatabaseSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Connexions de base de données</h3>
-        
-        <div className="space-y-4">
-          {databases.map((db) => (
-            <div key={db.id} className="border border-slate-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
+      case 'security':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.security}</h3>
+            
+            {/* Password Change */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.changePassword}</h4>
+              
+              <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-slate-900">{db.name}</h4>
-                  <p className="text-sm text-slate-600">{db.type.toUpperCase()} • {db.host}:{db.port}</p>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.currentPassword}</label>
+                  <div className="relative">
+                    <input
+                      type={showPasswords ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full px-4 py-2 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords(!showPasswords)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${
-                    db.status === 'connected' ? 'bg-green-500' :
-                    db.status === 'error' ? 'bg-red-500' : 'bg-orange-500'
-                  }`}></div>
-                  <span className={`text-sm font-medium ${
-                    db.status === 'connected' ? 'text-green-700' :
-                    db.status === 'error' ? 'text-red-700' : 'text-orange-700'
-                  }`}>
-                    {db.status === 'connected' ? 'Connecté' :
-                     db.status === 'error' ? 'Erreur' : 'Déconnecté'}
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.newPassword}</label>
+                  <input
+                    type={showPasswords ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      handlePasswordStrengthCheck(e.target.value);
+                    }}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  
+                  {passwordStrength && (
+                    <div className="mt-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1 bg-slate-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all ${
+                              passwordStrength.score < 30 ? 'bg-red-500' :
+                              passwordStrength.score < 70 ? 'bg-orange-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${passwordStrength.score}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-slate-600">{passwordStrength.score}%</span>
+                      </div>
+                      {passwordStrength.feedback.length > 0 && (
+                        <ul className="mt-1 text-xs text-slate-600">
+                          {passwordStrength.feedback.map((feedback, index) => (
+                            <li key={index}>• {feedback}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.confirmNewPassword}</label>
+                  <input
+                    type={showPasswords ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? 'Changing...' : t.settings.changePassword}
+                </button>
+
+                {errors.password && (
+                  <div className="text-red-600 text-sm">{errors.password}</div>
+                )}
+              </div>
+            </div>
+
+            {/* Two-Factor Authentication */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.twoFactorAuthentication}</h4>
+              
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm text-slate-600">
+                    {settings.security.twoFactorEnabled ? t.settings.enabled : t.settings.disabled}
+                  </p>
+                </div>
+                <div className={`flex items-center space-x-2 ${settings.security.twoFactorEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                  {settings.security.twoFactorEnabled ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+                  <span className="font-medium">
+                    {settings.security.twoFactorEnabled ? t.settings.secure : t.settings.notSecure}
                   </span>
                 </div>
               </div>
 
-              {db.lastConnection && (
-                <p className="text-xs text-slate-500 mb-3">
-                  Dernière connexion: {new Date(db.lastConnection).toLocaleString('fr-FR')}
-                </p>
+              {!settings.security.twoFactorEnabled && !twoFactorSetup && (
+                <button
+                  onClick={handleSetup2FA}
+                  disabled={loading}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? 'Setting up...' : t.settings.enable2FA}
+                </button>
               )}
 
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => testDatabaseConnection(db.id)}
-                  className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
-                >
-                  Tester la connexion
-                </button>
-                <button className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              {twoFactorSetup && (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <img src={twoFactorSetup.qrCode} alt="QR Code" className="mx-auto mb-4 border rounded-lg" />
+                    <p className="text-sm text-slate-600 mb-4">
+                      {t.settings.scanQR}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.verificationCode}</label>
+                    <input
+                      type="text"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      placeholder="123456"
+                      maxLength={6}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-mono"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleVerify2FA}
+                    disabled={loading || verificationCode.length !== 6}
+                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {loading ? 'Verifying...' : t.settings.enable2FA}
+                  </button>
+                </div>
+              )}
+
+              {errors.security && (
+                <div className="text-red-600 text-sm mt-2">{errors.security}</div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'ai':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.aiConfiguration}</h3>
+            
+            {/* AI Settings */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                <div>
+                  <h4 className="font-medium text-slate-900">{t.settings.enableAI}</h4>
+                  <p className="text-sm text-slate-600">{t.settings.enableAIDesc}</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.ai.enabled}
+                    onChange={(e) => handleAISettingsChange('enabled', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Model Selection */}
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-4">{t.settings.modelVersion}</h4>
+                
+                <div className="space-y-3">
+                  {availableModels.map((model) => (
+                    <label key={model.id} className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="aiModel"
+                        value={model.id}
+                        checked={settings.ai.modelVersion === model.id}
+                        onChange={(e) => handleAISettingsChange('modelVersion', e.target.value)}
+                        className="text-blue-600"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h5 className="font-medium text-slate-900">{model.name}</h5>
+                          {model.recommended && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                              {t.settings.recommended}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600">{model.description}</p>
+                        <div className="flex items-center space-x-4 text-xs text-slate-500 mt-1">
+                          <span>Max tokens: {model.maxTokens.toLocaleString()}</span>
+                          <span>Cost: ${model.costPer1kTokens}/1k tokens</span>
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Model Testing */}
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-4">Test Model</h4>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Test Prompt</label>
+                    <textarea
+                      value={testPrompt}
+                      onChange={(e) => setTestPrompt(e.target.value)}
+                      rows={3}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter a test prompt..."
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleTestModel}
+                    disabled={testingModel || !testPrompt.trim()}
+                    className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+                  >
+                    <TestTube className="w-4 h-4" />
+                    <span>{testingModel ? 'Testing...' : 'Test Model'}</span>
+                  </button>
+
+                  {testResult && (
+                    <div className="p-4 bg-slate-50 rounded-lg">
+                      <h5 className="font-medium text-slate-900 mb-2">Response:</h5>
+                      <pre className="text-sm text-slate-700 whitespace-pre-wrap">{testResult}</pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Usage Stats */}
+              {aiUsageStats && (
+                <div className="border border-slate-200 rounded-lg p-4">
+                  <h4 className="font-medium text-slate-900 mb-4">Usage Statistics</h4>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-slate-900">{aiUsageStats.totalRequests.toLocaleString()}</p>
+                      <p className="text-sm text-slate-600">Total Requests</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-slate-900">{AIService.formatTokens(aiUsageStats.totalTokens)}</p>
+                      <p className="text-sm text-slate-600">Total Tokens</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-slate-900">{aiUsageStats.averageResponseTime}ms</p>
+                      <p className="text-sm text-slate-600">Avg Response Time</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-slate-900">{AIService.formatCost(aiUsageStats.totalCost)}</p>
+                      <p className="text-sm text-slate-600">Total Cost</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.notifications}</h3>
+            
+            {/* Email Notifications */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.emailNotifications}</h4>
+              
+              <div className="space-y-4">
+                {[
+                  { key: 'projectUpdates', label: t.settings.projectUpdates },
+                  { key: 'taskAssignments', label: t.settings.taskAssignments },
+                  { key: 'deadlineReminders', label: t.settings.deadlineReminders },
+                  { key: 'weeklyReports', label: t.settings.weeklyReports },
+                  { key: 'securityAlerts', label: t.settings.securityAlerts }
+                ].map((notification) => (
+                  <div key={notification.key} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                    <div>
+                      <h5 className="font-medium text-slate-900">{notification.label}</h5>
+                      <p className="text-sm text-slate-600">Receive notifications via email</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.notifications[notification.key as keyof typeof settings.notifications] as boolean || false}
+                        onChange={(e) => settingsDispatch({
+                          type: 'UPDATE_NOTIFICATION_SETTINGS',
+                          payload: { 
+                            [notification.key]: e.target.checked
+                          }
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
 
-        <button className="w-full p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-700 transition-colors">
-          <Plus className="w-5 h-5 mx-auto mb-2" />
-          Ajouter une connexion
-        </button>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Statistiques de la base de données</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Database className="w-5 h-5 text-blue-600" />
-              <h4 className="font-medium text-slate-900">Taille totale</h4>
-            </div>
-            <p className="text-2xl font-bold text-slate-900">2.8 GB</p>
-            <p className="text-sm text-slate-600">+12% ce mois</p>
-          </div>
-
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Zap className="w-5 h-5 text-green-600" />
-              <h4 className="font-medium text-slate-900">Requêtes/sec</h4>
-            </div>
-            <p className="text-2xl font-bold text-slate-900">1,247</p>
-            <p className="text-sm text-slate-600">Moyenne 24h</p>
-          </div>
-
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center space-x-2 mb-2">
-              <Clock className="w-5 h-5 text-orange-600" />
-              <h4 className="font-medium text-slate-900">Temps de réponse</h4>
-            </div>
-            <p className="text-2xl font-bold text-slate-900">23ms</p>
-            <p className="text-sm text-slate-600">Moyenne</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderBackupSection = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Configurations de sauvegarde</h3>
-        
-        <div className="space-y-4">
-          {backups.map((backup) => (
-            <div key={backup.id} className="border border-slate-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
+            {/* Push Notifications */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.pushNotifications}</h4>
+              
+              <div className="flex items-center justify-between p-3 border border-slate-200 rounded-lg mb-4">
                 <div>
-                  <h4 className="font-medium text-slate-900">{backup.name}</h4>
-                  <p className="text-sm text-slate-600">
-                    {backup.frequency === 'daily' ? 'Quotidienne' :
-                     backup.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuelle'} • 
-                    {backup.destination === 'cloud' ? ' Cloud' :
-                     backup.destination === 's3' ? ' Amazon S3' : ' Local'}
-                  </p>
+                  <h5 className="font-medium text-slate-900">{t.settings.enablePush}</h5>
+                  <p className="text-sm text-slate-600">Allow browser notifications</p>
                 </div>
-                <div className="flex items-center space-x-2">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.notifications.channels?.push?.enabled || false}
+                    onChange={(e) => {
+                      if (e.target.checked && 'Notification' in window) {
+                        Notification.requestPermission().then(permission => {
+                          settingsDispatch({
+                            type: 'UPDATE_NOTIFICATION_SETTINGS',
+                            payload: { 
+                              channels: {
+                                ...settings.notifications.channels,
+                                push: { 
+                                  ...settings.notifications.channels?.push,
+                                  enabled: permission === 'granted'
+                                }
+                              }
+                            }
+                          });
+                        });
+                      } else {
+                        settingsDispatch({
+                          type: 'UPDATE_NOTIFICATION_SETTINGS',
+                          payload: { 
+                            channels: {
+                              ...settings.notifications.channels,
+                              push: { 
+                                ...settings.notifications.channels?.push,
+                                enabled: false
+                              }
+                            }
+                          }
+                        });
+                      }
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.quietHours}</label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-slate-600">From:</span>
+                      <input
+                        type="time"
+                        value={settings.notifications.quietHours?.start || '22:00'}
+                        onChange={(e) => settingsDispatch({
+                          type: 'UPDATE_NOTIFICATION_SETTINGS',
+                          payload: { 
+                            quietHours: {
+                              ...settings.notifications.quietHours,
+                              start: e.target.value
+                            }
+                          }
+                        })}
+                        className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-slate-600">To:</span>
+                      <input
+                        type="time"
+                        value={settings.notifications.quietHours?.end || '08:00'}
+                        onChange={(e) => settingsDispatch({
+                          type: 'UPDATE_NOTIFICATION_SETTINGS',
+                          payload: { 
+                            quietHours: {
+                              ...settings.notifications.quietHours,
+                              end: e.target.value
+                            }
+                          }
+                        })}
+                        className="px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Notification Frequency */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.frequency}</h4>
+              
+              <div className="space-y-3">
+                {[
+                  { value: 'instant', label: t.settings.instant },
+                  { value: 'hourly', label: t.settings.hourly },
+                  { value: 'daily', label: t.settings.daily },
+                  { value: 'weekly', label: t.settings.weekly }
+                ].map((frequency) => (
+                  <label key={frequency.value} className="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="frequency"
+                      value={frequency.value}
+                      checked={settings.notifications.frequency === frequency.value}
+                      onChange={(e) => settingsDispatch({
+                        type: 'UPDATE_NOTIFICATION_SETTINGS',
+                        payload: { frequency: e.target.value as any }
+                      })}
+                      className="text-blue-600"
+                    />
+                    <span className="font-medium text-slate-900">{frequency.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'appearance':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.preferences}</h3>
+            
+            {/* Theme Selection */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.theme}</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { value: 'light', label: t.settings.lightTheme, icon: Sun },
+                  { value: 'dark', label: t.settings.darkTheme, icon: Moon },
+                  { value: 'system', label: t.settings.systemTheme, icon: Monitor }
+                ].map((theme) => {
+                  const Icon = theme.icon;
+                  return (
+                    <label key={theme.value} className={`flex flex-col items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                      settings.appearance.theme === theme.value 
+                        ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                        : 'border-slate-200 hover:bg-slate-50'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="theme"
+                        value={theme.value}
+                        checked={settings.appearance.theme === theme.value}
+                        onChange={(e) => settingsDispatch({
+                          type: 'UPDATE_APPEARANCE_SETTINGS',
+                          payload: { theme: e.target.value as any }
+                        })}
+                        className="sr-only"
+                      />
+                      <Icon className="w-8 h-8 mb-2" />
+                      <span className="font-medium">{theme.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Color Scheme */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.colorScheme}</h4>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { value: 'blue', label: 'Blue', color: 'bg-blue-500' },
+                  { value: 'purple', label: 'Purple', color: 'bg-purple-500' },
+                  { value: 'green', label: 'Green', color: 'bg-green-500' },
+                  { value: 'orange', label: 'Orange', color: 'bg-orange-500' },
+                  { value: 'red', label: 'Red', color: 'bg-red-500' },
+                  { value: 'indigo', label: 'Indigo', color: 'bg-indigo-500' },
+                  { value: 'pink', label: 'Pink', color: 'bg-pink-500' },
+                  { value: 'gray', label: 'Gray', color: 'bg-gray-500' }
+                ].map((color) => (
+                  <label key={color.value} className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    settings.appearance.primaryColor === color.value 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-slate-200 hover:bg-slate-50'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="primaryColor"
+                      value={color.value}
+                      checked={settings.appearance.primaryColor === color.value}
+                      onChange={(e) => settingsDispatch({
+                        type: 'UPDATE_APPEARANCE_SETTINGS',
+                        payload: { primaryColor: e.target.value }
+                      })}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded-full ${color.color}`}></div>
+                    <span className="text-sm font-medium">{color.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Interface Options */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.interface}</h4>
+              
+              <div className="space-y-4">
+                {[
+                  { key: 'compactMode', label: t.settings.compactMode, desc: 'Reduce spacing for more content' },
+                  { key: 'showAnimations', label: t.settings.animations, desc: 'Enable smooth transitions and effects' },
+                  { key: 'showTooltips', label: t.settings.tooltips, desc: 'Show helpful tips on hover' },
+                  { key: 'highContrast', label: t.settings.highContrast, desc: 'Increase contrast for better readability' }
+                ].map((option) => (
+                  <div key={option.key} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                    <div>
+                      <h5 className="font-medium text-slate-900">{option.label}</h5>
+                      <p className="text-sm text-slate-600">{option.desc}</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.appearance[option.key as keyof typeof settings.appearance] as boolean}
+                        onChange={(e) => settingsDispatch({
+                          type: 'UPDATE_APPEARANCE_SETTINGS',
+                          payload: { [option.key]: e.target.checked }
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Font Size */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.fontSize}</h4>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Small</span>
+                  <span className="text-sm text-slate-600">Large</span>
+                </div>
+                <input
+                  type="range"
+                  min="12"
+                  max="20"
+                  value={settings.appearance.fontSize}
+                  onChange={(e) => settingsDispatch({
+                    type: 'UPDATE_APPEARANCE_SETTINGS',
+                    payload: { fontSize: parseInt(e.target.value) }
+                  })}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="text-center">
+                  <span className="text-sm text-slate-600">Current: {settings.appearance.fontSize}px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'integrations':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.integrations}</h3>
+            
+            {/* Development Tools */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.developmentTools}</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { 
+                    key: 'github', 
+                    name: 'GitHub', 
+                    icon: Github, 
+                    connected: settings.integrations.github.enabled,
+                    description: 'Sync with GitHub repositories'
+                  },
+                  { 
+                    key: 'slack', 
+                    name: 'Slack', 
+                    icon: Slack, 
+                    connected: settings.integrations.slack.enabled,
+                    description: 'Team communication integration'
+                  },
+                  { 
+                    key: 'figma', 
+                    name: 'Figma', 
+                    icon: Figma, 
+                    connected: settings.integrations.figma.enabled,
+                    description: 'Design collaboration tools'
+                  },
+                  { 
+                    key: 'chrome', 
+                    name: 'Chrome Extension', 
+                    icon: Chrome, 
+                    connected: settings.integrations.chromeExtension.enabled,
+                    description: 'Browser extension features'
+                  }
+                ].map((integration) => {
+                  const Icon = integration.icon;
+                  return (
+                    <div key={integration.key} className="border border-slate-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <Icon className="w-6 h-6 text-slate-600" />
+                          <div>
+                            <h5 className="font-medium text-slate-900">{integration.name}</h5>
+                            <p className="text-sm text-slate-600">{integration.description}</p>
+                          </div>
+                        </div>
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${
+                          integration.connected 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {integration.connected ? 'Connected' : 'Not Connected'}
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          if (integration.connected) {
+                            settingsDispatch({
+                              type: 'UPDATE_INTEGRATION_SETTINGS',
+                              payload: { 
+                                [integration.key]: { 
+                                  enabled: false,
+                                  apiKey: '',
+                                  webhookUrl: ''
+                                }
+                              }
+                            });
+                          } else {
+                            // In production, this would open OAuth flow
+                            settingsDispatch({
+                              type: 'UPDATE_INTEGRATION_SETTINGS',
+                              payload: { 
+                                [integration.key]: { 
+                                  enabled: true,
+                                  apiKey: 'demo_key_' + Date.now(),
+                                  webhookUrl: `https://api.${integration.key}.com/webhook`
+                                }
+                              }
+                            });
+                          }
+                        }}
+                        className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                          integration.connected
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                      >
+                        {integration.connected ? 'Disconnect' : 'Connect'}
+                      </button>
+
+                      {integration.connected && (
+                        <div className="mt-3 space-y-2">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-700 mb-1">API Key</label>
+                            <input
+                              type="password"
+                              value={settings.integrations[integration.key as keyof typeof settings.integrations].apiKey}
+                              onChange={(e) => settingsDispatch({
+                                type: 'UPDATE_INTEGRATION_SETTINGS',
+                                payload: { 
+                                  [integration.key]: { 
+                                    ...settings.integrations[integration.key as keyof typeof settings.integrations],
+                                    apiKey: e.target.value
+                                  }
+                                }
+                              })}
+                              className="w-full px-3 py-1 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Enter API key..."
+                            />
+                          </div>
+                          {integration.key !== 'chromeExtension' && (
+                            <div>
+                              <label className="block text-xs font-medium text-slate-700 mb-1">Webhook URL</label>
+                              <input
+                                type="url"
+                                value={settings.integrations[integration.key as keyof typeof settings.integrations].webhookUrl}
+                                onChange={(e) => settingsDispatch({
+                                  type: 'UPDATE_INTEGRATION_SETTINGS',
+                                  payload: { 
+                                    [integration.key]: { 
+                                      ...settings.integrations[integration.key as keyof typeof settings.integrations],
+                                      webhookUrl: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full px-3 py-1 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="https://..."
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Webhooks */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium text-slate-900">{t.settings.webhooks}</h4>
+                <button
+                  onClick={() => {
+                    const newWebhook = {
+                      id: Date.now().toString(),
+                      name: 'New Webhook',
+                      url: '',
+                      events: ['project.created'],
+                      enabled: true
+                    };
+                    settingsDispatch({
+                      type: 'UPDATE_INTEGRATION_SETTINGS',
+                      payload: { 
+                        webhooks: [...settings.integrations.webhooks, newWebhook]
+                      }
+                    });
+                  }}
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Webhook</span>
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {settings.integrations.webhooks.map((webhook, index) => (
+                  <div key={webhook.id} className="border border-slate-200 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <input
+                        type="text"
+                        value={webhook.name}
+                        onChange={(e) => {
+                          const updatedWebhooks = [...settings.integrations.webhooks];
+                          updatedWebhooks[index] = { ...webhook, name: e.target.value };
+                          settingsDispatch({
+                            type: 'UPDATE_INTEGRATION_SETTINGS',
+                            payload: { webhooks: updatedWebhooks }
+                          });
+                        }}
+                        className="font-medium text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0"
+                      />
+                      <button
+                        onClick={() => {
+                          const updatedWebhooks = settings.integrations.webhooks.filter((_, i) => i !== index);
+                          settingsDispatch({
+                            type: 'UPDATE_INTEGRATION_SETTINGS',
+                            payload: { webhooks: updatedWebhooks }
+                          });
+                        }}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">URL</label>
+                        <input
+                          type="url"
+                          value={webhook.url}
+                          onChange={(e) => {
+                            const updatedWebhooks = [...settings.integrations.webhooks];
+                            updatedWebhooks[index] = { ...webhook, url: e.target.value };
+                            settingsDispatch({
+                              type: 'UPDATE_INTEGRATION_SETTINGS',
+                              payload: { webhooks: updatedWebhooks }
+                            });
+                          }}
+                          className="w-full px-3 py-1 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="https://your-webhook-url.com"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Events</label>
+                        <div className="flex flex-wrap gap-2">
+                          {['project.created', 'project.updated', 'task.completed', 'user.invited'].map((event) => (
+                            <label key={event} className="flex items-center space-x-1">
+                              <input
+                                type="checkbox"
+                                checked={webhook.events.includes(event)}
+                                onChange={(e) => {
+                                  const updatedWebhooks = [...settings.integrations.webhooks];
+                                  const updatedEvents = e.target.checked
+                                    ? [...webhook.events, event]
+                                    : webhook.events.filter(e => e !== event);
+                                  updatedWebhooks[index] = { ...webhook, events: updatedEvents };
+                                  settingsDispatch({
+                                    type: 'UPDATE_INTEGRATION_SETTINGS',
+                                    payload: { webhooks: updatedWebhooks }
+                                  });
+                                }}
+                                className="text-blue-600"
+                              />
+                              <span className="text-xs text-slate-600">{event}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {settings.integrations.webhooks.length === 0 && (
+                  <div className="text-center py-8 text-slate-500">
+                    <Link className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                    <p>No webhooks configured</p>
+                    <p className="text-sm">Add a webhook to get notified of events</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'database':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.databaseLabel}</h3>
+            
+            {/* Database Connections */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium text-slate-900">{t.settings.connections}</h4>
+                <button
+                  onClick={() => {
+                    const newConnection = {
+                      id: Date.now().toString(),
+                      name: 'New Database',
+                      type: 'postgresql' as const,
+                      host: 'localhost',
+                      port: 5432,
+                      database: '',
+                      username: '',
+                      password: '',
+                      ssl: false,
+                      status: 'disconnected' as const,
+                      lastConnection: null
+                    };
+                    settingsDispatch({
+                      type: 'ADD_DATABASE',
+                      payload: newConnection
+                    });
+                  }}
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Database</span>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {settings.databases.map((db, index) => (
+                  <div key={db.id} className="border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <Database className="w-5 h-5 text-slate-600" />
+                        <input
+                          type="text"
+                          value={db.name}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { name: e.target.value } }
+                          })}
+                          className="font-medium text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <div className={`flex items-center space-x-2 px-2 py-1 rounded text-xs font-medium ${
+                          db.status === 'connected' ? 'bg-green-100 text-green-700' :
+                          db.status === 'error' ? 'bg-red-100 text-red-700' :
+                          'bg-slate-100 text-slate-600'
+                        }`}>
+                          <div className={`w-2 h-2 rounded-full ${
+                            db.status === 'connected' ? 'bg-green-500' :
+                            db.status === 'error' ? 'bg-red-500' :
+                            'bg-slate-400'
+                          }`} />
+                          <span>{db.status}</span>
+                        </div>
+                        
+                        <button
+                          onClick={() => handleTestDatabaseConnection(db.id)}
+                          disabled={testingConnections.has(db.id)}
+                          className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50"
+                        >
+                          {testingConnections.has(db.id) ? 'Testing...' : 'Test'}
+                        </button>
+                        
+                        <button
+                          onClick={() => settingsDispatch({
+                            type: 'REMOVE_DATABASE',
+                            payload: db.id
+                          })}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Type</label>
+                        <select
+                          value={db.type}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { type: e.target.value as any } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="postgresql">PostgreSQL</option>
+                          <option value="mysql">MySQL</option>
+                          <option value="mongodb">MongoDB</option>
+                          <option value="redis">Redis</option>
+                          <option value="sqlite">SQLite</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Host</label>
+                        <input
+                          type="text"
+                          value={db.host}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { host: e.target.value } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="localhost"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Port</label>
+                        <input
+                          type="number"
+                          value={db.port}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { port: parseInt(e.target.value) || 0 } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Database</label>
+                        <input
+                          type="text"
+                          value={db.database}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { database: e.target.value } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="database_name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Username</label>
+                        <input
+                          type="text"
+                          value={db.username}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { username: e.target.value } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Password</label>
+                        <input
+                          type="password"
+                          value={db.password}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { password: e.target.value } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 flex items-center space-x-4">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={db.ssl}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_DATABASE',
+                            payload: { id: db.id, updates: { ssl: e.target.checked } }
+                          })}
+                          className="text-blue-600"
+                        />
+                        <span className="text-sm text-slate-700">Use SSL</span>
+                      </label>
+                      
+                      {db.lastConnection && (
+                        <span className="text-xs text-slate-500">
+                          Last connected: {new Date(db.lastConnection).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Database Stats */}
+                    {databaseStats[db.id] && (
+                      <div className="mt-4 p-3 bg-slate-50 rounded-lg">
+                        <h5 className="font-medium text-slate-900 mb-2">Statistics</h5>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-slate-600">Tables</p>
+                            <p className="font-medium">{databaseStats[db.id].tables}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-600">Size</p>
+                            <p className="font-medium">{databaseStats[db.id].size}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-600">Connections</p>
+                            <p className="font-medium">{databaseStats[db.id].connections}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-600">Uptime</p>
+                            <p className="font-medium">{databaseStats[db.id].uptime}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {settings.databases.length === 0 && (
+                  <div className="text-center py-8 text-slate-500">
+                    <Database className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                    <p>No database connections</p>
+                    <p className="text-sm">Add a database connection to get started</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'backup':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.backupData}</h3>
+            
+            {/* Backup Configurations */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium text-slate-900">{t.settings.backupConfigurations}</h4>
+                <button
+                  onClick={() => {
+                    const newBackup = {
+                      id: Date.now().toString(),
+                      name: 'New Backup',
+                      type: 'full' as const,
+                      schedule: 'daily' as const,
+                      destinations: ['local'],
+                      retention: 30,
+                      enabled: true,
+                      lastRun: null,
+                      nextRun: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    };
+                    settingsDispatch({
+                      type: 'ADD_BACKUP',
+                      payload: newBackup
+                    });
+                  }}
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Backup</span>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {settings.backup.configurations.map((backup, index) => (
+                  <div key={backup.id} className="border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <Download className="w-5 h-5 text-slate-600" />
+                        <input
+                          type="text"
+                          value={backup.name}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_BACKUP',
+                            payload: { id: backup.id, updates: { name: e.target.value } }
+                          })}
+                          className="font-medium text-slate-900 bg-transparent border-none focus:outline-none focus:ring-0"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={backup.enabled}
+                            onChange={(e) => settingsDispatch({
+                              type: 'UPDATE_BACKUP',
+                              payload: { id: backup.id, updates: { enabled: e.target.checked } }
+                            })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                        
+                        <button
+                          onClick={() => handleRunBackup(backup.id)}
+                          disabled={runningBackup === backup.id}
+                          className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50"
+                        >
+                          {runningBackup === backup.id ? 'Running...' : 'Run Now'}
+                        </button>
+                        
+                        <button
+                          onClick={() => settingsDispatch({
+                            type: 'REMOVE_BACKUP',
+                            payload: backup.id
+                          })}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Type</label>
+                        <select
+                          value={backup.type}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_BACKUP',
+                            payload: { id: backup.id, updates: { type: e.target.value as any } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="full">Full Backup</option>
+                          <option value="incremental">Incremental</option>
+                          <option value="differential">Differential</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Schedule</label>
+                        <select
+                          value={backup.schedule}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_BACKUP',
+                            payload: { id: backup.id, updates: { schedule: e.target.value as any } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="hourly">Hourly</option>
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">Retention (days)</label>
+                        <input
+                          type="number"
+                          value={backup.retention}
+                          onChange={(e) => settingsDispatch({
+                            type: 'UPDATE_BACKUP',
+                            payload: { id: backup.id, updates: { retention: parseInt(e.target.value) || 0 } }
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                          min="1"
+                          max="365"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3">
+                      <label className="block text-xs font-medium text-slate-700 mb-2">Destinations</label>
+                      <div className="flex flex-wrap gap-2">
+                        {['local', 'cloud', 's3', 'ftp'].map((dest) => (
+                          <label key={dest} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={backup.destinations.includes(dest)}
+                              onChange={(e) => {
+                                const updatedDestinations = e.target.checked
+                                  ? [...backup.destinations, dest]
+                                  : backup.destinations.filter(d => d !== dest);
+                                settingsDispatch({
+                                  type: 'UPDATE_BACKUP',
+                                  payload: { id: backup.id, updates: { destinations: updatedDestinations } }
+                                });
+                              }}
+                              className="text-blue-600"
+                            />
+                            <span className="text-sm text-slate-700 capitalize">{dest}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                      <div>
+                        {backup.lastRun && (
+                          <span>Last run: {new Date(backup.lastRun).toLocaleString()}</span>
+                        )}
+                      </div>
+                      <div>
+                        {backup.nextRun && (
+                          <span>Next run: {new Date(backup.nextRun).toLocaleString()}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {settings.backup.configurations.length === 0 && (
+                  <div className="text-center py-8 text-slate-500">
+                    <Download className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                    <p>No backup configurations</p>
+                    <p className="text-sm">Add a backup configuration to protect your data</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Active Backups */}
+            {activeBackups.length > 0 && (
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-4">Active Backups</h4>
+                
+                <div className="space-y-3">
+                  {activeBackups.map((job) => (
+                    <div key={job.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-slate-900">{job.name}</h5>
+                          <p className="text-sm text-slate-600">{job.type} backup • {job.progress}% complete</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        <div className="w-24 bg-slate-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${job.progress}%` }}
+                          />
+                        </div>
+                        <span className="text-sm text-slate-600">{job.progress}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Backup History */}
+            {backupHistory.length > 0 && (
+              <div className="border border-slate-200 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-4">Recent Backups</h4>
+                
+                <div className="space-y-2">
+                  {backupHistory.slice(0, 5).map((entry) => (
+                    <div key={entry.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-2 h-2 rounded-full ${
+                          entry.status === 'completed' ? 'bg-green-500' :
+                          entry.status === 'failed' ? 'bg-red-500' :
+                          'bg-orange-500'
+                        }`} />
+                        <div>
+                          <h5 className="font-medium text-slate-900">{entry.configName}</h5>
+                          <p className="text-sm text-slate-600">
+                            {new Date(entry.startTime).toLocaleString()}
+                            {entry.endTime && ` • ${Math.round((new Date(entry.endTime).getTime() - new Date(entry.startTime).getTime()) / 1000)}s`}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          entry.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          entry.status === 'failed' ? 'bg-red-100 text-red-700' :
+                          'bg-orange-100 text-orange-700'
+                        }`}>
+                          {entry.status}
+                        </span>
+                        
+                        {entry.size && (
+                          <span className="text-sm text-slate-600">{entry.size}</span>
+                        )}
+                        
+                        {entry.status === 'completed' && (
+                          <button className="text-blue-600 hover:text-blue-700">
+                            <Download className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'advanced':
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900">{t.settings.advanced}</h3>
+            
+            {/* System Settings */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.systemSettings}</h4>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                  <div>
+                    <h5 className="font-medium text-slate-900">{t.settings.debugMode}</h5>
+                    <p className="text-sm text-slate-600">Enable detailed logging and debugging</p>
+                  </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={backup.enabled}
-                      onChange={(e) => setBackups(prev => prev.map(b => 
-                        b.id === backup.id ? { ...b, enabled: e.target.checked } : b
-                      ))}
+                      checked={settings.advanced.debugMode}
+                      onChange={(e) => settingsDispatch({
+                        type: 'UPDATE_ADVANCED_SETTINGS',
+                        payload: { debugMode: e.target.checked }
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                  <div>
+                    <h5 className="font-medium text-slate-900">{t.settings.experimentalFeatures}</h5>
+                    <p className="text-sm text-slate-600">Enable beta features and experimental functionality</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.advanced.experimentalFeatures}
+                      onChange={(e) => settingsDispatch({
+                        type: 'UPDATE_ADVANCED_SETTINGS',
+                        payload: { experimentalFeatures: e.target.checked }
+                      })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
+                  <div>
+                    <h5 className="font-medium text-slate-900">{t.settings.analyticsTracking}</h5>
+                    <p className="text-sm text-slate-600">Help improve the app by sharing anonymous usage data</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.advanced.analyticsEnabled}
+                      onChange={(e) => settingsDispatch({
+                        type: 'UPDATE_ADVANCED_SETTINGS',
+                        payload: { analyticsEnabled: e.target.checked }
+                      })}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                {backup.lastBackup && (
-                  <div>
-                    <p className="text-xs text-slate-500">Dernière sauvegarde</p>
-                    <p className="text-sm font-medium text-slate-900">
-                      {new Date(backup.lastBackup).toLocaleString('fr-FR')}
-                    </p>
-                  </div>
-                )}
-                {backup.size && (
-                  <div>
-                    <p className="text-xs text-slate-500">Taille</p>
-                    <p className="text-sm font-medium text-slate-900">{backup.size}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => runBackup(backup.id)}
-                  disabled={!backup.enabled}
-                  className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                >
-                  Lancer maintenant
-                </button>
-                <button className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button className="w-full p-4 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-slate-400 hover:text-slate-700 transition-colors">
-          <Plus className="w-5 h-5 mx-auto mb-2" />
-          Nouvelle configuration
-        </button>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Restauration</h3>
-        
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-3">
-            <AlertTriangle className="w-5 h-5 text-orange-600" />
-            <h4 className="font-medium text-orange-900">Zone de danger</h4>
-          </div>
-          <p className="text-sm text-orange-700 mb-4">
-            La restauration remplacera toutes les données actuelles. Cette action est irréversible.
-          </p>
-          <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-            Restaurer depuis une sauvegarde
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderBlogSection = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Articles de blog</h3>
-        <button
-          onClick={createBlogPost}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nouvel article</span>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {blogPosts.map((post) => (
-          <div key={post.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                post.status === 'published' ? 'bg-green-100 text-green-700' :
-                post.status === 'draft' ? 'bg-orange-100 text-orange-700' :
-                'bg-slate-100 text-slate-700'
-              }`}>
-                {post.status === 'published' ? 'Publié' :
-                 post.status === 'draft' ? 'Brouillon' : 'Archivé'}
-              </span>
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => {
-                    setSelectedBlogPost(post);
-                    setIsCreatingPost(false);
-                    setShowBlogEditor(true);
-                  }}
-                  className="p-1 text-slate-400 hover:text-slate-600"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => deleteBlogPost(post.id)}
-                  className="p-1 text-slate-400 hover:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
             </div>
 
-            <h4 className="font-medium text-slate-900 mb-2 line-clamp-2">{post.title}</h4>
-            <p className="text-sm text-slate-600 mb-3 line-clamp-3">{post.excerpt}</p>
-
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>{post.readTime} min de lecture</span>
-              <span>{new Date(post.updatedAt).toLocaleDateString('fr-FR')}</span>
-            </div>
-
-            {post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-3">
-                {post.tags.slice(0, 3).map((tag, index) => (
-                  <span key={index} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                    {tag}
-                  </span>
-                ))}
-                {post.tags.length > 3 && (
-                  <span className="text-xs text-slate-500">+{post.tags.length - 3}</span>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Blog Editor Modal */}
-      {showBlogEditor && selectedBlogPost && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200">
-              <h3 className="text-xl font-semibold text-slate-900">
-                {isCreatingPost ? 'Nouvel article' : 'Modifier l\'article'}
-              </h3>
-              <button
-                onClick={() => setShowBlogEditor(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-slate-500" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
+            {/* Performance Settings */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">{t.settings.performance}</h4>
+              
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Titre</label>
-                  <input
-                    type="text"
-                    value={selectedBlogPost.title}
-                    onChange={(e) => setSelectedBlogPost({ ...selectedBlogPost, title: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Extrait</label>
-                  <textarea
-                    value={selectedBlogPost.excerpt}
-                    onChange={(e) => setSelectedBlogPost({ ...selectedBlogPost, excerpt: e.target.value })}
-                    rows={2}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Résumé de l'article..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
-                    <select
-                      value={selectedBlogPost.status}
-                      onChange={(e) => setSelectedBlogPost({ ...selectedBlogPost, status: e.target.value as any })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="draft">Brouillon</option>
-                      <option value="published">Publié</option>
-                      <option value="archived">Archivé</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Tags (séparés par des virgules)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Cache Size (MB)</label>
+                  <div className="flex items-center space-x-4">
                     <input
-                      type="text"
-                      value={selectedBlogPost.tags.join(', ')}
-                      onChange={(e) => setSelectedBlogPost({ 
-                        ...selectedBlogPost, 
-                        tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag) 
+                      type="range"
+                      min="50"
+                      max="1000"
+                      value={settings.advanced.cacheSize}
+                      onChange={(e) => settingsDispatch({
+                        type: 'UPDATE_ADVANCED_SETTINGS',
+                        payload: { cacheSize: parseInt(e.target.value) }
                       })}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="IA, Guide, Productivité"
+                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
                     />
+                    <span className="text-sm text-slate-600 w-16">{settings.advanced.cacheSize} MB</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Contenu (Markdown)</label>
-                  <textarea
-                    value={selectedBlogPost.content}
-                    onChange={(e) => setSelectedBlogPost({ ...selectedBlogPost, content: e.target.value })}
-                    rows={20}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                    placeholder="# Titre de l'article
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Max Concurrent Tasks</label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="range"
+                      min="1"
+                      max="20"
+                      value={settings.advanced.maxConcurrentTasks}
+                      onChange={(e) => settingsDispatch({
+                        type: 'UPDATE_ADVANCED_SETTINGS',
+                        payload: { maxConcurrentTasks: parseInt(e.target.value) }
+                      })}
+                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                    <span className="text-sm text-slate-600 w-12">{settings.advanced.maxConcurrentTasks}</span>
+                  </div>
+                </div>
 
-Votre contenu en Markdown..."
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">API Timeout (seconds)</label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="300"
+                    value={settings.advanced.apiTimeout}
+                    onChange={(e) => settingsDispatch({
+                      type: 'UPDATE_ADVANCED_SETTINGS',
+                      payload: { apiTimeout: parseInt(e.target.value) || 30 }
+                    })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex space-x-3 p-6 border-t border-slate-200">
-              <button
-                onClick={() => setShowBlogEditor(false)}
-                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={saveBlogPost}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>{isCreatingPost ? 'Créer' : 'Sauvegarder'}</span>
-              </button>
+            {/* Data Management */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">Data Management</h4>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 border border-yellow-200 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    <div>
+                      <h5 className="font-medium text-yellow-800">Clear Cache</h5>
+                      <p className="text-sm text-yellow-700">Remove all cached data to free up space</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('projectflow_cache');
+                      dispatch({
+                        type: 'ADD_NOTIFICATION',
+                        payload: {
+                          id: Date.now().toString(),
+                          title: 'Cache Cleared',
+                          message: 'All cached data has been removed',
+                          type: 'info',
+                          isRead: false,
+                          createdAt: new Date().toISOString()
+                        }
+                      });
+                    }}
+                    className="px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                  >
+                    Clear Cache
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 border border-red-200 bg-red-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <div>
+                      <h5 className="font-medium text-red-800">Reset Settings</h5>
+                      <p className="text-sm text-red-700">Reset all settings to default values</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to reset all settings? This action cannot be undone.')) {
+                        settingsDispatch({ type: 'RESET_SETTINGS', payload: undefined });
+                        dispatch({
+                          type: 'ADD_NOTIFICATION',
+                          payload: {
+                            id: Date.now().toString(),
+                            title: 'Settings Reset',
+                            message: 'All settings have been reset to defaults',
+                            type: 'info',
+                            isRead: false,
+                            createdAt: new Date().toISOString()
+                          }
+                        });
+                      }
+                    }}
+                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Reset Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Export/Import */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-4">Export/Import Settings</h4>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    const settingsData = JSON.stringify(settings, null, 2);
+                    const blob = new Blob([settingsData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `projectflow-settings-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export Settings</span>
+                </button>
+                
+                <label className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  <span>Import Settings</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          try {
+                            const importedSettings = JSON.parse(event.target?.result as string);
+                            settingsDispatch({ type: 'IMPORT_SETTINGS', payload: importedSettings });
+                            dispatch({
+                              type: 'ADD_NOTIFICATION',
+                              payload: {
+                                id: Date.now().toString(),
+                                title: 'Settings Imported',
+                                message: 'Settings have been imported successfully',
+                                type: 'success',
+                                isRead: false,
+                                createdAt: new Date().toISOString()
+                              }
+                            });
+                          } catch (error) {
+                            dispatch({
+                              type: 'ADD_NOTIFICATION',
+                              payload: {
+                                id: Date.now().toString(),
+                                title: 'Import Failed',
+                                message: 'Failed to import settings file',
+                                type: 'error',
+                                isRead: false,
+                                createdAt: new Date().toISOString()
+                              }
+                            });
+                          }
+                        };
+                        reader.readAsText(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        );
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'profile':
-        return renderProfileSection();
-      case 'security':
-        return renderSecuritySection();
-      case 'notifications':
-        return renderNotificationsSection();
-      case 'appearance':
-        return renderAppearanceSection();
-      case 'ai':
-        return renderAISection();
-      case 'integrations':
-        return renderIntegrationsSection();
-      case 'database':
-        return renderDatabaseSection();
-      case 'backup':
-        return renderBackupSection();
-      case 'blog':
-        return renderBlogSection();
       default:
-        return renderProfileSection();
     }
   };
 
@@ -1503,19 +2285,35 @@ Votre contenu en Markdown..."
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center space-x-3">
             <SettingsIcon className="w-8 h-8 text-blue-600" />
-            <span>Paramètres</span>
+            <span>{t.settings.title}</span>
           </h1>
-          <p className="text-slate-600 mt-1">Configurez votre expérience ProjectFlow</p>
+          <p className="text-slate-600 mt-1">{t.settings.subtitle}</p>
         </div>
         
         <button
-          onClick={saveSettings}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
+          onClick={handleSaveSettings}
+          disabled={loading}
+          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2 disabled:opacity-50"
         >
           <Save className="w-5 h-5" />
-          <span>Sauvegarder</span>
+          <span>{loading ? 'Saving...' : t.common.save}</span>
         </button>
       </div>
+
+      {/* Error Display */}
+      {Object.keys(errors).length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 text-red-700">
+            <AlertTriangle className="w-5 h-5" />
+            <h4 className="font-medium">Errors:</h4>
+          </div>
+          <ul className="mt-2 text-sm text-red-600">
+            {Object.entries(errors).map(([key, error]) => (
+              <li key={key}>• {error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar */}
@@ -1546,7 +2344,13 @@ Votre contenu en Markdown..."
         {/* Content */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            {renderContent()}
+            {loading && activeSection !== 'profile' && activeSection !== 'security' && activeSection !== 'ai' ? (
+              <div className="flex items-center justify-center py-12">
+                <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+              </div>
+            ) : (
+              renderContent()
+            )}
           </div>
         </div>
       </div>

@@ -245,7 +245,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
                         </label>
                         <select
                           value={tempOperator}
-                          onChange={(e) => setTempOperator(e.target.value)}
+                          onChange={(e) => setTempOperator(e.target.value as FilterConfig[string]['operator'])}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                         >
                           {getOperatorOptions().map((option) => (

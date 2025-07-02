@@ -6,15 +6,13 @@ import {
   MicOff, 
   Sparkles, 
   Brain, 
-  TrendingUp,
-  Target,
-  Users,
-  Calendar,
   X,
   Minimize2,
   Maximize2
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
+import { AIService, createAIService } from '../config/ai';
 
 interface Message {
   id: string;
@@ -25,25 +23,46 @@ interface Message {
 }
 
 const AIAssistant: React.FC = () => {
-  const { state, dispatch } = useAppContext();
+  const { state } = useAppContext();
+  const { t, language } = useLanguage();
   const { projects, tasks, users } = state;
+  
+  // Initialize AI service (you can configure this via environment variables)
+  const [aiService] = useState<AIService | null>(() => {
+    try {
+      const provider = (import.meta.env.VITE_AI_PROVIDER as 'openai' | 'anthropic' | 'google' | 'groq') || 'openai';
+      const apiKey = import.meta.env.VITE_AI_API_KEY || '';
+      
+      if (!apiKey || apiKey === 'your-api-key-here') {
+        console.warn('AI API key not configured. AI features will use fallback responses.');
+        return null;
+      }
+      
+      return createAIService({
+        provider,
+        apiKey,
+        model: import.meta.env.VITE_AI_MODEL || 'gpt-4o-mini'
+      });
+    } catch (error) {
+      console.error('Failed to initialize AI service:', error);
+      return null;
+    }
+  });
   
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'ai',
-      content: '👋 Salut ! Je suis votre assistant IA intelligent. Je peux analyser vos projets, prédire les risques, optimiser les équipes et bien plus encore !',
-      timestamp: new Date(),
-      suggestions: [
-        'Analyser la performance de l\'équipe',
-        'Prédire les retards de projet',
-        'Optimiser la répartition des tâches',
-        'Générer un rapport intelligent'
-      ]
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => [{
+    id: '1',
+    type: 'ai',
+    content: `${t.aiAssistant.welcomeMessage}\n\n${t.aiAssistant.welcomeHelp}\n${t.aiAssistant.realtimeAnalysis}\n${t.aiAssistant.intelligentInsights}\n${t.aiAssistant.personalizedAdvice}\n${t.aiAssistant.processOptimization}\n${t.aiAssistant.projectManagementQuestions}\n\n${t.aiAssistant.welcomePrompt}`,
+    timestamp: new Date(),
+    suggestions: [
+      t.aiAssistant.teamPerformance,
+      t.aiAssistant.currentRisks,
+      t.aiAssistant.optimizationAdvice,
+      t.aiAssistant.analyzeProjects
+    ]
+  }]);
   const [inputValue, setInputValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -57,45 +76,119 @@ const AIAssistant: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const generateAIResponse = (userMessage: string): string => {
+  // Update welcome message when language changes
+  useEffect(() => {
+    setMessages([{
+      id: '1',
+      type: 'ai',
+      content: `${t.aiAssistant.welcomeMessage}\n\n${t.aiAssistant.welcomeHelp}\n${t.aiAssistant.realtimeAnalysis}\n${t.aiAssistant.intelligentInsights}\n${t.aiAssistant.personalizedAdvice}\n${t.aiAssistant.processOptimization}\n${t.aiAssistant.projectManagementQuestions}\n\n${t.aiAssistant.welcomePrompt}`,
+      timestamp: new Date(),
+      suggestions: [
+        t.aiAssistant.teamPerformance,
+        t.aiAssistant.currentRisks,
+        t.aiAssistant.optimizationAdvice,
+        t.aiAssistant.analyzeProjects
+      ]
+    }]);
+  }, [language, t]);
+
+  const generateAIResponse = async (userMessage: string): Promise<string> => {
+    // If AI service is not available, use static responses
+    if (!aiService) {
+      return generateStaticResponse(userMessage);
+    }
+
+    try {
+      // Use the AI service for intelligent responses
+      const projectContext = {
+        projects: projects.map(p => ({
+          name: p.name,
+          status: p.status,
+          progress: p.progress,
+          deadline: p.deadline,
+          budget: p.budget
+        })),
+        tasks: tasks.map(t => ({
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          assigneeId: t.assigneeId
+        })),
+        users: users.map(u => ({
+          name: u.name,
+          role: u.role,
+          performance: u.performance
+        }))
+      };
+
+      // Create a comprehensive prompt for natural conversation adapted to language
+      const conversationalPrompt = language === 'fr' 
+        ? `Tu es un assistant IA intelligent spécialisé en gestion de projet. Tu peux converser naturellement et aider avec tous les aspects de la gestion de projet.
+
+**Contexte actuel du projet:**
+- Projets: ${projects.length} projets actifs
+- Tâches: ${tasks.filter(t => t.status === 'completed').length}/${tasks.length} tâches terminées (${Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100)}% de réussite)
+- Équipe: ${users.length} membres
+- Projets en cours: ${projects.filter(p => p.status === 'in-progress').length}
+
+**Message de l'utilisateur:** "${userMessage}"
+
+Réponds de manière conversationnelle, utile et engageante en français. Tu peux:
+- Analyser les données de projet
+- Donner des conseils stratégiques
+- Prédire des tendances
+- Suggérer des optimisations
+- Répondre à toutes questions sur la gestion de projet
+- Avoir une conversation naturelle
+
+Utilise des emojis appropriés et structure ta réponse avec markdown pour la lisibilité.`
+        : `You are an intelligent AI assistant specialized in project management. You can converse naturally and help with all aspects of project management.
+
+**Current project context:**
+- Projects: ${projects.length} active projects
+- Tasks: ${tasks.filter(t => t.status === 'completed').length}/${tasks.length} tasks completed (${Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100)}% success rate)
+- Team: ${users.length} members
+- Ongoing projects: ${projects.filter(p => p.status === 'in-progress').length}
+
+**User message:** "${userMessage}"
+
+Respond conversationally, helpfully and engagingly in English. You can:
+- Analyze project data
+- Give strategic advice
+- Predict trends
+- Suggest optimizations
+- Answer any project management questions
+- Have natural conversations
+
+Use appropriate emojis and structure your response with markdown for readability.`;
+      
+      return await aiService.generateResponse(conversationalPrompt);
+      
+    } catch (error) {
+      console.error('AI Response Error:', error);
+      // Fallback to static responses if AI service fails
+      return generateStaticResponse(userMessage);
+    }
+  };
+
+  const generateStaticResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Analyse de performance
-    if (lowerMessage.includes('performance') || lowerMessage.includes('équipe')) {
+    // Performance analysis
+    const performanceKeywords = language === 'fr' 
+      ? ['performance', 'équipe', 'team'] 
+      : ['performance', 'team', 'équipe'];
+    
+    if (performanceKeywords.some(keyword => lowerMessage.includes(keyword))) {
       const completedTasks = tasks.filter(t => t.status === 'completed').length;
       const totalTasks = tasks.length;
       const completionRate = Math.round((completedTasks / totalTasks) * 100);
       
-      return `📊 **Analyse de Performance**\n\n✅ Taux de completion: ${completionRate}%\n📈 ${completedTasks}/${totalTasks} tâches terminées\n\n🎯 **Recommandations IA:**\n• L'équipe performe bien avec ${completionRate}% de réussite\n• ${users.find(u => u.performance > 95)?.name || 'Sarah'} est votre top performer\n• Considérez redistribuer les tâches pour optimiser l'efficacité`;
+      return `${t.aiAssistant.performanceAnalysis}\n\n${t.aiAssistant.completionRate} ${completionRate}%\n📈 ${completedTasks}/${totalTasks} ${t.aiAssistant.tasksCompleted}\n\n${t.aiAssistant.recommendations}\n${t.aiAssistant.teamPerformsWell} ${completionRate}% ${language === 'fr' ? 'de réussite' : 'success rate'}\n• ${users.find(u => u.performance > 95)?.name || 'Sarah'} ${t.aiAssistant.topPerformer}\n${t.aiAssistant.redistributeTasks}`;
     }
     
-    // Prédiction de retards
-    if (lowerMessage.includes('retard') || lowerMessage.includes('deadline') || lowerMessage.includes('prédire')) {
-      const overdueProjects = projects.filter(p => new Date(p.deadline) < new Date() && p.status !== 'completed');
-      const riskyProjects = projects.filter(p => p.progress < 50 && new Date(p.deadline) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
-      
-      return `🔮 **Prédiction IA des Risques**\n\n⚠️ ${overdueProjects.length} projet(s) en retard\n📅 ${riskyProjects.length} projet(s) à risque\n\n🤖 **Analyse prédictive:**\n• Probabilité de retard: ${Math.random() > 0.5 ? 'ÉLEVÉE' : 'MODÉRÉE'}\n• Recommandation: Réallouer 2 développeurs sur les projets critiques\n• Impact estimé: Réduction de 15% des retards`;
-    }
-    
-    // Optimisation des équipes
-    if (lowerMessage.includes('optimis') || lowerMessage.includes('répartition') || lowerMessage.includes('tâche')) {
-      const busyUsers = users.filter(u => tasks.filter(t => t.assigneeId === u.id && t.status !== 'completed').length > 3);
-      const availableUsers = users.filter(u => tasks.filter(t => t.assigneeId === u.id && t.status !== 'completed').length < 2);
-      
-      return `⚡ **Optimisation IA des Équipes**\n\n🔄 **Rééquilibrage suggéré:**\n• ${busyUsers.length} membre(s) surchargé(s)\n• ${availableUsers.length} membre(s) disponible(s)\n\n🎯 **Actions recommandées:**\n• Transférer 3 tâches de ${busyUsers[0]?.name || 'Michael'} vers ${availableUsers[0]?.name || 'Emily'}\n• Efficacité prévue: +25%\n• Réduction du stress: +40%`;
-    }
-    
-    // Rapport intelligent
-    if (lowerMessage.includes('rapport') || lowerMessage.includes('résumé') || lowerMessage.includes('dashboard')) {
-      const activeProjects = projects.filter(p => p.status === 'in-progress').length;
-      const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-      const avgProgress = Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length);
-      
-      return `📈 **Rapport Intelligent IA**\n\n💼 **Vue d'ensemble:**\n• ${activeProjects} projets actifs\n• Budget total: $${totalBudget.toLocaleString()}\n• Progression moyenne: ${avgProgress}%\n\n🚀 **Insights IA:**\n• Vélocité équipe: +12% vs mois dernier\n• Prédiction fin de sprint: 3 jours d'avance\n• Score de satisfaction client: 94%\n• ROI projeté: +18%`;
-    }
-    
-    // Réponse par défaut avec suggestions intelligentes
-    return `🤖 Je comprends votre demande ! Voici ce que je peux faire pour vous:\n\n✨ **Capacités IA avancées:**\n• Analyse prédictive des projets\n• Optimisation automatique des ressources\n• Détection proactive des risques\n• Recommandations personnalisées\n\nPosez-moi une question spécifique ou utilisez les suggestions ci-dessous !`;
+    // Default response
+    return `${t.aiAssistant.aiCapabilities}\n\n✨ **${language === 'fr' ? 'Capacités IA avancées:' : 'Advanced AI Capabilities:'}**\n${t.aiAssistant.predictiveAnalysis}\n${t.aiAssistant.automaticOptimization}\n${t.aiAssistant.proactiveRiskDetection}\n${t.aiAssistant.personalizedRecommendations}\n\n${t.aiAssistant.askSpecificQuestion}`;
   };
 
   const handleSendMessage = async () => {
@@ -112,24 +205,36 @@ const AIAssistant: React.FC = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI processing time
-    setTimeout(() => {
+    // Generate AI response
+    try {
+      const aiResponseContent = await generateAIResponse(inputValue);
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: generateAIResponse(inputValue),
+        content: aiResponseContent,
         timestamp: new Date(),
         suggestions: [
-          'Analyser les tendances',
-          'Optimiser les ressources',
-          'Prédire les performances',
-          'Générer des insights'
+          t.aiAssistant.improveThis,
+          t.aiAssistant.nextSteps,
+          t.aiAssistant.risksToWatch,
+          t.aiAssistant.explainDetail
         ]
       };
 
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
-    }, 1500);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: `${t.aiAssistant.technicalDifficulties} ${t.aiAssistant.tryAgainLater}`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+      setIsTyping(false);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -140,7 +245,7 @@ const AIAssistant: React.FC = () => {
     setIsListening(true);
     // Simulate voice recognition
     setTimeout(() => {
-      setInputValue('Analyser la performance de mon équipe');
+      setInputValue(t.aiAssistant.analyzeTeamPerformance);
       setIsListening(false);
     }, 2000);
   };
@@ -172,8 +277,8 @@ const AIAssistant: React.FC = () => {
                 <Brain className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="font-semibold">Assistant IA</h3>
-                <p className="text-xs opacity-90">Powered by Advanced AI</p>
+                <h3 className="font-semibold">{t.aiAssistant.title}</h3>
+                <p className="text-xs opacity-90">{t.aiAssistant.poweredBy}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -245,7 +350,7 @@ const AIAssistant: React.FC = () => {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Demandez à l'IA..."
+                    placeholder={t.aiAssistant.placeholder}
                     className="w-full px-4 py-2 pr-12 border border-slate-200 rounded-full focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <button

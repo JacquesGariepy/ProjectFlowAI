@@ -7,15 +7,14 @@ import {
   Calendar as CalendarIcon, 
   Settings,
   ChevronLeft,
-  Zap,
   Brain,
   Sparkles,
-  TrendingUp,
   Bot,
   FileText,
   HelpCircle,
   Crown
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SidebarProps {
   activeView: string;
@@ -25,17 +24,19 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, collapsed, setCollapsed }) => {
+  const { t } = useLanguage();
+  
   const menuItems = [
-    { id: 'smart-dashboard', label: 'Dashboard IA', icon: Brain, isNew: true },
-    { id: 'ai-insights', label: 'Insights IA', icon: Sparkles, isNew: true },
-    { id: 'dashboard', label: 'Dashboard Classic', icon: LayoutDashboard },
-    { id: 'projects', label: 'Projets', icon: FolderOpen },
-    { id: 'tasks', label: 'Tâches', icon: CheckSquare },
-    { id: 'team', label: 'Équipe', icon: Users },
-    { id: 'calendar', label: 'Calendrier', icon: CalendarIcon },
-    { id: 'blog', label: 'Blog', icon: FileText },
-    { id: 'help-support', label: 'Aide et Support', icon: HelpCircle },
-    { id: 'settings', label: 'Paramètres', icon: Settings },
+    { id: 'smart-dashboard', label: t.nav.smartDashboard, icon: Brain, isNew: true },
+    { id: 'ai-insights', label: t.nav.aiInsights, icon: Sparkles, isNew: true },
+    { id: 'dashboard', label: t.nav.classicDashboard, icon: LayoutDashboard },
+    { id: 'projects', label: t.nav.projects, icon: FolderOpen },
+    { id: 'tasks', label: t.nav.tasks, icon: CheckSquare },
+    { id: 'team', label: t.nav.team, icon: Users },
+    { id: 'calendar', label: t.nav.calendar, icon: CalendarIcon },
+    { id: 'blog', label: t.nav.blog, icon: FileText },
+    { id: 'help-support', label: t.nav.helpSupport, icon: HelpCircle },
+    { id: 'settings', label: t.nav.settings, icon: Settings },
   ];
 
   const navigateToAIPremium = () => {
@@ -54,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, collapsed,
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
                 ProjectFlow AI
               </h1>
-              <div className="text-xs text-purple-600 font-medium">Powered by Advanced AI</div>
+              <div className="text-xs text-purple-600 font-medium">{t.sidebar.poweredByAI}</div>
             </div>
           </div>
         )}
@@ -106,14 +107,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, collapsed,
           <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 rounded-lg p-4 text-white">
             <div className="flex items-center space-x-2 mb-2">
               <Crown className="w-4 h-4" />
-              <h3 className="font-semibold text-sm">IA Premium</h3>
+              <h3 className="font-semibold text-sm">{t.nav.aiPremium}</h3>
             </div>
-            <p className="text-xs text-purple-100 mb-3">Débloquez l'analyse prédictive avancée et l'optimisation automatique</p>
+            <p className="text-xs text-purple-100 mb-3">{t.sidebar.aiPremiumDescription}</p>
             <button 
               onClick={navigateToAIPremium}
               className="w-full bg-white/20 backdrop-blur-sm text-white text-xs font-medium py-2 px-3 rounded-md hover:bg-white/30 transition-colors"
             >
-              Découvrir Premium
+              {t.sidebar.discoverPremium}
             </button>
           </div>
         </div>
