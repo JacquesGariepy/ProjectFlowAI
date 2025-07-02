@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   HelpCircle, 
   Search, 
@@ -40,70 +41,71 @@ interface GuideItem {
   title: string;
   description: string;
   duration: string;
-  difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
   category: string;
   icon: React.ComponentType<any>;
   url: string;
 }
 
 const HelpSupport: React.FC = () => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [selectedGuide, setSelectedGuide] = useState<GuideItem | null>(null);
 
   const categories = [
-    { id: 'all', name: 'Toutes les catégories', icon: Book },
-    { id: 'getting-started', name: 'Premiers pas', icon: Play },
-    { id: 'projects', name: 'Gestion de projets', icon: Settings },
-    { id: 'tasks', name: 'Gestion des tâches', icon: CheckCircle },
-    { id: 'team', name: 'Collaboration équipe', icon: Users },
-    { id: 'calendar', name: 'Calendrier', icon: Calendar },
-    { id: 'ai', name: 'Fonctionnalités IA', icon: Zap },
-    { id: 'analytics', name: 'Analytics', icon: BarChart3 },
-    { id: 'account', name: 'Compte et paramètres', icon: Settings }
+    { id: 'all', name: t.helpSupport.allCategories, icon: Book },
+    { id: 'getting-started', name: t.helpSupport.gettingStarted, icon: Play },
+    { id: 'projects', name: t.helpSupport.projectManagement, icon: Settings },
+    { id: 'tasks', name: t.helpSupport.taskManagement, icon: CheckCircle },
+    { id: 'team', name: t.helpSupport.teamCollaboration, icon: Users },
+    { id: 'calendar', name: t.helpSupport.calendar, icon: Calendar },
+    { id: 'ai', name: t.helpSupport.aiFeatures, icon: Zap },
+    { id: 'analytics', name: t.helpSupport.analytics, icon: BarChart3 },
+    { id: 'account', name: t.helpSupport.accountSettings, icon: Settings }
   ];
 
   const faqs: FAQItem[] = [
     {
       id: '1',
-      question: 'Comment créer mon premier projet ?',
-      answer: 'Pour créer un projet, cliquez sur le bouton "Nouveau Projet" dans la section Projets. Remplissez les informations requises comme le nom, la description, les dates et assignez les membres de l\'équipe. Vous pouvez également définir le budget et les priorités.',
+      question: t.helpSupport.faqCreateProject,
+      answer: t.helpSupport.faqCreateProjectAnswer,
       category: 'getting-started',
       helpful: 45
     },
     {
       id: '2',
-      question: 'Comment utiliser les fonctionnalités IA ?',
-      answer: 'ProjectFlow intègre l\'IA dans plusieurs domaines : le Dashboard IA pour les insights automatiques, les commandes vocales pour la navigation, l\'analyse prédictive pour anticiper les retards, et les recommandations d\'optimisation pour améliorer les performances.',
+      question: t.helpSupport.faqUseAI,
+      answer: t.helpSupport.faqUseAIAnswer,
       category: 'ai',
       helpful: 38
     },
     {
       id: '3',
-      question: 'Comment inviter des membres à mon équipe ?',
-      answer: 'Allez dans la section Équipe, cliquez sur "Ajouter Membre", remplissez les informations du nouvel utilisateur et assignez-le à une équipe. Un email d\'invitation sera automatiquement envoyé.',
+      question: t.helpSupport.faqInviteMembers,
+      answer: t.helpSupport.faqInviteMembersAnswer,
       category: 'team',
       helpful: 32
     },
     {
       id: '4',
-      question: 'Comment configurer les notifications ?',
-      answer: 'Dans les Paramètres > Notifications, vous pouvez personnaliser tous les types de notifications : email, push, desktop. Configurez les alertes pour les échéances, les mises à jour de tâches, et les mentions d\'équipe.',
+      question: t.helpSupport.faqConfigureNotifications,
+      answer: t.helpSupport.faqConfigureNotificationsAnswer,
       category: 'account',
       helpful: 28
     },
     {
       id: '5',
-      question: 'Comment utiliser les commandes vocales ?',
-      answer: 'Activez les commandes vocales en cliquant sur l\'icône micro dans le header. Vous pouvez dire des commandes comme "créer un nouveau projet", "afficher mes tâches", ou "analyser les performances".',
+      question: t.helpSupport.faqVoiceCommands,
+      answer: t.helpSupport.faqVoiceCommandsAnswer,
       category: 'ai',
       helpful: 25
     },
     {
       id: '6',
-      question: 'Comment exporter mes données ?',
-      answer: 'Chaque section (Projets, Tâches, etc.) dispose d\'options d\'export. Cliquez sur le menu "..." d\'un élément et sélectionnez "Exporter". Les données sont exportées au format JSON avec toutes les métadonnées.',
+      question: t.helpSupport.faqExportData,
+      answer: t.helpSupport.faqExportDataAnswer,
       category: 'analytics',
       helpful: 22
     }
@@ -112,60 +114,60 @@ const HelpSupport: React.FC = () => {
   const guides: GuideItem[] = [
     {
       id: '1',
-      title: 'Guide de démarrage rapide',
-      description: 'Apprenez les bases de ProjectFlow en 10 minutes',
-      duration: '10 min',
-      difficulty: 'Débutant',
+      title: t.helpSupport.quickStartGuide,
+      description: t.helpSupport.quickStartDescription,
+      duration: `10 ${t.helpSupport.minutes}`,
+      difficulty: 'beginner',
       category: 'getting-started',
       icon: Play,
       url: '#'
     },
     {
       id: '2',
-      title: 'Maîtriser le Dashboard IA',
-      description: 'Exploitez toute la puissance de l\'intelligence artificielle',
-      duration: '15 min',
-      difficulty: 'Intermédiaire',
+      title: t.helpSupport.masterAIDashboard,
+      description: t.helpSupport.masterAIDashboardDescription,
+      duration: `15 ${t.helpSupport.minutes}`,
+      difficulty: 'intermediate',
       category: 'ai',
       icon: Zap,
       url: '#'
     },
     {
       id: '3',
-      title: 'Gestion avancée des projets',
-      description: 'Techniques avancées pour optimiser vos projets',
-      duration: '20 min',
-      difficulty: 'Avancé',
+      title: t.helpSupport.advancedProjectManagement,
+      description: t.helpSupport.advancedProjectManagementDescription,
+      duration: `20 ${t.helpSupport.minutes}`,
+      difficulty: 'advanced',
       category: 'projects',
       icon: Settings,
       url: '#'
     },
     {
       id: '4',
-      title: 'Collaboration en équipe',
-      description: 'Maximisez l\'efficacité de votre équipe',
-      duration: '12 min',
-      difficulty: 'Intermédiaire',
+      title: t.helpSupport.teamCollaborationGuide,
+      description: t.helpSupport.teamCollaborationDescription,
+      duration: `12 ${t.helpSupport.minutes}`,
+      difficulty: 'intermediate',
       category: 'team',
       icon: Users,
       url: '#'
     },
     {
       id: '5',
-      title: 'Analytics et rapports',
-      description: 'Créez des rapports détaillés et des analyses',
-      duration: '18 min',
-      difficulty: 'Avancé',
+      title: t.helpSupport.analyticsReports,
+      description: t.helpSupport.analyticsReportsDescription,
+      duration: `18 ${t.helpSupport.minutes}`,
+      difficulty: 'advanced',
       category: 'analytics',
       icon: BarChart3,
       url: '#'
     },
     {
       id: '6',
-      title: 'Optimisation du calendrier',
-      description: 'Gérez efficacement votre temps et vos événements',
-      duration: '8 min',
-      difficulty: 'Débutant',
+      title: t.helpSupport.calendarOptimization,
+      description: t.helpSupport.calendarOptimizationDescription,
+      duration: `8 ${t.helpSupport.minutes}`,
+      difficulty: 'beginner',
       category: 'calendar',
       icon: Calendar,
       url: '#'
@@ -190,10 +192,19 @@ const HelpSupport: React.FC = () => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Débutant': return 'bg-green-100 text-green-700';
-      case 'Intermédiaire': return 'bg-orange-100 text-orange-700';
-      case 'Avancé': return 'bg-red-100 text-red-700';
+      case 'beginner': return 'bg-green-100 text-green-700';
+      case 'intermediate': return 'bg-orange-100 text-orange-700';
+      case 'advanced': return 'bg-red-100 text-red-700';
       default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case 'beginner': return t.helpSupport.beginner;
+      case 'intermediate': return t.helpSupport.intermediate;
+      case 'advanced': return t.helpSupport.advanced;
+      default: return difficulty;
     }
   };
 
@@ -205,18 +216,18 @@ const HelpSupport: React.FC = () => {
           <div>
             <div className="flex items-center space-x-3 mb-2">
               <HelpCircle className="w-8 h-8" />
-              <h1 className="text-3xl font-bold">Aide et Support</h1>
+              <h1 className="text-3xl font-bold">{t.helpSupport.title}</h1>
             </div>
-            <p className="text-blue-100">Trouvez rapidement les réponses à vos questions</p>
+            <p className="text-blue-100">{t.helpSupport.subtitle}</p>
           </div>
           <div className="flex items-center space-x-4">
             <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
               <MessageCircle className="w-4 h-4" />
-              <span>Chat en direct</span>
+              <span>{t.helpSupport.liveChat}</span>
             </button>
             <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2">
               <Mail className="w-4 h-4" />
-              <span>Nous contacter</span>
+              <span>{t.helpSupport.contactUs}</span>
             </button>
           </div>
         </div>
@@ -229,7 +240,7 @@ const HelpSupport: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher dans l'aide..."
+              placeholder={t.helpSupport.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
@@ -266,12 +277,12 @@ const HelpSupport: React.FC = () => {
               <Video className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Tutoriels vidéo</h3>
-              <p className="text-sm text-slate-600">Guides visuels étape par étape</p>
+              <h3 className="font-semibold text-slate-900">{t.helpSupport.videoTutorials}</h3>
+              <p className="text-sm text-slate-600">{t.helpSupport.visualGuides}</p>
             </div>
           </div>
           <div className="flex items-center text-blue-600 group-hover:text-blue-700">
-            <span className="text-sm font-medium">Voir les vidéos</span>
+            <span className="text-sm font-medium">{t.helpSupport.watchVideos}</span>
             <ChevronRight className="w-4 h-4 ml-1" />
           </div>
         </div>
@@ -282,12 +293,12 @@ const HelpSupport: React.FC = () => {
               <MessageCircle className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Support en direct</h3>
-              <p className="text-sm text-slate-600">Chat avec notre équipe</p>
+              <h3 className="font-semibold text-slate-900">{t.helpSupport.liveSupport}</h3>
+              <p className="text-sm text-slate-600">{t.helpSupport.chatWithTeam}</p>
             </div>
           </div>
           <div className="flex items-center text-emerald-600 group-hover:text-emerald-700">
-            <span className="text-sm font-medium">Démarrer le chat</span>
+            <span className="text-sm font-medium">{t.helpSupport.startChat}</span>
             <ChevronRight className="w-4 h-4 ml-1" />
           </div>
         </div>
@@ -298,12 +309,12 @@ const HelpSupport: React.FC = () => {
               <FileText className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Documentation</h3>
-              <p className="text-sm text-slate-600">Guide complet de l'API</p>
+              <h3 className="font-semibold text-slate-900">{t.helpSupport.documentation}</h3>
+              <p className="text-sm text-slate-600">{t.helpSupport.completeApiGuide}</p>
             </div>
           </div>
           <div className="flex items-center text-purple-600 group-hover:text-purple-700">
-            <span className="text-sm font-medium">Lire la doc</span>
+            <span className="text-sm font-medium">{t.helpSupport.readDocs}</span>
             <ExternalLink className="w-4 h-4 ml-1" />
           </div>
         </div>
@@ -316,9 +327,9 @@ const HelpSupport: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
               <HelpCircle className="w-5 h-5 text-blue-500" />
-              <span>Questions fréquentes</span>
+              <span>{t.helpSupport.frequentlyAskedQuestions}</span>
             </h3>
-            <span className="text-sm text-slate-500">{filteredFAQs.length} résultats</span>
+            <span className="text-sm text-slate-500">{filteredFAQs.length} {t.helpSupport.results}</span>
           </div>
 
           <div className="space-y-4">
@@ -340,11 +351,11 @@ const HelpSupport: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2 text-sm text-slate-500">
                         <Star className="w-4 h-4" />
-                        <span>{faq.helpful} personnes ont trouvé cela utile</span>
+                        <span>{faq.helpful} {t.helpSupport.peopleFoundHelpful}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <button className="text-sm text-blue-600 hover:text-blue-700">Utile</button>
-                        <button className="text-sm text-slate-500 hover:text-slate-700">Pas utile</button>
+                        <button className="text-sm text-blue-600 hover:text-blue-700">{t.helpSupport.helpful}</button>
+                        <button className="text-sm text-slate-500 hover:text-slate-700">{t.helpSupport.notHelpful}</button>
                       </div>
                     </div>
                   </div>
@@ -359,9 +370,9 @@ const HelpSupport: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-slate-900 flex items-center space-x-2">
               <Book className="w-5 h-5 text-emerald-500" />
-              <span>Guides et tutoriels</span>
+              <span>{t.helpSupport.guidesAndTutorials}</span>
             </h3>
-            <span className="text-sm text-slate-500">{filteredGuides.length} guides</span>
+            <span className="text-sm text-slate-500">{filteredGuides.length} {t.helpSupport.guides}</span>
           </div>
 
           <div className="space-y-4">
@@ -390,7 +401,7 @@ const HelpSupport: React.FC = () => {
                           <span>{guide.duration}</span>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${getDifficultyColor(guide.difficulty)}`}>
-                          {guide.difficulty}
+                          {getDifficultyLabel(guide.difficulty)}
                         </span>
                       </div>
                     </div>
@@ -406,9 +417,9 @@ const HelpSupport: React.FC = () => {
 
       {/* Contact Support */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Besoin d'aide supplémentaire ?</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.helpSupport.needMoreHelp}</h3>
         <p className="text-slate-600 mb-6">
-          Notre équipe de support est là pour vous aider. Choisissez le moyen de contact qui vous convient le mieux.
+          {t.helpSupport.supportTeamHelp}
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -417,7 +428,7 @@ const HelpSupport: React.FC = () => {
               <Mail className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <div className="font-medium text-slate-900">Email</div>
+              <div className="font-medium text-slate-900">{t.helpSupport.email}</div>
               <div className="text-sm text-slate-600">support@projectflow.com</div>
             </div>
           </div>
@@ -427,7 +438,7 @@ const HelpSupport: React.FC = () => {
               <Phone className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <div className="font-medium text-slate-900">Téléphone</div>
+              <div className="font-medium text-slate-900">{t.helpSupport.phone}</div>
               <div className="text-sm text-slate-600">+33 1 23 45 67 89</div>
             </div>
           </div>
@@ -437,8 +448,8 @@ const HelpSupport: React.FC = () => {
               <MessageCircle className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <div className="font-medium text-slate-900">Chat en direct</div>
-              <div className="text-sm text-slate-600">Disponible 24h/7j</div>
+              <div className="font-medium text-slate-900">{t.helpSupport.liveChat}</div>
+              <div className="text-sm text-slate-600">{t.helpSupport.availableAlways}</div>
             </div>
           </div>
         </div>
@@ -471,30 +482,30 @@ const HelpSupport: React.FC = () => {
                       <span>{selectedGuide.duration}</span>
                     </div>
                     <span className={`text-sm px-2 py-1 rounded-full font-medium ${getDifficultyColor(selectedGuide.difficulty)}`}>
-                      {selectedGuide.difficulty}
+                      {getDifficultyLabel(selectedGuide.difficulty)}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="bg-slate-50 rounded-lg p-6">
-                <h4 className="font-semibold text-slate-900 mb-4">Contenu du guide</h4>
+                <h4 className="font-semibold text-slate-900 mb-4">{t.helpSupport.guideContent}</h4>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    <span className="text-slate-700">Introduction et configuration</span>
+                    <span className="text-slate-700">{t.helpSupport.introAndSetup}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    <span className="text-slate-700">Fonctionnalités principales</span>
+                    <span className="text-slate-700">{t.helpSupport.mainFeatures}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    <span className="text-slate-700">Conseils et bonnes pratiques</span>
+                    <span className="text-slate-700">{t.helpSupport.tipsAndBestPractices}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    <span className="text-slate-700">Exemples pratiques</span>
+                    <span className="text-slate-700">{t.helpSupport.practicalExamples}</span>
                   </div>
                 </div>
               </div>
@@ -504,11 +515,11 @@ const HelpSupport: React.FC = () => {
                   onClick={() => setSelectedGuide(null)}
                   className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
                 >
-                  Fermer
+                  {t.helpSupport.closeModal}
                 </button>
                 <button className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2">
                   <Play className="w-4 h-4" />
-                  <span>Commencer le guide</span>
+                  <span>{t.helpSupport.startGuide}</span>
                 </button>
               </div>
             </div>

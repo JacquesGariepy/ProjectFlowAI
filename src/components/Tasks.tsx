@@ -207,7 +207,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         payload: {
           id: Date.now().toString(),
           title: t.tasks.taskDeleted,
-          message: `${t.tasks.taskTitle} "${task?.title}" ${t.tasks.taskDeletedMessage}`,
+          message: t.tasks.taskDeletedMessage.replace('{title}', task?.title || ''),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -227,7 +227,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       payload: {
         id: Date.now().toString(),
         title: t.tasks.statusUpdated,
-        message: `${t.tasks.statusUpdatedMessage} "${newStatus}"`,
+        message: t.tasks.statusUpdatedMessage.replace('{status}', newStatus),
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -270,8 +270,10 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: selectedTask.id ? t.tasks.taskUpdated : t.tasks.taskCreated,
-          message: `${t.tasks.taskTitle} "${selectedTask.title}" ${t.tasks.taskSavedMessage} ${selectedTask.id ? t.tasks.taskSavedUpdated : t.tasks.taskSavedCreated} ${t.tasks.successMessage}`,
+          title: selectedTask.id ? t.tasks.taskUpdatedNotif : t.tasks.taskCreatedNotif,
+          message: selectedTask.id 
+            ? t.tasks.taskUpdatedMessage.replace('{title}', selectedTask.title)
+            : t.tasks.taskCreatedMessage.replace('{title}', selectedTask.title),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -331,16 +333,16 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       const project = projects.find(p => p.id === task.projectId);
       
       return {
-        [t.tasks.title]: task.title,
-        [t.tasks.description]: task.description,
-        [t.tasks.status]: task.status,
-        [t.tasks.priority]: task.priority,
-        [t.tasks.assignee]: assignee?.name || '',
-        [t.tasks.project]: project?.name || '',
-        [t.tasks.deadline]: task.dueDate,
-        [t.tasks.timeTracked]: `${task.timeTracked}${t.tasks.hours}`,
-        [t.tasks.estimatedTime]: `${task.estimatedTime}${t.tasks.hours}`,
-        [t.tasks.tags]: task.tags.join(', ')
+        [t.tasks.titleHeader]: task.title,
+        [t.tasks.descriptionHeader]: task.description,
+        [t.tasks.statusHeader]: task.status,
+        [t.tasks.priorityHeader]: task.priority,
+        [t.tasks.assignedToHeader]: assignee?.name || '',
+        [t.tasks.projectHeader]: project?.name || '',
+        [t.tasks.dueDateHeader]: task.dueDate,
+        [t.tasks.timeTrackedHeader]: `${task.timeTracked}${t.tasks.hours}`,
+        [t.tasks.estimatedTimeHeader]: `${task.estimatedTime}${t.tasks.hours}`,
+        [t.tasks.tagsHeader]: task.tags.join(', ')
       };
     });
 
@@ -380,7 +382,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         payload: {
           id: Date.now().toString(),
           title: t.tasks.viewSaved,
-          message: `${t.tasks.viewName} "${view.name}" ${t.tasks.viewSavedMessage}`,
+          message: t.tasks.viewSavedMessage.replace('{name}', view.name),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -398,7 +400,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       payload: {
         id: Date.now().toString(),
         title: t.tasks.viewLoaded,
-        message: `${t.tasks.viewName} "${view.name}" ${t.tasks.viewLoadedMessage}`,
+        message: t.tasks.viewLoadedMessage.replace('{name}', view.name),
         type: 'info',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -488,7 +490,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
             <CheckSquare className="w-8 h-8 text-blue-600" />
             <span>{t.tasks.title}</span>
           </h1>
-          <p className="text-slate-600 mt-1">{t.tasks.subtitle}</p>
+          <p className="text-slate-600 mt-1">{t.tasks.manageWithAI}</p>
         </div>
         <button
           onClick={handleCreateTask}
@@ -517,9 +519,9 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-600">{t.tasks.myTasksMetric}</p>
+              <p className="text-sm font-medium text-slate-600">{t.tasks.myTasksCount}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.myTasks}</p>
-              <p className="text-sm text-slate-500">{metrics.myProgress}{t.tasks.completedPercentage}</p>
+              <p className="text-sm text-slate-500">{metrics.myProgress}% {t.tasks.progressCompleted}</p>
             </div>
             <div className="p-3 bg-emerald-100 rounded-lg">
               <User className="w-6 h-6 text-emerald-600" />
@@ -532,7 +534,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
             <div>
               <p className="text-sm font-medium text-slate-600">{t.tasks.timeTracked}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.totalTimeTracked}{t.tasks.hours}</p>
-              <p className="text-sm text-slate-500">{metrics.timeEfficiency}{t.tasks.efficiency}</p>
+              <p className="text-sm text-slate-500">{metrics.timeEfficiency}% {t.tasks.efficiency}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
               <Clock className="w-6 h-6 text-orange-600" />
@@ -545,7 +547,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
             <div>
               <p className="text-sm font-medium text-slate-600">{t.tasks.overdueTasks}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.overdueTasks}</p>
-              <p className="text-sm text-slate-500">{t.tasks.attentionRequired}</p>
+              <p className="text-sm text-slate-500">{t.tasks.needsAttention}</p>
             </div>
             <div className="p-3 bg-red-100 rounded-lg">
               <AlertTriangle className="w-6 h-6 text-red-600" />
@@ -942,7 +944,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {selectedTask.id ? t.tasks.editTask : t.tasks.newTaskModal}
+                {selectedTask.id ? t.tasks.editTaskTitle : t.tasks.newTaskTitle}
               </h3>
               <button
                 onClick={() => setShowTaskModal(false)}
@@ -954,7 +956,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.title}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.tasks.taskTitle}</label>
                 <input
                   type="text"
                   value={selectedTask.title}
@@ -1224,7 +1226,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                     </div>
 
                     <div>
-                      <span className="text-sm text-slate-600">{t.tasks.deadline}:</span>
+                      <span className="text-sm text-slate-600">{t.tasks.dueDate}:</span>
                       <div className="mt-1">
                         <span className="text-sm text-slate-900">{formatDate(viewingTask.dueDate)}</span>
                       </div>
@@ -1241,11 +1243,11 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-600">{t.tasks.timeTracked}:</span>
+                        <span className="text-slate-600">{t.tasks.timeTrackedLabel}</span>
                         <span className="font-medium text-slate-900">{viewingTask.timeTracked}{t.tasks.hours}</span>
                       </div>
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-slate-600">{t.tasks.estimatedTime}:</span>
+                        <span className="text-slate-600">{t.tasks.estimatedTimeLabel}</span>
                         <span className="font-medium text-slate-900">{viewingTask.estimatedTime}{t.tasks.hours}</span>
                       </div>
                       <div className="w-full h-2 bg-slate-200 rounded-full">
@@ -1334,13 +1336,13 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">{t.tasks.deleteTask}</h3>
-                <p className="text-sm text-slate-600">{t.tasks.deleteConfirmation}</p>
+                <h3 className="text-lg font-semibold text-slate-900">{t.tasks.deleteTaskTitle}</h3>
+                <p className="text-sm text-slate-600">{t.tasks.irreversibleAction}</p>
               </div>
             </div>
 
             <p className="text-slate-700 mb-6">
-              {t.tasks.deleteWarning}
+              {t.tasks.deleteConfirmation}
             </p>
 
             <div className="flex space-x-3">

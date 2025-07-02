@@ -7,7 +7,12 @@ import {
   Target, 
   Zap,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Languages,
+  Settings,
+  Trash2,
+  Merge,
+  Download
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useAI } from '../hooks/useAI';
@@ -23,6 +28,14 @@ interface AIInsight {
   category: string;
   actionable: boolean;
   data?: Record<string, unknown>;
+  timestamp?: string;
+  language?: string;
+  generatedByAI?: boolean;
+  generatedAt?: string;
+  sessionId?: number;
+  applied?: boolean;
+  appliedAt?: string;
+  translatedFrom?: string;
 }
 
 const AIInsights: React.FC = () => {
@@ -34,31 +47,75 @@ const AIInsights: React.FC = () => {
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [autoTranslate, setAutoTranslate] = useState(false);
+  const [maxInsightsPerLanguage, setMaxInsightsPerLanguage] = useState(50);
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  const [previousLanguage, setPreviousLanguage] = useState<string | null>(null);
+
+  // Memory management: Clean old insights to prevent storage bloat
+  const cleanOldInsights = useCallback((insightsArray: AIInsight[]) => {
+    // Keep only the most recent insights per language, up to maxInsightsPerLanguage
+    const sortedInsights = insightsArray
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
+      .slice(0, maxInsightsPerLanguage);
+    
+    // Remove insights older than 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return sortedInsights.filter(insight => 
+      new Date(insight.timestamp || 0) > sevenDaysAgo
+    );
+  }, [maxInsightsPerLanguage]);
+
+  // Get all available languages with insights
+  const updateAvailableLanguages = useCallback(() => {
+    const languages: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('ai-insights-')) {
+        const lang = key.replace('ai-insights-', '');
+        if (lang !== language) {
+          languages.push(lang);
+        }
+      }
+    }
+    setAvailableLanguages(languages);
+  }, [language]);
 
   const loadSavedInsights = useCallback(() => {
     try {
+      // Handle language change - save current insights before switching
+      if (previousLanguage && previousLanguage !== language && insights.length > 0) {
+        saveInsights(insights, previousLanguage);
+      }
+      
       // Load insights based on current language
       const saved = localStorage.getItem(`ai-insights-${language}`);
       if (saved) {
         const parsedInsights = JSON.parse(saved);
-        // Check if insights are not too old (24 hours for better persistence)
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const validInsights = parsedInsights.filter((insight: any) => 
-          new Date(insight.timestamp || 0) > twentyFourHoursAgo
-        );
-        if (validInsights.length > 0) {
-          setInsights(validInsights);
-          return; // Important: stop here if we have saved insights
+        
+        // Clean old insights for memory management
+        const cleanedInsights = cleanOldInsights(parsedInsights);
+        
+        if (cleanedInsights.length > 0) {
+          setInsights(cleanedInsights);
+          // Save cleaned insights back to storage
+          if (cleanedInsights.length !== parsedInsights.length) {
+            localStorage.setItem(`ai-insights-${language}`, JSON.stringify(cleanedInsights));
+          }
+          updateAvailableLanguages();
+          return;
         }
       }
       
       // Only if no valid saved insights, generate default insights
       generateInitialInsights();
+      updateAvailableLanguages();
     } catch (error) {
       console.error('Error loading saved insights:', error);
       generateInitialInsights();
     }
-  }, [language]); // Add language as dependency
+  }, [language, previousLanguage, insights, cleanOldInsights, updateAvailableLanguages]);
 
   const generateInitialInsights = () => {
     // Welcome insights only the first time
@@ -82,15 +139,22 @@ const AIInsights: React.FC = () => {
     saveInsights(welcomeInsights);
   };
 
-  const saveInsights = (newInsights: AIInsight[]) => {
+  const saveInsights = (newInsights: AIInsight[], targetLanguage: string = language) => {
     try {
       const insightsWithTimestamp = newInsights.map(insight => ({
         ...insight,
-        timestamp: new Date().toISOString(),
-        language: language // Add language to each insight
+        timestamp: insight.timestamp || new Date().toISOString(),
+        language: targetLanguage
       }));
+      
+      // Apply memory management before saving
+      const managedInsights = cleanOldInsights(insightsWithTimestamp);
+      
       // Save insights with language-specific key
-      localStorage.setItem(`ai-insights-${language}`, JSON.stringify(insightsWithTimestamp));
+      localStorage.setItem(`ai-insights-${targetLanguage}`, JSON.stringify(managedInsights));
+      
+      // Update available languages list
+      updateAvailableLanguages();
     } catch (error) {
       console.error('Error saving insights:', error);
     }
@@ -259,10 +323,113 @@ const AIInsights: React.FC = () => {
     }
   }, [isAvailable, generateResponse, projects, tasks, users, language]);
 
+  // Auto-translate insights when language changes
+  const translateInsights = useCallback(async (insightsToTranslate: AIInsight[], targetLang: string) => {
+    if (!isAvailable || !autoTranslate) return insightsToTranslate;
+    
+    try {
+      const translatedInsights = await Promise.all(
+        insightsToTranslate.map(async (insight) => {
+          if (insight.language === targetLang) return insight; // Already in target language
+          
+          const translatePrompt = targetLang === 'fr' 
+            ? `Traduisez ce texte en français en conservant le sens technique et professionnel:\n\nTitre: ${insight.title}\nDescription: ${insight.description}\nCatégorie: ${insight.category}\n\nRépondez uniquement au format JSON:\n{"title": "titre traduit", "description": "description traduite", "category": "catégorie traduite"}`
+            : `Translate this text to English while preserving technical and professional meaning:\n\nTitle: ${insight.title}\nDescription: ${insight.description}\nCategory: ${insight.category}\n\nRespond only in JSON format:\n{"title": "translated title", "description": "translated description", "category": "translated category"}`;
+          
+          try {
+            const translationResponse = await generateResponse(translatePrompt);
+            const translation = JSON.parse(translationResponse);
+            
+            return {
+              ...insight,
+              title: translation.title || insight.title,
+              description: translation.description || insight.description,
+              category: translation.category || insight.category,
+              language: targetLang,
+              translatedFrom: insight.language,
+              timestamp: new Date().toISOString()
+            };
+          } catch (translateError) {
+            console.error('Translation failed for insight:', insight.id, translateError);
+            return insight; // Return original if translation fails
+          }
+        })
+      );
+      
+      return translatedInsights;
+    } catch (error) {
+      console.error('Batch translation failed:', error);
+      return insightsToTranslate;
+    }
+  }, [isAvailable, autoTranslate, generateResponse]);
+
+  // Merge insights from different languages
+  const mergeInsightsFromLanguages = useCallback(async () => {
+    const allInsights: AIInsight[] = [];
+    
+    // Collect insights from all languages
+    for (const lang of availableLanguages) {
+      try {
+        const saved = localStorage.getItem(`ai-insights-${lang}`);
+        if (saved) {
+          const langInsights = JSON.parse(saved);
+          allInsights.push(...langInsights);
+        }
+      } catch (error) {
+        console.error(`Error loading insights for language ${lang}:`, error);
+      }
+    }
+    
+    if (allInsights.length === 0) return;
+    
+    // Translate insights to current language if auto-translate is enabled
+    const processedInsights = autoTranslate 
+      ? await translateInsights(allInsights, language)
+      : allInsights;
+    
+    // Remove duplicates based on content similarity
+    const uniqueInsights = processedInsights.filter((insight, index, arr) => {
+      return !arr.slice(0, index).some(existing => 
+        existing.title.toLowerCase().includes(insight.title.toLowerCase().substring(0, 20)) ||
+        insight.title.toLowerCase().includes(existing.title.toLowerCase().substring(0, 20))
+      );
+    });
+    
+    // Merge with current insights
+    const mergedInsights = [...insights, ...uniqueInsights];
+    const cleanedMerged = cleanOldInsights(mergedInsights);
+    
+    setInsights(cleanedMerged);
+    saveInsights(cleanedMerged);
+    
+    alert(language === 'fr' 
+      ? `${uniqueInsights.length} insights fusionnés depuis d'autres langues`
+      : `${uniqueInsights.length} insights merged from other languages`);
+  }, [availableLanguages, autoTranslate, translateInsights, language, insights, cleanOldInsights]);
+
+  useEffect(() => {
+    // Set previous language for tracking changes
+    setPreviousLanguage(language);
+  }, []);
+
   useEffect(() => {
     // Load saved insights when component mounts or language changes
     loadSavedInsights();
-  }, [loadSavedInsights]); // Use loadSavedInsights as dependency
+  }, [language]); // Remove loadSavedInsights dependency to avoid infinite loops
+  
+  useEffect(() => {
+    // Load auto-translate setting
+    const savedAutoTranslate = localStorage.getItem('ai-insights-auto-translate');
+    if (savedAutoTranslate) {
+      setAutoTranslate(JSON.parse(savedAutoTranslate));
+    }
+    
+    // Load max insights setting
+    const savedMaxInsights = localStorage.getItem('ai-insights-max-per-language');
+    if (savedMaxInsights) {
+      setMaxInsightsPerLanguage(parseInt(savedMaxInsights));
+    }
+  }, []);
 
   // Remove this useEffect that automatically regenerated
   // useEffect(() => {
@@ -441,8 +608,63 @@ const AIInsights: React.FC = () => {
       setInsights([]);
       // Remove insights for current language only
       localStorage.removeItem(`ai-insights-${language}`);
+      updateAvailableLanguages();
       generateInitialInsights(); // Reset welcome message
     }
+  };
+  
+  const clearAllLanguagesInsights = () => {
+    const confirmMessage = language === 'fr' 
+      ? 'Êtes-vous sûr de vouloir supprimer TOUS les insights de TOUTES les langues ? Cette action est irréversible.'
+      : 'Are you sure you want to delete ALL insights from ALL languages? This action is irreversible.';
+      
+    if (confirm(confirmMessage)) {
+      // Remove insights for all languages
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('ai-insights-')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      setInsights([]);
+      setAvailableLanguages([]);
+      generateInitialInsights();
+    }
+  };
+  
+  const exportInsights = () => {
+    try {
+      const exportData = {
+        language,
+        insights,
+        exportedAt: new Date().toISOString(),
+        version: '1.0'
+      };
+      
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ai-insights-${language}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert(language === 'fr' ? 'Erreur lors de l\'export' : 'Export failed');
+    }
+  };
+  
+  const saveSettings = () => {
+    localStorage.setItem('ai-insights-auto-translate', JSON.stringify(autoTranslate));
+    localStorage.setItem('ai-insights-max-per-language', maxInsightsPerLanguage.toString());
+    setShowSettings(false);
   };
 
   const getInsightIcon = (type: string) => {
@@ -493,8 +715,33 @@ const AIInsights: React.FC = () => {
               <Brain className="w-8 h-8" />
               <h1 className="text-3xl font-bold">{t.ai.insightsTitle}</h1>
               <Sparkles className="w-6 h-6 animate-pulse" />
+              
+              {/* Language Indicator */}
+              <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
+                <Languages className="w-4 h-4" />
+                <span className="text-sm font-medium">{language.toUpperCase()}</span>
+                {insights.length > 0 && (
+                  <span className="text-xs opacity-75">
+                    ({insights.filter(i => i.language === language).length} {language === 'fr' ? 'local' : 'local'})
+                  </span>
+                )}
+              </div>
             </div>
             <p className="text-purple-100">{t.ai.insightsSubtitle}</p>
+            
+            {/* Available Languages Indicator */}
+            {availableLanguages.length > 0 && (
+              <div className="flex items-center space-x-2 mt-2">
+                <span className="text-xs text-purple-200">
+                  {language === 'fr' ? 'Autres langues disponibles:' : 'Other languages available:'}
+                </span>
+                {availableLanguages.map(lang => (
+                  <span key={lang} className="text-xs bg-white/10 px-2 py-1 rounded">
+                    {lang.toUpperCase()}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
@@ -508,8 +755,42 @@ const AIInsights: React.FC = () => {
                   ✨ {t.ai.aiActive} ({insights.filter(insight => (insight as any).generatedByAI).length} {t.ai.insightsCount})
                 </span>
               )}
+              {autoTranslate && (
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  🌐 {language === 'fr' ? 'Auto-traduction' : 'Auto-translate'}
+                </span>
+              )}
             </div>
             <div className="flex items-center space-x-2">
+              {/* Settings Button */}
+              <button
+                onClick={() => setShowSettings(true)}
+                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
+                title={language === 'fr' ? 'Paramètres' : 'Settings'}
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+              
+              {/* Merge Button */}
+              {availableLanguages.length > 0 && (
+                <button
+                  onClick={mergeInsightsFromLanguages}
+                  className="bg-yellow-500/20 hover:bg-yellow-500/30 p-2 rounded-lg transition-colors"
+                  title={language === 'fr' ? 'Fusionner les insights' : 'Merge insights'}
+                >
+                  <Merge className="w-4 h-4" />
+                </button>
+              )}
+              
+              {/* Export Button */}
+              <button
+                onClick={exportInsights}
+                className="bg-green-500/20 hover:bg-green-500/30 p-2 rounded-lg transition-colors"
+                title={language === 'fr' ? 'Exporter' : 'Export'}
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              
               <button
                 onClick={clearInsights}
                 className="bg-red-500/20 hover:bg-red-500/30 px-3 py-1 text-xs rounded-lg font-medium transition-colors text-white"
@@ -684,6 +965,112 @@ const AIInsights: React.FC = () => {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-slate-900">
+                {language === 'fr' ? 'Paramètres des Insights IA' : 'AI Insights Settings'}
+              </h3>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Auto-translate setting */}
+              <div>
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={autoTranslate}
+                    onChange={(e) => setAutoTranslate(e.target.checked)}
+                    className="w-4 h-4 text-purple-600 bg-slate-100 border-slate-300 rounded focus:ring-purple-500"
+                  />
+                  <div>
+                    <div className="font-medium text-slate-900">
+                      {language === 'fr' ? 'Traduction Automatique' : 'Auto-Translation'}
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      {language === 'fr' 
+                        ? 'Traduire automatiquement les insights lors du changement de langue'
+                        : 'Automatically translate insights when switching languages'}
+                    </div>
+                  </div>
+                </label>
+              </div>
+              
+              {/* Max insights per language */}
+              <div>
+                <label className="block text-sm font-medium text-slate-900 mb-2">
+                  {language === 'fr' ? 'Insights max par langue' : 'Max insights per language'}
+                </label>
+                <input
+                  type="number"
+                  min="10"
+                  max="200"
+                  value={maxInsightsPerLanguage}
+                  onChange={(e) => setMaxInsightsPerLanguage(parseInt(e.target.value) || 50)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <div className="text-xs text-slate-500 mt-1">
+                  {language === 'fr' 
+                    ? 'Limite le nombre d\'insights stockés par langue pour économiser l\'espace'
+                    : 'Limits the number of insights stored per language to save space'}
+                </div>
+              </div>
+              
+              {/* Storage info */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <h4 className="font-medium text-slate-900 mb-2">
+                  {language === 'fr' ? 'Informations de Stockage' : 'Storage Information'}
+                </h4>
+                <div className="space-y-1 text-sm text-slate-600">
+                  <div>{language === 'fr' ? 'Langue actuelle:' : 'Current language:'} <span className="font-medium">{language}</span></div>
+                  <div>{language === 'fr' ? 'Insights locaux:' : 'Local insights:'} <span className="font-medium">{insights.length}</span></div>
+                  <div>{language === 'fr' ? 'Autres langues:' : 'Other languages:'} <span className="font-medium">{availableLanguages.length}</span></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                {language === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+              <button
+                onClick={saveSettings}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+              >
+                {language === 'fr' ? 'Sauvegarder' : 'Save'}
+              </button>
+            </div>
+            
+            {/* Danger zone */}
+            <div className="mt-6 pt-6 border-t border-slate-200">
+              <h4 className="font-medium text-red-600 mb-3">
+                {language === 'fr' ? 'Zone de Danger' : 'Danger Zone'}
+              </h4>
+              <button
+                onClick={clearAllLanguagesInsights}
+                className="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center space-x-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>
+                  {language === 'fr' ? 'Supprimer TOUS les insights' : 'Delete ALL insights'}
+                </span>
+              </button>
             </div>
           </div>
         </div>

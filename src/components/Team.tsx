@@ -43,8 +43,8 @@ interface TeamProps {
 
 const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) => {
   const { state, dispatch } = useAppContext();
-  const { t } = useLanguage();
   const { users, teams, currentUser, projects, tasks } = state;
+  const { t } = useLanguage();
   
   const [selectedTeam, setSelectedTeam] = useState<TeamType | null>(teams[0] || null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -199,8 +199,8 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: t.team.userDeleted,
-          message: `${user?.name} ${t.team.userDeletedMessage}`,
+          title: t.messages.memberRemoved,
+          message: `${user?.name} ${t.messages.memberRemoved.toLowerCase()}`,
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -230,7 +230,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
         };
         reader.readAsDataURL(file);
       } else {
-        alert(t.team.selectValidImage);
+        alert(t.forms.invalidFileType);
       }
     }
   };
@@ -267,8 +267,8 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
         type: 'ADD_NOTIFICATION',
         payload: {
           id: Date.now().toString(),
-          title: isCreatingUser ? t.team.userAdded : t.team.userUpdated,
-          message: `${selectedUser.name} ${isCreatingUser ? t.team.userAddedMessage : t.team.userUpdatedMessage} l'équipe`,
+          title: isCreatingUser ? t.messages.memberAdded : t.messages.memberUpdated,
+          message: `${selectedUser.name} ${isCreatingUser ? t.messages.memberAdded.toLowerCase() : t.messages.memberUpdated.toLowerCase()}`,
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -334,16 +334,6 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
     if (performance >= 85) return 'text-blue-600';
     if (performance >= 75) return 'text-orange-600';
     return 'text-red-600';
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return t.team.statusActive;
-      case 'vacation': return t.team.statusVacation;
-      case 'busy': return t.team.statusBusy;
-      case 'offline': return t.team.statusOffline;
-      default: return status;
-    }
   };
 
   const renderUserCard = (user: User) => {
@@ -415,7 +405,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center space-x-2 text-slate-700"
                   >
                     <Edit className="w-4 h-4" />
-                    <span>{t.team.edit}</span>
+                    <span>{t.common.edit}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -425,7 +415,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center space-x-2 text-red-600"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span>{t.team.delete}</span>
+                    <span>{t.common.delete}</span>
                   </button>
                 </div>
               )}
@@ -458,22 +448,24 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center p-3 bg-slate-50 rounded-lg">
               <div className="text-lg font-bold text-slate-900">{userProjects.length}</div>
-              <div className="text-xs text-slate-600">{t.team.projects}</div>
+              <div className="text-xs text-slate-600">{t.team.activeProjects}</div>
             </div>
             <div className="text-center p-3 bg-slate-50 rounded-lg">
               <div className="text-lg font-bold text-slate-900">{completedTasks}</div>
-              <div className="text-xs text-slate-600">{t.team.tasks}</div>
+              <div className="text-xs text-slate-600">{t.team.completedTasks}</div>
             </div>
           </div>
 
           <div className="flex items-center justify-between mb-4">
             <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(user.status)}`}>
-              {getStatusText(user.status)}
+              {user.status === 'active' ? t.team.statusActive :
+               user.status === 'vacation' ? t.team.statusVacation :
+               user.status === 'busy' ? t.team.statusBusy : t.team.statusOffline}
             </span>
             
             <div className="flex items-center space-x-1 text-xs text-slate-500">
               <Calendar className="w-3 h-3" />
-              <span>{t.team.since} {formatDate(user.joinDate)}</span>
+              <span>{t.time.ago} {formatDate(user.joinDate)}</span>
             </div>
           </div>
 
@@ -497,7 +489,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               onClick={() => handleViewUser(user)}
               className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
             >
-{t.team.viewProfile}
+              {t.team.viewProfile}
             </button>
             <button
               onClick={() => handleEditUser(user)}
@@ -553,21 +545,23 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
           <div className="flex items-center space-x-6">
             <div className="text-center">
               <div className="text-sm font-medium text-slate-900">{user.performance}%</div>
-              <div className="text-xs text-slate-500">{t.team.performance}</div>
+              <div className="text-xs text-slate-500">Performance</div>
             </div>
             
             <div className="text-center">
               <div className="text-sm font-medium text-slate-900">{userProjects.length}</div>
-              <div className="text-xs text-slate-500">{t.team.projects}</div>
+              <div className="text-xs text-slate-500">{t.team.activeProjects}</div>
             </div>
             
             <div className="text-center">
               <div className="text-sm font-medium text-slate-900">{completedTasks}</div>
-              <div className="text-xs text-slate-500">{t.team.tasks}</div>
+              <div className="text-xs text-slate-500">{t.team.completedTasks}</div>
             </div>
 
             <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(user.status)}`}>
-              {getStatusText(user.status)}
+              {user.status === 'active' ? t.team.statusActive :
+               user.status === 'vacation' ? t.team.statusVacation :
+               user.status === 'busy' ? t.team.statusBusy : t.team.statusOffline}
             </span>
 
             <div className="flex items-center space-x-2">
@@ -575,7 +569,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 onClick={() => handleViewUser(user)}
                 className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
               >
-{t.team.view}
+                {t.common.view}
               </button>
               <button
                 onClick={() => handleEditUser(user)}
@@ -655,7 +649,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-{t.team.allUsers}
+                {t.team.allUsers}
               </button>
             </div>
           </div>
@@ -681,7 +675,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
             <div>
               <p className="text-sm font-medium text-slate-600">{t.team.members}</p>
               <p className="text-2xl font-bold text-slate-900">{teamStats.totalMembers}</p>
-              <p className="text-xs text-slate-500">{teamStats.activeMembers} {t.team.activeMembers}</p>
+              <p className="text-xs text-slate-500">{teamStats.activeMembers} {t.team.statusActive.toLowerCase()}</p>
             </div>
           </div>
         </div>
@@ -692,9 +686,9 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               <TrendingUp className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">{t.team.averagePerformance}</p>
+              <p className="text-sm font-medium text-slate-600">{t.team.performance} Moy.</p>
               <p className="text-2xl font-bold text-slate-900">{teamStats.avgPerformance}%</p>
-              <p className="text-xs text-slate-500">{t.team.performantTeam}</p>
+              <p className="text-xs text-slate-500">Performing team</p>
             </div>
           </div>
         </div>
@@ -705,9 +699,9 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               <Target className="w-6 h-6 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">{t.team.totalTasksCompleted}</p>
+              <p className="text-sm font-medium text-slate-600">{t.team.completedTasks}</p>
               <p className="text-2xl font-bold text-slate-900">{teamStats.totalTasksCompleted}</p>
-              <p className="text-xs text-slate-500">{t.team.teamTotal}</p>
+              <p className="text-xs text-slate-500">Total team</p>
             </div>
           </div>
         </div>
@@ -718,12 +712,12 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               <Award className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-600">{t.team.topPerformer}</p>
+              <p className="text-sm font-medium text-slate-600">Top Performer</p>
               <p className="text-lg font-bold text-slate-900">
                 {getTeamMembers(selectedTeam?.id)
                   .sort((a, b) => b.performance - a.performance)[0]?.name.split(' ')[0] || 'N/A'}
               </p>
-              <p className="text-xs text-slate-500">{t.team.bestPerformance}</p>
+              <p className="text-xs text-slate-500">Best performance</p>
             </div>
           </div>
         </div>
@@ -737,7 +731,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder={t.team.searchMembers}
+                placeholder={t.common.search + ' members...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -749,7 +743,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               onChange={(e) => setFilterDepartment(e.target.value)}
               className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">{t.team.allDepartments}</option>
+              <option value="all">All departments</option>
               <option value="Engineering">Engineering</option>
               <option value="Design">Design</option>
               <option value="Product">Product</option>
@@ -762,7 +756,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">{t.team.allStatuses}</option>
+              <option value="all">All statuses</option>
               <option value="active">{t.team.statusActive}</option>
               <option value="vacation">{t.team.statusVacation}</option>
               <option value="busy">{t.team.statusBusy}</option>
@@ -808,11 +802,11 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
       {filteredUsers.length === 0 && (
         <div className="text-center py-12">
           <Users className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 mb-2">{t.team.noMembersFound}</h3>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">{t.team.noTeamMembers}</h3>
           <p className="text-slate-600 mb-4">
             {selectedTeam 
-              ? `${t.team.noMembersInTeam} "${selectedTeam.name}" ${t.team.noMembersMatchCriteria}`
-              : `${t.team.noMembersFound} ${t.team.noMembersMatchCriteria}`
+              ? `No member in team "${selectedTeam.name}" matches your criteria.`
+              : t.team.noTeamMembers + ' match your search criteria.'
             }
           </p>
           <button
@@ -830,7 +824,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {isCreatingUser ? t.team.addMemberModal : t.team.editProfileModal}
+                {isCreatingUser ? t.team.addMember : 'Edit Profile'}
               </h3>
               <button
                 onClick={() => {
@@ -866,7 +860,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     )}
                   </button>
                 </div>
-                <p className="text-sm text-slate-600">{t.team.changePhotoText}</p>
+                <p className="text-sm text-slate-600">Click icon to change photo</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -878,7 +872,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.fullName}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.name}</label>
                   <input
                     type="text"
                     value={selectedUser.name}
@@ -916,7 +910,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     onChange={(e) => setSelectedUser({ ...selectedUser, department: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">{t.team.selectDepartment}</option>
+                    <option value="">Select a department</option>
                     <option value="Engineering">Engineering</option>
                     <option value="Design">Design</option>
                     <option value="Product">Product</option>
@@ -928,7 +922,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.phone}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
                   <input
                     type="tel"
                     value={selectedUser.phone || ''}
@@ -938,7 +932,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.location}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
                   <input
                     type="text"
                     value={selectedUser.location || ''}
@@ -950,7 +944,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.status}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
                   <select
                     value={selectedUser.status}
                     onChange={(e) => setSelectedUser({ ...selectedUser, status: e.target.value as any })}
@@ -964,13 +958,13 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.team}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Team</label>
                   <select
                     value={selectedUser.teamId || ''}
                     onChange={(e) => setSelectedUser({ ...selectedUser, teamId: e.target.value || undefined })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">{t.team.noTeam}</option>
+                    <option value="">No team</option>
                     {teams.map(team => (
                       <option key={team.id} value={team.id}>{team.name}</option>
                     ))}
@@ -979,7 +973,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.skillsSeparator}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.skills} (comma separated)</label>
                 <input
                   type="text"
                   value={selectedUser.skills.join(', ')}
@@ -1000,7 +994,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     });
                   }}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={t.team.skillsPlaceholder}
+                  placeholder="React, TypeScript, Node.js"
                 />
               </div>
 
@@ -1012,11 +1006,11 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-slate-900">{selectedUser.tasksCompleted}</div>
-                    <div className="text-sm text-slate-600">{t.team.tasksCompleted}</div>
+                    <div className="text-sm text-slate-600">{t.team.completedTasks}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-slate-900">{selectedUser.projects.length}</div>
-                    <div className="text-sm text-slate-600">{t.team.activeProjectsCount}</div>
+                    <div className="text-sm text-slate-600">{t.team.activeProjects}</div>
                   </div>
                 </div>
               )}
@@ -1032,7 +1026,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 }}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-{isCreatingUser ? t.team.cancel : t.team.close}
+                {isCreatingUser ? t.common.cancel : t.common.close}
               </button>
               
               {/* Save button - now shows for both create AND edit modes */}
@@ -1041,7 +1035,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{isCreatingUser ? t.team.addToTeam : t.team.save}</span>
+                <span>{isCreatingUser ? 'Add to team' : t.common.save}</span>
               </button>
               
               {/* Delete button - only show in edit mode */}
@@ -1051,7 +1045,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                   className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center space-x-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>{t.team.delete}</span>
+                  <span>{t.common.delete}</span>
                 </button>
               )}
             </div>
@@ -1065,7 +1059,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {isCreatingTeam ? t.team.newTeamModal : t.team.editTeamModal}
+                {isCreatingTeam ? t.team.newTeam : 'Edit Team'}
               </h3>
               <button
                 onClick={() => setShowTeamModal(false)}
@@ -1077,7 +1071,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.teamName}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Team Name</label>
                 <input
                   type="text"
                   value={selectedTeam.name}
@@ -1087,7 +1081,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.description}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
                 <textarea
                   value={selectedTeam.description}
                   onChange={(e) => setSelectedTeam({ ...selectedTeam, description: e.target.value })}
@@ -1098,7 +1092,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.color}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Color</label>
                   <input
                     type="color"
                     value={selectedTeam.color}
@@ -1108,7 +1102,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.team.teamLeader}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Team Leader</label>
                   <select
                     value={selectedTeam.leaderId}
                     onChange={(e) => setSelectedTeam({ ...selectedTeam, leaderId: e.target.value })}
@@ -1127,14 +1121,14 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 onClick={() => setShowTeamModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {t.team.cancel}
+                {t.common.cancel}
               </button>
               <button
                 onClick={saveTeam}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{isCreatingTeam ? t.team.create : t.team.save}</span>
+                <span>{isCreatingTeam ? 'Create' : t.common.save}</span>
               </button>
             </div>
           </div>
@@ -1150,13 +1144,13 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 <Trash2 className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">{t.team.deleteMemberModal}</h3>
-                <p className="text-sm text-slate-600">{t.team.deleteConfirmation}</p>
+                <h3 className="text-lg font-semibold text-slate-900">Delete Member</h3>
+                <p className="text-sm text-slate-600">This action is irreversible</p>
               </div>
             </div>
 
             <p className="text-slate-700 mb-6">
-              {t.team.deleteWarning}
+              Are you sure you want to delete this team member? All their assignments will also be deleted.
             </p>
 
             <div className="flex space-x-3">
@@ -1164,13 +1158,13 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {t.team.cancel}
+                {t.common.cancel}
               </button>
               <button
                 onClick={confirmDeleteUser}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                {t.team.delete}
+                {t.common.delete}
               </button>
             </div>
           </div>

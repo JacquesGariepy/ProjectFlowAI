@@ -117,7 +117,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       {
         id: '1',
         type: 'reallocation',
-        title: t.projects.teamReallocationSuggested,
+        title: 'Réallocation d\'équipe suggérée',
         description: 'Transférer 2 développeurs du projet E-commerce vers Mobile App pour accélérer la livraison',
         confidence: 87,
         impact: 'high',
@@ -133,7 +133,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       {
         id: '2',
         type: 'optimization',
-        title: t.projects.budgetOptimizationDetected,
+        title: 'Optimisation budget détectée',
         description: 'Réduire les coûts de 12% en optimisant l\'infrastructure cloud',
         confidence: 92,
         impact: 'medium',
@@ -149,7 +149,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       {
         id: '3',
         type: 'risk',
-        title: t.projects.delayRiskIdentified,
+        title: 'Risque de retard identifié',
         description: 'Projet Analytics Dashboard: 73% de probabilité de retard de 5 jours',
         confidence: 85,
         impact: 'high',
@@ -165,7 +165,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       {
         id: '4',
         type: 'opportunity',
-        title: t.projects.accelerationOpportunity,
+        title: 'Opportunité d\'accélération',
         description: 'Possibilité de livrer le projet Brand Identity 2 semaines en avance',
         confidence: 78,
         impact: 'medium',
@@ -267,7 +267,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
     const duplicatedProject: Project = {
       ...project,
       id: Date.now().toString(),
-      name: `${project.name} (Copy)`,
+      name: `${project.name} (${t.projects.copy})`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'planning',
@@ -284,7 +284,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       payload: {
         id: Date.now().toString(),
         title: t.projects.projectDuplicated,
-        message: `${t.common.view} "${project.name}" ${t.projects.projectDuplicatedMessage}`,
+        message: t.projects.projectDuplicatedMessage.replace('{name}', project.name),
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -326,7 +326,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       payload: {
         id: Date.now().toString(),
         title: t.projects.projectExported,
-        message: `${t.common.view} "${project.name}" ${t.projects.projectExportedMessage}`,
+        message: t.projects.projectExportedMessage.replace('{name}', project.name),
         type: 'success',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -353,7 +353,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         payload: {
           id: Date.now().toString(),
           title: t.projects.projectDeleted,
-          message: `${t.common.view} "${project?.name}" ${t.projects.projectDeletedMessage}`,
+          message: t.projects.projectDeletedMessage.replace('{name}', project?.name || ''),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -386,7 +386,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
         payload: {
           id: Date.now().toString(),
           title: t.projects.reallocationCompleted,
-          message: `${t.common.view} "${reallocationProject.name}" ${t.projects.reallocationCompletedMessage}`,
+          message: t.projects.reallocationCompletedMessage.replace('{name}', reallocationProject.name),
           type: 'success',
           isRead: false,
           createdAt: new Date().toISOString()
@@ -518,7 +518,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
             <FolderOpen className="w-8 h-8 text-blue-600" />
             <span>{t.projects.title}</span>
           </h1>
-          <p className="text-slate-600 mt-1">{t.projects.subtitle}</p>
+          <p className="text-slate-600 mt-1">{t.projects.manageWithAI}</p>
         </div>
         <button
           onClick={handleCreateProject}
@@ -536,7 +536,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
             <div>
               <p className="text-sm font-medium text-slate-600">{t.projects.totalProjects}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.totalProjects}</p>
-              <p className="text-sm text-slate-500">{metrics.activeProjects} {t.projects.activeProjectsCount}</p>
+              <p className="text-sm text-slate-500">{metrics.activeProjects} {t.projects.activeProjects}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <FolderOpen className="w-6 h-6 text-blue-600" />
@@ -549,7 +549,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
             <div>
               <p className="text-sm font-medium text-slate-600">{t.projects.completionRate}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.completionRate}%</p>
-              <p className="text-sm text-slate-500">{metrics.completedProjects} {t.projects.completedProjectsCount}</p>
+              <p className="text-sm text-slate-500">{metrics.completedProjects} {t.projects.completed}</p>
             </div>
             <div className="p-3 bg-emerald-100 rounded-lg">
               <CheckCircle className="w-6 h-6 text-emerald-600" />
@@ -575,7 +575,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
             <div>
               <p className="text-sm font-medium text-slate-600">{t.projects.averageProgress}</p>
               <p className="text-3xl font-bold text-slate-900">{metrics.avgProgress}%</p>
-              <p className="text-sm text-slate-500">{metrics.overdueProjects} {t.projects.late}</p>
+              <p className="text-sm text-slate-500">{metrics.overdueProjects} {t.projects.overdue}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
               <TrendingUp className="w-6 h-6 text-purple-600" />
@@ -597,7 +597,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
             className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>{t.projects.addRecommendation}</span>
+            <span>{t.common.add}</span>
           </button>
         </div>
 
@@ -679,11 +679,11 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">{t.projects.allStatuses}</option>
-          <option value="planning">{t.projects.statusPlanning}</option>
-          <option value="in-progress">{t.projects.statusInProgress}</option>
-          <option value="review">{t.projects.statusReview}</option>
-          <option value="completed">{t.projects.statusCompleted}</option>
-          <option value="on-hold">{t.projects.statusOnPause}</option>
+          <option value="planning">{t.projects.planning}</option>
+          <option value="in-progress">{t.projects.inProgress}</option>
+          <option value="review">{t.projects.review}</option>
+          <option value="completed">{t.projects.completed}</option>
+          <option value="on-hold">{t.projects.onHold}</option>
         </select>
 
         <select
@@ -692,9 +692,9 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">{t.projects.allPriorities}</option>
-          <option value="high">{t.projects.priorityHighDisplay}</option>
-          <option value="medium">{t.projects.priorityMediumDisplay}</option>
-          <option value="low">{t.projects.priorityLowDisplay}</option>
+          <option value="high">{t.projects.priorityHigh}</option>
+          <option value="medium">{t.projects.priorityMedium}</option>
+          <option value="low">{t.projects.priorityLow}</option>
         </select>
       </div>
 
@@ -733,7 +733,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                         className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                       >
                         <Edit className="w-4 h-4 mr-3" />
-                        {t.projects.edit}
+                        {t.common.edit}
                       </button>
                       <button
                         onClick={() => handleDuplicateProject(project)}
@@ -755,7 +755,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                         className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4 mr-3" />
-                        {t.projects.delete}
+                        {t.common.delete}
                       </button>
                     </div>
                   )}
@@ -828,7 +828,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                   daysLeft <= 7 ? 'text-orange-600' : 'text-slate-600'
                 }`}>
                   {daysLeft < 0 ? `${Math.abs(daysLeft)} ${t.projects.daysLate}` :
-                   daysLeft === 0 ? t.projects.todayText :
+                   daysLeft === 0 ? t.projects.today :
                    `${daysLeft} ${t.projects.daysRemaining}`}
                 </span>
               </div>
@@ -875,7 +875,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {selectedProject.id ? t.projects.editProject : t.projects.createProject}
+                {selectedProject.id ? t.projects.editProject : t.projects.newProject}
               </h3>
               <button
                 onClick={() => setShowProjectModal(false)}
@@ -914,11 +914,11 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                     onChange={(e) => setSelectedProject({ ...selectedProject, status: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="planning">{t.projects.statusPlanningDisplay}</option>
-                    <option value="in-progress">{t.projects.statusInProgressDisplay}</option>
-                    <option value="review">{t.projects.statusReviewDisplay}</option>
-                    <option value="completed">{t.projects.statusCompletedDisplay}</option>
-                    <option value="on-hold">{t.projects.statusOnPauseDisplay}</option>
+                    <option value="planning">{t.projects.planning}</option>
+                    <option value="in-progress">{t.projects.inProgress}</option>
+                    <option value="review">{t.projects.review}</option>
+                    <option value="completed">{t.projects.completed}</option>
+                    <option value="on-hold">{t.projects.onHold}</option>
                   </select>
                 </div>
 
@@ -929,9 +929,9 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                     onChange={(e) => setSelectedProject({ ...selectedProject, priority: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="low">{t.projects.priorityLowDisplay}</option>
-                    <option value="medium">{t.projects.priorityMediumDisplay}</option>
-                    <option value="high">{t.projects.priorityHighDisplay}</option>
+                    <option value="low">{t.projects.priorityLow}</option>
+                    <option value="medium">{t.projects.priorityMedium}</option>
+                    <option value="high">{t.projects.priorityHigh}</option>
                   </select>
                 </div>
               </div>
@@ -986,14 +986,14 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowProjectModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {t.projects.cancel}
+                {t.common.cancel}
               </button>
               <button
                 onClick={saveProject}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{t.projects.save}</span>
+                <span>{t.common.save}</span>
               </button>
             </div>
           </div>
@@ -1009,13 +1009,13 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">{t.projects.deleteProject}</h3>
-                <p className="text-sm text-slate-600">{t.projects.deleteConfirmation}</p>
+                <h3 className="text-lg font-semibold text-slate-900">{t.projects.deleteProjectTitle}</h3>
+                <p className="text-sm text-slate-600">{t.projects.irreversibleAction}</p>
               </div>
             </div>
 
             <p className="text-slate-700 mb-6">
-              {t.projects.deleteWarning}
+              {t.projects.deleteProjectConfirmation}
             </p>
 
             <div className="flex space-x-3">
@@ -1023,13 +1023,13 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {t.projects.cancel}
+                {t.common.cancel}
               </button>
               <button
                 onClick={confirmDeleteProject}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                {t.projects.delete}
+                {t.common.delete}
               </button>
             </div>
           </div>
@@ -1046,20 +1046,20 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">{t.projects.teamReallocation}</h3>
-                <p className="text-sm text-slate-600">Projet: {reallocationProject.name}</p>
+                <p className="text-sm text-slate-600">{t.projects.project}: {reallocationProject.name}</p>
               </div>
             </div>
 
             <div className="space-y-4 mb-6">
               <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">{t.projects.aiRecommendations}</h4>
+                <h4 className="font-medium text-blue-900 mb-2">{t.projects.aiRecommendation}</h4>
                 <p className="text-sm text-blue-700">
-                  {t.projects.aiRecommendationText}
+                  {t.projects.transferDevelopers}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-slate-900">{t.projects.suggestedMembers}</h4>
+                <h4 className="font-medium text-slate-900">{t.projects.suggestedMembersColon}</h4>
                 <div className="space-y-2">
                   {users.slice(0, 2).map(user => (
                     <div key={user.id} className="flex items-center space-x-3 p-2 border border-slate-200 rounded-lg">
@@ -1079,7 +1079,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowReallocationModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {t.projects.cancel}
+                {t.common.cancel}
               </button>
               <button
                 onClick={executeReallocation}
@@ -1099,7 +1099,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {editingRecommendation ? t.projects.editRecommendation : t.projects.newAiRecommendation}
+                {editingRecommendation ? t.projects.editRecommendation : t.projects.newRecommendation}
               </h3>
               <button
                 onClick={() => setShowRecommendationModal(false)}
@@ -1111,7 +1111,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.recommendationTitle}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.titleField}</label>
                 <input
                   type="text"
                   value={newRecommendation.title || ''}
@@ -1132,36 +1132,36 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.recommendationType}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.typeField}</label>
                   <select
                     value={newRecommendation.type || 'optimization'}
                     onChange={(e) => setNewRecommendation({ ...newRecommendation, type: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="reallocation">{t.projects.typeReallocation}</option>
-                    <option value="optimization">{t.projects.typeOptimization}</option>
-                    <option value="risk">{t.projects.typeRisk}</option>
-                    <option value="opportunity">{t.projects.typeOpportunity}</option>
+                    <option value="reallocation">{t.projects.reallocation}</option>
+                    <option value="optimization">{t.projects.optimization}</option>
+                    <option value="risk">{t.projects.risk}</option>
+                    <option value="opportunity">{t.projects.opportunity}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.recommendationImpact}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.ai.impact}</label>
                   <select
                     value={newRecommendation.impact || 'medium'}
                     onChange={(e) => setNewRecommendation({ ...newRecommendation, impact: e.target.value as any })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="low">{t.projects.impactLow}</option>
-                    <option value="medium">{t.projects.impactMedium}</option>
-                    <option value="high">{t.projects.impactHigh}</option>
+                    <option value="low">{t.projects.lowImpact}</option>
+                    <option value="medium">{t.projects.mediumImpact}</option>
+                    <option value="high">{t.projects.highImpact}</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.recommendationConfidence}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.confidencePercent}</label>
                   <input
                     type="number"
                     min="0"
@@ -1173,7 +1173,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.recommendationProject}</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.projects.project}</label>
                   <select
                     value={newRecommendation.projectId || ''}
                     onChange={(e) => setNewRecommendation({ ...newRecommendation, projectId: e.target.value })}
@@ -1204,14 +1204,14 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
                 onClick={() => setShowRecommendationModal(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {t.projects.cancel}
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleSaveRecommendation}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{t.projects.save}</span>
+                <span>{t.common.save}</span>
               </button>
             </div>
           </div>

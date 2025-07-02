@@ -50,6 +50,7 @@ import {
   Figma
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 import { UserSettings } from '../types';
 
 type SettingsSection = 'profile' | 'security' | 'notifications' | 'appearance' | 'ai' | 'integrations' | 'database' | 'backup' | 'blog';
@@ -100,6 +101,7 @@ interface BlogPost {
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { t } = useLanguage();
   const { currentUser } = state;
   
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
@@ -305,15 +307,15 @@ const Settings: React.FC = () => {
   }, []);
 
   const menuItems = [
-    { id: 'profile', label: 'Profil', icon: User },
-    { id: 'security', label: 'Sécurité', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'appearance', label: 'Apparence', icon: Palette },
+    { id: 'profile', label: t.settings.personalInfo, icon: User },
+    { id: 'security', label: t.settings.security, icon: Shield },
+    { id: 'notifications', label: t.settings.notifications, icon: Bell },
+    { id: 'appearance', label: t.settings.preferences, icon: Palette },
     { id: 'ai', label: 'Intelligence Artificielle', icon: Brain },
-    { id: 'integrations', label: 'Intégrations', icon: Plug },
+    { id: 'integrations', label: t.settings.integrations, icon: Plug },
     { id: 'database', label: 'Base de données', icon: Database },
-    { id: 'backup', label: 'Sauvegarde', icon: Download },
-    { id: 'blog', label: 'Blog', icon: FileText }
+    { id: 'backup', label: t.settings.backupData, icon: Download },
+    { id: 'blog', label: t.nav.blog, icon: FileText }
   ];
 
   const saveSettings = () => {
@@ -519,7 +521,7 @@ const Settings: React.FC = () => {
   const renderProfileSection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Informations personnelles</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.personalInfo}</h3>
         
         <div className="space-y-4">
           <div className="flex items-center space-x-4">
@@ -635,7 +637,7 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Change Password */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Changer le mot de passe</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.changePassword}</h3>
         
         <div className="space-y-4">
           <div>
@@ -682,7 +684,7 @@ const Settings: React.FC = () => {
             disabled={!currentPassword || !newPassword || !confirmPassword}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Changer le mot de passe
+            {t.settings.changePassword}
           </button>
         </div>
       </div>
@@ -872,13 +874,13 @@ const Settings: React.FC = () => {
   const renderAppearanceSection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Thème</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.theme}</h3>
         
         <div className="grid grid-cols-3 gap-4">
           {[
-            { value: 'light', label: 'Clair', icon: Sun },
-            { value: 'dark', label: 'Sombre', icon: Moon },
-            { value: 'system', label: 'Système', icon: Monitor }
+            { value: 'light', label: t.settings.lightMode, icon: Sun },
+            { value: 'dark', label: t.settings.darkMode, icon: Moon },
+            { value: 'system', label: t.settings.systemMode, icon: Monitor }
           ].map(({ value, label, icon: Icon }) => (
             <button
               key={value}
@@ -900,11 +902,11 @@ const Settings: React.FC = () => {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Langue et région</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.language} et région</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Langue</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.language}</label>
             <select
               value={settings.preferences.language}
               onChange={(e) => setSettings({
@@ -921,7 +923,7 @@ const Settings: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Fuseau horaire</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.timezone}</label>
             <select
               value={settings.preferences.timezone}
               onChange={(e) => setSettings({
@@ -938,7 +940,7 @@ const Settings: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Format de date</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">{t.settings.dateFormat}</label>
             <select
               value={settings.preferences.dateFormat}
               onChange={(e) => setSettings({
@@ -1042,7 +1044,7 @@ const Settings: React.FC = () => {
   const renderIntegrationsSection = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Intégrations disponibles</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{t.settings.integrations} disponibles</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {integrations.map((integration) => {
@@ -1301,13 +1303,13 @@ const Settings: React.FC = () => {
   const renderBlogSection = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Articles de blog</h3>
+        <h3 className="text-lg font-semibold text-slate-900">{t.blog.allPosts}</h3>
         <button
           onClick={createBlogPost}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
-          <span>Nouvel article</span>
+          <span>{t.blog.newArticle}</span>
         </button>
       </div>
 
@@ -1320,8 +1322,8 @@ const Settings: React.FC = () => {
                 post.status === 'draft' ? 'bg-orange-100 text-orange-700' :
                 'bg-slate-100 text-slate-700'
               }`}>
-                {post.status === 'published' ? 'Publié' :
-                 post.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                {post.status === 'published' ? t.status.published :
+                 post.status === 'draft' ? t.status.draft : t.status.archived}
               </span>
               <div className="flex items-center space-x-1">
                 <button
@@ -1373,7 +1375,7 @@ const Settings: React.FC = () => {
           <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
               <h3 className="text-xl font-semibold text-slate-900">
-                {isCreatingPost ? 'Nouvel article' : 'Modifier l\'article'}
+                {isCreatingPost ? t.blog.newArticle : t.blog.editArticle}
               </h3>
               <button
                 onClick={() => setShowBlogEditor(false)}
@@ -1386,7 +1388,7 @@ const Settings: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Titre</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.blog.postTitle}</label>
                   <input
                     type="text"
                     value={selectedBlogPost.title}
@@ -1414,9 +1416,9 @@ const Settings: React.FC = () => {
                       onChange={(e) => setSelectedBlogPost({ ...selectedBlogPost, status: e.target.value as any })}
                       className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="draft">Brouillon</option>
-                      <option value="published">Publié</option>
-                      <option value="archived">Archivé</option>
+                      <option value="draft">{t.status.draft}</option>
+                      <option value="published">{t.status.published}</option>
+                      <option value="archived">{t.status.archived}</option>
                     </select>
                   </div>
 
@@ -1436,7 +1438,7 @@ const Settings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Contenu (Markdown)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">{t.blog.content} (Markdown)</label>
                   <textarea
                     value={selectedBlogPost.content}
                     onChange={(e) => setSelectedBlogPost({ ...selectedBlogPost, content: e.target.value })}
@@ -1455,14 +1457,14 @@ Votre contenu en Markdown..."
                 onClick={() => setShowBlogEditor(false)}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                Annuler
+                {t.common.cancel}
               </button>
               <button
                 onClick={saveBlogPost}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               >
                 <Save className="w-4 h-4" />
-                <span>{isCreatingPost ? 'Créer' : 'Sauvegarder'}</span>
+                <span>{isCreatingPost ? t.blog.create : t.common.save}</span>
               </button>
             </div>
           </div>
@@ -1503,9 +1505,9 @@ Votre contenu en Markdown..."
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center space-x-3">
             <SettingsIcon className="w-8 h-8 text-blue-600" />
-            <span>Paramètres</span>
+            <span>{t.settings.title}</span>
           </h1>
-          <p className="text-slate-600 mt-1">Configurez votre expérience ProjectFlow</p>
+          <p className="text-slate-600 mt-1">{t.settings.subtitle}</p>
         </div>
         
         <button
@@ -1513,7 +1515,7 @@ Votre contenu en Markdown..."
           className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
         >
           <Save className="w-5 h-5" />
-          <span>Sauvegarder</span>
+          <span>{t.common.save}</span>
         </button>
       </div>
 
