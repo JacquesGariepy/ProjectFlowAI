@@ -125,7 +125,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
       content: '# Nouveau post\n\nContenu du post...',
       excerpt: '',
       status: 'draft',
-      author: currentUser.id,
+      author: currentUser?.id || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       tags: [],
@@ -210,8 +210,8 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   // Like system - one like per user per post
   const toggleLike = (postId: string) => {
     dispatch({ 
-      type: 'TOGGLE_BLOG_LIKE', 
-      payload: { postId, userId: currentUser.id } 
+      type: 'TOGGLE_BLOG_LIKE',
+      payload: { postId, userId: currentUser?.id || '' }
     });
   };
 
@@ -230,7 +230,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
       const comment: BlogComment = {
         id: Date.now().toString(),
         postId: selectedPost.id,
-        authorId: currentUser.id,
+        authorId: currentUser?.id || '',
         content: newComment,
         createdAt: new Date().toISOString(),
         likes: [],
@@ -269,7 +269,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
       const reply: BlogComment = {
         id: Date.now().toString(),
         postId: selectedPost.id,
-        authorId: currentUser.id,
+        authorId: currentUser?.id || '',
         content: replyContent,
         createdAt: new Date().toISOString(),
         likes: [],
@@ -407,9 +407,9 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
           comment.id === commentId
             ? {
                 ...comment,
-                likes: comment.likes.includes(currentUser.id)
-                  ? comment.likes.filter(id => id !== currentUser.id)
-                  : [...comment.likes, currentUser.id]
+                likes: comment.likes.includes(currentUser?.id || '')
+                  ? comment.likes.filter(id => id !== (currentUser?.id || ''))
+                  : [...comment.likes, currentUser?.id || '']
               }
             : comment
         )
@@ -435,9 +435,9 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
                   reply.id === replyId
                     ? {
                         ...reply,
-                        likes: reply.likes.includes(currentUser.id)
-                          ? reply.likes.filter(id => id !== currentUser.id)
-                          : [...reply.likes, currentUser.id]
+                        likes: reply.likes.includes(currentUser?.id || '')
+                          ? reply.likes.filter(id => id !== (currentUser?.id || ''))
+                          : [...reply.likes, currentUser?.id || '']
                       }
                     : reply
                 )
@@ -458,6 +458,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   const sharePost = (post: BlogPost) => {
     const url = `${window.location.origin}/blog/${post.id}`;
     setShareUrl(url);
+    setSelectedPost(post);
     setShowShareModal(true);
   };
 
@@ -514,7 +515,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   const renderPostCard = (post: BlogPost) => {
     const author = users.find(u => u.id === post.author);
     const VisibilityIcon = getVisibilityIcon(post.visibility);
-    const isLiked = post.likes.includes(currentUser.id);
+    const isLiked = post.likes.includes(currentUser?.id || '');
 
     return (
       <div key={post.id} className="bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
@@ -685,7 +686,7 @@ const Blog: React.FC<BlogProps> = ({ navigationParams, onNavigationComplete }) =
   const renderPostList = (post: BlogPost) => {
     const author = users.find(u => u.id === post.author);
     const VisibilityIcon = getVisibilityIcon(post.visibility);
-    const isLiked = post.likes.includes(currentUser.id);
+    const isLiked = post.likes.includes(currentUser?.id || '');
 
     return (
       <div key={post.id} className="bg-white rounded-xl border border-slate-200 hover:shadow-md transition-all duration-300 p-6">
@@ -1217,8 +1218,8 @@ Votre contenu en Markdown..."
                   <div className="mb-6">
                     <div className="flex space-x-3">
                       <img
-                        src={currentUser.avatar}
-                        alt={currentUser.name}
+                        src={currentUser?.avatar || '/default-avatar.png'}
+                        alt={currentUser?.name || 'User'}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                       <div className="flex-1">
@@ -1247,8 +1248,8 @@ Votre contenu en Markdown..."
                   <div className="space-y-6">
                     {selectedPost.comments.map((comment) => {
                       const author = users.find(u => u.id === comment.authorId);
-                      const isLiked = comment.likes.includes(currentUser.id);
-                      const isOwner = comment.authorId === currentUser.id;
+                      const isLiked = comment.likes.includes(currentUser?.id || '');
+                      const isOwner = comment.authorId === (currentUser?.id || '');
 
                       return (
                         <div key={comment.id} className="flex space-x-3">
@@ -1347,8 +1348,8 @@ Votre contenu en Markdown..."
                               <div className="mt-3 ml-4">
                                 <div className="flex space-x-2">
                                   <img
-                                    src={currentUser.avatar}
-                                    alt={currentUser.name}
+                                    src={currentUser?.avatar || '/default-avatar.png'}
+                                    alt={currentUser?.name || 'User'}
                                     className="w-6 h-6 rounded-full object-cover"
                                   />
                                   <div className="flex-1">
@@ -1387,8 +1388,8 @@ Votre contenu en Markdown..."
                               <div className="ml-4 mt-4 space-y-3">
                                 {comment.replies.map((reply) => {
                                   const replyAuthor = users.find(u => u.id === reply.authorId);
-                                  const isReplyLiked = reply.likes.includes(currentUser.id);
-                                  const isReplyOwner = reply.authorId === currentUser.id;
+                                  const isReplyLiked = reply.likes.includes(currentUser?.id || '');
+                                  const isReplyOwner = reply.authorId === (currentUser?.id || '');
 
                                   return (
                                     <div key={reply.id} className="flex space-x-2">
@@ -1446,12 +1447,12 @@ Votre contenu en Markdown..."
                 <button
                   onClick={() => toggleLike(selectedPost.id)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    selectedPost.likes.includes(currentUser.id)
+                    selectedPost.likes.includes(currentUser?.id || '')
                       ? 'bg-red-100 text-red-700'
                       : 'bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-700'
                   }`}
                 >
-                  <Heart className={`w-4 h-4 ${selectedPost.likes.includes(currentUser.id) ? 'fill-current' : ''}`} />
+                  <Heart className={`w-4 h-4 ${selectedPost.likes.includes(currentUser?.id || '') ? 'fill-current' : ''}`} />
                   <span>J'aime ({selectedPost.likes.length})</span>
                 </button>
                 <button 
@@ -1489,7 +1490,10 @@ Votre contenu en Markdown..."
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-slate-900">Partager l'article</h3>
               <button
-                onClick={() => setShowShareModal(false)}
+                onClick={() => {
+                  setShowShareModal(false);
+                  setCopied(false);
+                }}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-slate-500" />

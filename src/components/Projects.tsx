@@ -215,8 +215,13 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
 
   // Filter projects
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchQuery.toLowerCase());
+    // Debug logging to identify the undefined property
+    console.log('Debug - searchQuery:', searchQuery, 'type:', typeof searchQuery);
+    console.log('Debug - project.name:', project.name, 'project.description:', project.description);
+    
+    const safeSearchQuery = searchQuery?.toLowerCase() || '';
+    const matchesSearch = (project.name?.toLowerCase() || '').includes(safeSearchQuery) ||
+                         (project.description?.toLowerCase() || '').includes(safeSearchQuery);
     const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
     const matchesPriority = filterPriority === 'all' || project.priority === filterPriority;
     
@@ -449,7 +454,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           tasks: [],
-          createdBy: state.currentUser.id
+          createdBy: state.currentUser?.id || ''
         };
         dispatch({ type: 'ADD_PROJECT', payload: newProject });
       }

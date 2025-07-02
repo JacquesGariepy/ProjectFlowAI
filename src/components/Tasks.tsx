@@ -130,8 +130,8 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
     const reviewTasks = tasks.filter(t => t.status === 'review').length;
     const overdueTasks = tasks.filter(t => t.status !== 'completed' && isOverdue(t.dueDate)).length;
     
-    const myTasks = tasks.filter(t => t.assigneeId === currentUser.id).length;
-    const myCompletedTasks = tasks.filter(t => t.assigneeId === currentUser.id && t.status === 'completed').length;
+    const myTasks = tasks.filter(t => t.assigneeId === (currentUser?.id || '')).length;
+    const myCompletedTasks = tasks.filter(t => t.assigneeId === (currentUser?.id || '') && t.status === 'completed').length;
     const myProgress = myTasks > 0 ? Math.round((myCompletedTasks / myTasks) * 100) : 0;
     
     const totalTimeTracked = tasks.reduce((sum, t) => sum + t.timeTracked, 0);
@@ -163,7 +163,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       description: '',
       status: 'todo',
       priority: 'medium',
-      assigneeId: currentUser.id,
+      assigneeId: currentUser?.id || '',
       projectId: projects[0]?.id || '',
       dueDate: '',
       createdDate: '',
@@ -283,7 +283,7 @@ const Tasks: React.FC<TasksProps> = ({ navigationParams, onNavigationComplete })
       const comment = {
         id: Date.now().toString(),
         content: newComment,
-        authorId: currentUser.id,
+        authorId: currentUser?.id || '',
         createdAt: new Date().toISOString()
       };
       

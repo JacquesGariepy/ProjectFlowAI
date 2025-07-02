@@ -194,7 +194,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         currentUser: { ...state.currentUser, ...action.payload },
         users: state.users.map(user =>
-          user.id === state.currentUser.id
+          user.id === state.currentUser?.id
             ? { ...user, ...action.payload }
             : user
         )
@@ -206,7 +206,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         users: state.users.map(user =>
           user.id === action.payload.id ? action.payload : user
         ),
-        currentUser: state.currentUser.id === action.payload.id ? action.payload : state.currentUser
+        currentUser: state.currentUser?.id === action.payload.id ? action.payload : state.currentUser
       };
 
     case 'ADD_USER':

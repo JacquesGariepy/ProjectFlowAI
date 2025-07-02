@@ -87,7 +87,7 @@ const Calendar: React.FC = () => {
       endTime: `${(startHour + 1).toString().padStart(2, '0')}:00`,
       date: normalizeDate(eventDate),
       type: 'meeting',
-      attendees: [currentUser.id],
+      attendees: [currentUser?.id || 'unknown-user'],
       location: '',
       isRecurring: false,
       reminderMinutes: 15

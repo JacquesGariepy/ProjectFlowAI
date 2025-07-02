@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
-  Edit, 
-  Trash2, 
-  X, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Users,
+  Plus,
+  Search,
+  Filter,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  X,
   Save,
   Mail,
   Phone,
@@ -23,7 +23,9 @@ import {
   Eye,
   Shield,
   Crown,
-  Briefcase
+  Briefcase,
+  Upload,
+  Camera
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { User, Team as TeamType } from '../types';
@@ -54,6 +56,10 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
   const [filterDepartment, setFilterDepartment] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle navigation to specific user
   useEffect(() => {
@@ -83,6 +89,20 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
       onNavigationComplete?.();
     }
   }, [navigationParams, users, onNavigationComplete]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeDropdown && !(event.target as Element).closest('.dropdown-container')) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeDropdown]);
 
   // Get team members
   const getTeamMembers = (teamId?: string) => {
@@ -142,18 +162,21 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
     };
     
     setSelectedUser(newUser);
+    setSelectedImage(null);
     setIsCreatingUser(true);
     setShowUserModal(true);
   };
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
+    setSelectedImage(null);
     setIsCreatingUser(false);
     setShowUserModal(true);
   };
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
+    setSelectedImage(null);
     setIsCreatingUser(false);
     setShowUserModal(true);
   };
@@ -184,6 +207,32 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
     }
   };
 
+  // Photo upload handlers
+  const handlePhotoUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setIsUploadingImage(true);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          setSelectedImage(imageUrl);
+          if (selectedUser) {
+            setSelectedUser({ ...selectedUser, avatar: imageUrl });
+          }
+          setIsUploadingImage(false);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Veuillez sélectionner un fichier image valide.');
+      }
+    }
+  };
+
   const saveUser = () => {
     if (selectedUser) {
       if (isCreatingUser) {
@@ -209,6 +258,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
       
       setShowUserModal(false);
       setSelectedUser(null);
+      setSelectedImage(null);
       setIsCreatingUser(false);
       
       dispatch({
@@ -232,7 +282,7 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
       name: '',
       description: '',
       color: '#3B82F6',
-      leaderId: currentUser.id,
+      leaderId: currentUser?.id || 'unknown-user',
       members: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -324,10 +374,49 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
               </div>
             </div>
             
-            <div className="relative">
-              <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+            <div className="relative dropdown-container">
+              <button
+                onClick={() => setActiveDropdown(activeDropdown === user.id ? null : user.id)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
                 <MoreHorizontal className="w-4 h-4 text-slate-500" />
               </button>
+              
+              {/* Dropdown Menu */}
+              {activeDropdown === user.id && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-10">
+                  <button
+                    onClick={() => {
+                      handleViewUser(user);
+                      setActiveDropdown(null);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center space-x-2 text-slate-700"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Voir le profil</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleEditUser(user);
+                      setActiveDropdown(null);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center space-x-2 text-slate-700"
+                  >
+                    <Edit className="w-4 h-4" />
+                    <span>Modifier</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDeleteUser(user.id);
+                      setActiveDropdown(null);
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center space-x-2 text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Supprimer</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -733,10 +822,15 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-slate-900">
-                {isCreatingUser ? 'Ajouter un membre' : 'Profil utilisateur'}
+                {isCreatingUser ? 'Ajouter un membre' : 'Modifier le profil'}
               </h3>
               <button
-                onClick={() => setShowUserModal(false)}
+                onClick={() => {
+                  setShowUserModal(false);
+                  setSelectedUser(null);
+                  setSelectedImage(null);
+                  setIsCreatingUser(false);
+                }}
                 className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-slate-500" />
@@ -744,6 +838,36 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
             </div>
 
             <div className="space-y-4">
+              {/* Photo Upload Section */}
+              <div className="flex flex-col items-center space-y-4 pb-4 border-b border-slate-200">
+                <div className="relative">
+                  <img
+                    src={selectedImage || selectedUser.avatar}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full object-cover ring-4 ring-slate-200"
+                  />
+                  <button
+                    onClick={handlePhotoUpload}
+                    className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                    disabled={isUploadingImage}
+                  >
+                    {isUploadingImage ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Camera className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                <p className="text-sm text-slate-600">Cliquez sur l'icône pour changer la photo</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Nom complet</label>
@@ -752,7 +876,6 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     value={selectedUser.name}
                     onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={!isCreatingUser}
                   />
                 </div>
 
@@ -763,7 +886,6 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                     value={selectedUser.email}
                     onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled={!isCreatingUser}
                   />
                 </div>
               </div>
@@ -853,10 +975,22 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
                 <input
                   type="text"
                   value={selectedUser.skills.join(', ')}
-                  onChange={(e) => setSelectedUser({ 
-                    ...selectedUser, 
-                    skills: e.target.value.split(',').map(skill => skill.trim()).filter(skill => skill) 
-                  })}
+                  onChange={(e) => {
+                    const skillsText = e.target.value;
+                    // Only split and filter on blur, not on every change
+                    setSelectedUser({
+                      ...selectedUser,
+                      skills: skillsText.split(',').map(skill => skill.trim())
+                    });
+                  }}
+                  onBlur={(e) => {
+                    // Filter out empty skills on blur
+                    const skills = e.target.value.split(',').map(skill => skill.trim()).filter(skill => skill);
+                    setSelectedUser({
+                      ...selectedUser,
+                      skills
+                    });
+                  }}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="React, TypeScript, Node.js"
                 />
@@ -882,26 +1016,34 @@ const Team: React.FC<TeamProps> = ({ navigationParams, onNavigationComplete }) =
 
             <div className="flex space-x-3 mt-6">
               <button
-                onClick={() => setShowUserModal(false)}
+                onClick={() => {
+                  setShowUserModal(false);
+                  setSelectedUser(null);
+                  setSelectedImage(null);
+                  setIsCreatingUser(false);
+                }}
                 className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 {isCreatingUser ? 'Annuler' : 'Fermer'}
               </button>
-              {isCreatingUser && (
-                <button
-                  onClick={saveUser}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Ajouter à l'équipe</span>
-                </button>
-              )}
+              
+              {/* Save button - now shows for both create AND edit modes */}
+              <button
+                onClick={saveUser}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isCreatingUser ? 'Ajouter à l\'équipe' : 'Sauvegarder'}</span>
+              </button>
+              
+              {/* Delete button - only show in edit mode */}
               {!isCreatingUser && (
                 <button
                   onClick={() => handleDeleteUser(selectedUser.id)}
-                  className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                  className="px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center space-x-2"
                 >
-                  Supprimer
+                  <Trash2 className="w-4 h-4" />
+                  <span>Supprimer</span>
                 </button>
               )}
             </div>

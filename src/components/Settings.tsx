@@ -103,7 +103,7 @@ const Settings: React.FC = () => {
   const { currentUser } = state;
   
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
-  const [settings, setSettings] = useState<UserSettings>(currentUser.settings || {
+  const [settings, setSettings] = useState<UserSettings>(currentUser?.settings || {
     notifications: {
       enabled: true,
       email: true,
@@ -138,10 +138,10 @@ const Settings: React.FC = () => {
 
   // Profile states
   const [profileData, setProfileData] = useState({
-    name: currentUser.name,
-    email: currentUser.email,
-    phone: currentUser.phone || '',
-    location: currentUser.location || '',
+    name: currentUser?.name || '',
+    email: currentUser?.email || '',
+    phone: currentUser?.phone || '',
+    location: currentUser?.location || '',
     bio: '',
     website: '',
     linkedin: '',
@@ -272,7 +272,7 @@ const Settings: React.FC = () => {
       content: '# Guide d\'utilisation de l\'IA\n\nCe guide vous explique comment utiliser efficacement les fonctionnalités d\'intelligence artificielle...',
       excerpt: 'Découvrez comment tirer parti de l\'IA pour optimiser vos projets',
       status: 'published',
-      author: currentUser.id,
+      author: currentUser?.id || '',
       createdAt: '2024-01-15T10:00:00Z',
       updatedAt: '2024-01-15T10:00:00Z',
       tags: ['IA', 'Guide', 'Productivité'],
@@ -284,7 +284,7 @@ const Settings: React.FC = () => {
       content: '# Nouvelles fonctionnalités\n\n## Dashboard IA intelligent\n\nNous avons ajouté un nouveau dashboard...',
       excerpt: 'Découvrez les dernières améliorations apportées à la plateforme',
       status: 'draft',
-      author: currentUser.id,
+      author: currentUser?.id || '',
       createdAt: '2024-01-20T14:30:00Z',
       updatedAt: '2024-01-20T16:45:00Z',
       tags: ['Nouveautés', 'Fonctionnalités'],
@@ -460,7 +460,7 @@ const Settings: React.FC = () => {
       content: '# Nouveau post\n\nContenu du post...',
       excerpt: '',
       status: 'draft',
-      author: currentUser.id,
+      author: currentUser?.id || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       tags: [],
@@ -525,7 +525,7 @@ const Settings: React.FC = () => {
           <div className="flex items-center space-x-4">
             <div className="relative">
               <img
-                src={currentUser.avatar}
+                src={currentUser?.avatar || '/default-avatar.png'}
                 alt="Avatar"
                 className="w-20 h-20 rounded-full object-cover"
               />
@@ -534,8 +534,8 @@ const Settings: React.FC = () => {
               </button>
             </div>
             <div>
-              <h4 className="font-medium text-slate-900">{currentUser.name}</h4>
-              <p className="text-sm text-slate-600">{currentUser.role}</p>
+              <h4 className="font-medium text-slate-900">{currentUser?.name || 'User'}</h4>
+              <p className="text-sm text-slate-600">{currentUser?.role || 'Member'}</p>
             </div>
           </div>
 

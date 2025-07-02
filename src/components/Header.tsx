@@ -671,7 +671,9 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <p className="text-sm text-slate-500">Bienvenue, {currentUser.name.split(' ')[0]} ! 🚀</p>
+              <p className="text-sm text-slate-500">
+                Bienvenue, {currentUser?.name ? currentUser.name.split(' ')[0] : 'Utilisateur'} ! 🚀
+              </p>
               {!isOnline && (
                 <div className="flex items-center space-x-1 text-red-500">
                   <WifiOff className="w-3 h-3" />
@@ -724,7 +726,7 @@ const Header: React.FC<HeaderProps> = ({
               ref={searchInputRef}
               type="text"
               placeholder="Recherche intelligente IA... (Ctrl+K)"
-              value={searchQuery}
+              value={searchQuery || ''}
               onChange={handleSearchChange}
               onFocus={() => setShowSearch(true)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(searchQuery)}
@@ -918,7 +920,7 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-100 transition-colors"
             >
               <img
-                src={currentUser.avatar}
+                src={currentUser?.avatar || '/default-avatar.jpg'}
                 alt="Profile"
                 className="w-8 h-8 rounded-full object-cover ring-2 ring-purple-500/20"
               />
@@ -930,14 +932,14 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="px-4 py-3 border-b border-slate-100">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={currentUser.avatar}
+                      src={currentUser?.avatar || '/default-avatar.jpg'}
                       alt="Profile"
                       className="w-12 h-12 rounded-full object-cover"
                     />
                     <div>
-                      <p className="font-medium text-slate-900">{currentUser.name}</p>
-                      <p className="text-sm text-slate-500">{currentUser.email}</p>
-                      <p className="text-xs text-slate-400 mt-1">{currentUser.role}</p>
+                      <p className="font-medium text-slate-900">{currentUser?.name || 'Utilisateur'}</p>
+                      <p className="text-sm text-slate-500">{currentUser?.email || 'email@example.com'}</p>
+                      <p className="text-xs text-slate-400 mt-1">{currentUser?.role || 'Utilisateur'}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-1 mt-2">
@@ -1040,7 +1042,7 @@ const Header: React.FC<HeaderProps> = ({
                   ref={searchInputRef}
                   type="text"
                   placeholder="Rechercher..."
-                  value={searchQuery}
+                  value={searchQuery || ''}
                   onChange={handleSearchChange}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit(searchQuery)}
                   className="w-full pl-10 pr-10 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"

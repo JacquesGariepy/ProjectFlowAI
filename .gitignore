@@ -7,3 +7,4 @@ dist/
 
 # SQLite database
 server/projectflow.db
+server/package-lock.json
