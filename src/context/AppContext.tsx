@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect, useState } from 'react';
 import { User, Project, Task, CalendarEvent, Notification, Team, BlogPost, BlogComment } from '../types';
+import { calculateProjectProgressById } from '../utils/calculations';
 
 interface AppState {
   currentUser: User;
@@ -75,30 +76,95 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'INIT_STATE':
       return { ...action.payload };
     case 'UPDATE_TASK_STATUS':
+      const updatedTasks = state.tasks.map(task =>
+        task.id === action.payload.taskId
+          ? {
+              ...task,
+              status: action.payload.status,
+              completedDate: action.payload.status === 'completed' ? new Date().toISOString() : undefined
+            }
+          : task
+      );
+
+      // Update the associated project's progress
+      const updatedTask = updatedTasks.find(task => task.id === action.payload.taskId);
+      let updatedProjects = state.projects;
+      
+      if (updatedTask) {
+        updatedProjects = state.projects.map(project => {
+          if (project.id === updatedTask.projectId) {
+            const newProgress = calculateProjectProgressById(project.id, updatedTasks);
+            
+            return {
+              ...project,
+              progress: newProgress,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return project;
+        });
+      }
+
       return {
         ...state,
-        tasks: state.tasks.map(task =>
-          task.id === action.payload.taskId
-            ? { 
-                ...task, 
-                status: action.payload.status,
-                completedDate: action.payload.status === 'completed' ? new Date().toISOString() : undefined
-              }
-            : task
-        )
+        tasks: updatedTasks,
+        projects: updatedProjects
       };
 
     case 'ADD_TASK':
-      return {
+      const newTaskState = {
         ...state,
         tasks: [...state.tasks, action.payload]
       };
 
-    case 'DELETE_TASK':
+      // Update the associated project's progress
+      const updatedProjectsForAdd = newTaskState.projects.map(project => {
+        if (project.id === action.payload.projectId) {
+          const newProgress = calculateProjectProgressById(project.id, newTaskState.tasks);
+          
+          return {
+            ...project,
+            progress: newProgress,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return project;
+      });
+
       return {
+        ...newTaskState,
+        projects: updatedProjectsForAdd
+      };
+
+    case 'DELETE_TASK':
+      const taskToDelete = state.tasks.find(task => task.id === action.payload);
+      const deletedTaskState = {
         ...state,
         tasks: state.tasks.filter(task => task.id !== action.payload)
       };
+
+      // Update the associated project's progress if task was found
+      if (taskToDelete) {
+        const updatedProjectsForDelete = deletedTaskState.projects.map(project => {
+          if (project.id === taskToDelete.projectId) {
+            const newProgress = calculateProjectProgressById(project.id, deletedTaskState.tasks);
+            
+            return {
+              ...project,
+              progress: newProgress,
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return project;
+        });
+
+        return {
+          ...deletedTaskState,
+          projects: updatedProjectsForDelete
+        };
+      }
+
+      return deletedTaskState;
 
     case 'UPDATE_PROJECT':
       return {

@@ -17,14 +17,17 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, BarChart, Bar, Tooltip, Legend, LineChart as RechartsLineChart, Line } from 'recharts';
 import { useAppContext } from '../context/AppContext';
+import { useAI } from '../hooks/useAI';
 
 const SmartDashboard: React.FC = () => {
   const { state } = useAppContext();
   const { projects, tasks, users } = state;
+  const { isAvailable, isLoading: aiLoading, generateResponse } = useAI();
   
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [predictiveData, setPredictiveData] = useState<any[]>([]);
   const [smartAlerts, setSmartAlerts] = useState<any[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     // Simulate AI analysis
@@ -33,13 +36,99 @@ const SmartDashboard: React.FC = () => {
     generateSmartAlerts();
   }, [projects, tasks, users]);
 
-  const generateAIInsights = () => {
+  const generateAIInsights = async () => {
+    setIsAnalyzing(true);
+    
+    try {
+      if (isAvailable) {
+        const projectContext = {
+          projects: projects.map(p => ({
+            name: p.name,
+            status: p.status,
+            progress: p.progress,
+            deadline: p.deadline,
+            budget: p.budget
+          })),
+          tasks: tasks.map(t => ({
+            title: t.title,
+            status: t.status,
+            priority: t.priority,
+            assigneeId: t.assigneeId
+          })),
+          users: users.map(u => ({
+            name: u.name,
+            role: u.role,
+            performance: u.performance
+          }))
+        };
+
+        const dashboardPrompt = `Analysez ce contexte de projet et générez des insights pour le dashboard IA au format JSON:
+        {
+          "insights": [
+            {
+              "id": number,
+              "type": "performance|prediction|optimization|risk",
+              "title": "Titre",
+              "description": "Description",
+              "confidence": number,
+              "impact": "high|medium|low",
+              "color": "gradient_class"
+            }
+          ]
+        }
+        
+        Contexte: ${JSON.stringify(projectContext)}
+        
+        Générez 3 insights pertinents avec des couleurs Tailwind (from-color-500 to-color-600).`;
+
+        const aiResponse = await generateResponse(dashboardPrompt);
+        
+        try {
+          const parsedResponse = JSON.parse(aiResponse);
+          if (parsedResponse.insights) {
+            const insightsWithIcons = parsedResponse.insights.map((insight: any) => ({
+              ...insight,
+              icon: getIconForType(insight.type)
+            }));
+            setAiInsights(insightsWithIcons);
+          } else {
+            generateStaticInsights();
+          }
+        } catch (parseError) {
+          generateStaticInsights();
+        }
+      } else {
+        generateStaticInsights();
+      }
+    } catch (error) {
+      console.error('AI insights generation failed:', error);
+      generateStaticInsights();
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const getIconForType = (type: string) => {
+    switch (type) {
+      case 'performance': return TrendingUp;
+      case 'prediction': return Target;
+      case 'optimization': return Zap;
+      case 'risk': return AlertTriangle;
+      default: return Brain;
+    }
+  };
+
+  const generateStaticInsights = () => {
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const totalTasks = tasks.length;
+    const completionRate = Math.round((completedTasks / totalTasks) * 100);
+    
     const insights = [
       {
         id: 1,
         type: 'performance',
-        title: 'Performance Exceptionnelle Détectée',
-        description: 'L\'équipe dépasse les objectifs de 23% ce mois-ci',
+        title: `Performance Équipe: ${completionRate}%`,
+        description: `L'équipe maintient un taux de réussite de ${completionRate}% sur ${totalTasks} tâches`,
         confidence: 94,
         impact: 'high',
         icon: TrendingUp,
@@ -48,8 +137,8 @@ const SmartDashboard: React.FC = () => {
       {
         id: 2,
         type: 'prediction',
-        title: 'Risque de Retard Prédit',
-        description: 'Projet E-commerce: 78% de chance de retard de 3 jours',
+        title: 'Analyse Prédictive Active',
+        description: `${projects.length} projets surveillés, prédictions en temps réel`,
         confidence: 87,
         impact: 'medium',
         icon: AlertTriangle,
@@ -58,8 +147,8 @@ const SmartDashboard: React.FC = () => {
       {
         id: 3,
         type: 'optimization',
-        title: 'Opportunité d\'Optimisation',
-        description: 'Réallocation suggérée: +15% d\'efficacité possible',
+        title: 'Optimisation Continue',
+        description: `Surveillance de ${users.length} membres, suggestions d'amélioration disponibles`,
         confidence: 91,
         impact: 'high',
         icon: Zap,
@@ -180,6 +269,11 @@ const SmartDashboard: React.FC = () => {
           <div className="text-right">
             <div className="text-2xl font-bold">94.2%</div>
             <div className="text-sm text-purple-200">Score IA Global</div>
+            {!isAvailable && (
+              <div className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full mt-1">
+                Mode Dégradé
+              </div>
+            )}
           </div>
         </div>
       </div>

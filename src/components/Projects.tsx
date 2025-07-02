@@ -30,7 +30,7 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { Project, User as UserType } from '../types';
 import { formatDate, getDaysUntilDeadline, isOverdue } from '../utils/dateUtils';
-import { calculateBudgetUtilization } from '../utils/calculations';
+import { calculateBudgetUtilization, calculateProjectProgress } from '../utils/calculations';
 
 interface ProjectsProps {
   navigationParams?: {
@@ -184,7 +184,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
     const totalProjects = projects.length;
     const activeProjects = projects.filter(p => p.status === 'in-progress').length;
     const completedProjects = projects.filter(p => p.status === 'completed').length;
-    const overdueProjects = projects.filter(p => 
+    const overdueProjects = projects.filter(p =>
       p.status !== 'completed' && isOverdue(p.deadline)
     ).length;
     
@@ -192,11 +192,15 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
     const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
     const budgetUtilization = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
     
-    const avgProgress = Math.round(
-      projects.reduce((sum, p) => sum + p.progress, 0) / projects.length
-    );
+    // Calculate average progress based on actual task completion
+    const avgProgress = totalProjects > 0 ? Math.round(
+      projects.reduce((sum, project) => {
+        const projectProgress = calculateProjectProgress(project, tasks);
+        return sum + projectProgress;
+      }, 0) / totalProjects
+    ) : 0;
     
-    const completionRate = Math.round((completedProjects / totalProjects) * 100);
+    const completionRate = totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0;
 
     return {
       totalProjects,
@@ -696,8 +700,7 @@ const Projects: React.FC<ProjectsProps> = ({ navigationParams, onNavigationCompl
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredProjects.map((project) => {
           const projectTasks = tasks.filter(t => t.projectId === project.id);
-          const completedTasks = projectTasks.filter(t => t.status === 'completed').length;
-          const progress = projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0;
+          const progress = calculateProjectProgress(project, tasks);
           const daysLeft = getDaysUntilDeadline(project.deadline);
           const budgetUtilization = calculateBudgetUtilization(project);
 

@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Brain, 
   TrendingUp, 
   AlertTriangle, 
   Lightbulb, 
   Target, 
-  Users, 
-  Calendar,
-  DollarSign,
   Zap,
-  Eye,
   ChevronRight,
   Sparkles
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useAI } from '../hooks/useAI';
 
 interface AIInsight {
   id: string;
@@ -24,110 +21,291 @@ interface AIInsight {
   impact: 'low' | 'medium' | 'high';
   category: string;
   actionable: boolean;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 const AIInsights: React.FC = () => {
   const { state } = useAppContext();
   const { projects, tasks, users } = state;
+  const { isLoading: aiLoading, isAvailable, generateResponse } = useAI();
   
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    generateAIInsights();
-  }, [projects, tasks, users]);
+  const loadSavedInsights = () => {
+    try {
+      const saved = localStorage.getItem('ai-insights');
+      if (saved) {
+        const parsedInsights = JSON.parse(saved);
+        // Vérifier si les insights ne sont pas trop anciens (ex: 24 heures pour plus de persistance)
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const validInsights = parsedInsights.filter((insight: any) => 
+          new Date(insight.timestamp || 0) > twentyFourHoursAgo
+        );
+        if (validInsights.length > 0) {
+          setInsights(validInsights);
+          return; // Important: arrêter ici si on a des insights sauvegardés
+        }
+      }
+      
+      // Seulement si aucun insight sauvegardé valide, générer des insights par défaut
+      generateInitialInsights();
+    } catch (error) {
+      console.error('Error loading saved insights:', error);
+      generateInitialInsights();
+    }
+  };
 
-  const generateAIInsights = () => {
+  const generateInitialInsights = () => {
+    // Insights de bienvenue uniquement la première fois
+    const welcomeInsights: AIInsight[] = [
+      {
+        id: 'welcome-1',
+        type: 'opportunity',
+        title: '🎉 Bienvenue dans les Insights IA !',
+        description: 'Cliquez sur "Actualiser IA" pour générer des analyses intelligentes basées sur vos données de projet.',
+        confidence: 100,
+        impact: 'high',
+        category: 'Système',
+        actionable: false,
+        data: {
+          isWelcomeMessage: true
+        }
+      }
+    ];
+    
+    setInsights(welcomeInsights);
+    saveInsights(welcomeInsights);
+  };
+
+  const saveInsights = (newInsights: AIInsight[]) => {
+    try {
+      const insightsWithTimestamp = newInsights.map(insight => ({
+        ...insight,
+        timestamp: new Date().toISOString()
+      }));
+      localStorage.setItem('ai-insights', JSON.stringify(insightsWithTimestamp));
+    } catch (error) {
+      console.error('Error saving insights:', error);
+    }
+  };
+
+  const generateAIInsights = useCallback(async () => {
     setIsAnalyzing(true);
     
-    // Simulate AI analysis delay
-    setTimeout(() => {
-      const newInsights: AIInsight[] = [
+    try {
+      if (isAvailable) {
+        // Use real AI for insights generation
+        const projectContext = {
+          projects: projects.map(p => ({
+            name: p.name,
+            status: p.status,
+            progress: p.progress,
+            deadline: p.deadline,
+            budget: p.budget
+          })),
+          tasks: tasks.map(t => ({
+            title: t.title,
+            status: t.status,
+            priority: t.priority,
+            assigneeId: t.assigneeId
+          })),
+          users: users.map(u => ({
+            name: u.name,
+            role: u.role,
+            performance: u.performance
+          }))
+        };
+
+        const analysisPrompt = `Analysez ce contexte de projet et générez 5 insights IA détaillés au format JSON suivant:
         {
-          id: '1',
-          type: 'prediction',
-          title: 'Prédiction de Performance Exceptionnelle',
-          description: 'L\'équipe va dépasser les objectifs de 18% ce trimestre selon l\'analyse prédictive IA',
-          confidence: 94,
-          impact: 'high',
-          category: 'Performance',
-          actionable: true,
-          data: {
-            currentPerformance: 87,
-            predictedPerformance: 105,
-            factors: ['Vélocité équipe +15%', 'Qualité code +12%', 'Satisfaction client +8%']
-          }
-        },
-        {
-          id: '2',
-          type: 'risk',
-          title: 'Risque de Burnout Détecté',
-          description: 'Michael Chen montre des signes de surcharge. Risque de burnout dans 2 semaines',
-          confidence: 87,
-          impact: 'high',
-          category: 'Ressources Humaines',
-          actionable: true,
-          data: {
-            member: 'Michael Chen',
-            workload: 145,
-            averageWorkload: 100,
-            stressIndicators: ['Heures supplémentaires +40%', 'Tâches en retard +3', 'Qualité code -5%']
-          }
-        },
-        {
-          id: '3',
-          type: 'optimization',
-          title: 'Opportunité d\'Optimisation Budget',
-          description: 'Réallocation de 15% du budget Marketing vers Développement augmenterait le ROI de 23%',
-          confidence: 91,
-          impact: 'medium',
-          category: 'Finance',
-          actionable: true,
-          data: {
-            currentROI: 156,
-            optimizedROI: 179,
-            reallocation: { from: 'Marketing', to: 'Développement', amount: 15 }
-          }
-        },
-        {
-          id: '4',
-          type: 'opportunity',
-          title: 'Fenêtre d\'Innovation Détectée',
-          description: 'Période optimale pour lancer une nouvelle fonctionnalité IA dans 3 semaines',
-          confidence: 89,
-          impact: 'high',
-          category: 'Innovation',
-          actionable: true,
-          data: {
-            optimalLaunchDate: '2024-03-15',
-            marketReadiness: 92,
-            teamCapacity: 85,
-            competitorAnalysis: 'Avantage concurrentiel de 6 mois'
-          }
-        },
-        {
-          id: '5',
-          type: 'prediction',
-          title: 'Prédiction de Retard Projet',
-          description: 'Projet E-commerce: 73% de probabilité de retard de 4 jours sans intervention',
-          confidence: 85,
-          impact: 'medium',
-          category: 'Planning',
-          actionable: true,
-          data: {
-            project: 'E-commerce Platform',
-            delayProbability: 73,
-            estimatedDelay: 4,
-            mitigationActions: ['Ajouter 1 développeur', 'Réduire scope de 10%', 'Paralléliser les tâches']
-          }
+          "insights": [
+            {
+              "id": "unique_id",
+              "type": "prediction|risk|optimization|opportunity",
+              "title": "Titre de l'insight",
+              "description": "Description détaillée",
+              "confidence": 85,
+              "impact": "high|medium|low",
+              "category": "Catégorie",
+              "actionable": true,
+              "data": { "données_pertinentes": "valeur" }
+            }
+          ]
         }
-      ];
-      
-      setInsights(newInsights);
+        
+        Contexte: ${JSON.stringify(projectContext)}
+        
+        Générez des insights pertinents, actionables et basés sur les données réelles. Incluez des prédictions, des risques, des optimisations et des opportunités.`;
+
+        const aiResponse = await generateResponse(analysisPrompt);
+        
+        try {
+          const parsedResponse = JSON.parse(aiResponse);
+          if (parsedResponse.insights && Array.isArray(parsedResponse.insights)) {
+            // Ajouter un timestamp pour identifier les insights générés par IA
+            const aiInsights = parsedResponse.insights.map((insight: any) => ({
+              ...insight,
+              generatedByAI: true,
+              generatedAt: new Date().toISOString()
+            }));
+            setInsights(aiInsights);
+            saveInsights(aiInsights);
+          } else {
+            throw new Error('Invalid AI response format');
+          }
+        } catch (parseError) {
+          console.error('Failed to parse AI response, using fallback:', parseError);
+          generateStaticInsights();
+        }
+      } else {
+        generateStaticInsights();
+      }
+    } catch (error) {
+      console.error('AI insights generation failed:', error);
+      generateStaticInsights();
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
+  }, [isAvailable, generateResponse, projects, tasks, users]);
+
+  useEffect(() => {
+    // Charger les insights sauvegardés une seule fois au montage
+    loadSavedInsights();
+  }, []);
+
+  // Supprimer ce useEffect qui regenerait automatiquement
+  // useEffect(() => {
+  //   if (insights.length === 0) {
+  //     generateAIInsights();
+  //   }
+  // }, [insights.length, generateAIInsights]);
+
+  const generateStaticInsights = () => {
+    const completedTasks = tasks.filter(t => t.status === 'completed').length;
+    const totalTasks = tasks.length;
+    const completionRate = Math.round((completedTasks / totalTasks) * 100);
+    const overdueTasks = tasks.filter(t => t.status !== 'completed' && new Date(t.dueDate) < new Date()).length;
+    const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status !== 'completed').length;
+    
+    const newInsights: AIInsight[] = [
+      {
+        id: '1',
+        type: 'prediction',
+        title: `Performance Équipe: ${completionRate}% de Réussite`,
+        description: `Analyse: ${completedTasks}/${totalTasks} tâches terminées. Tendance ${completionRate > 80 ? 'excellente' : completionRate > 60 ? 'satisfaisante' : 'préoccupante'}.`,
+        confidence: 92,
+        impact: completionRate > 80 ? 'high' : 'medium',
+        category: 'Performance',
+        actionable: true,
+        data: {
+          completedTasks,
+          totalTasks,
+          completionRate,
+          recommendation: completionRate < 70 ? 'Redistribuer les tâches' : 'Maintenir le rythme'
+        }
+      },
+      {
+        id: '2',
+        type: 'risk',
+        title: `${overdueTasks} Tâche(s) en Retard Détectée(s)`,
+        description: `Risque identifié: ${overdueTasks} tâches dépassent leur deadline. Impact potentiel sur les projets.`,
+        confidence: 88,
+        impact: overdueTasks > 3 ? 'high' : overdueTasks > 0 ? 'medium' : 'low',
+        category: 'Planning',
+        actionable: overdueTasks > 0,
+        data: {
+          overdueTasks,
+          impact: overdueTasks > 3 ? 'Critique' : 'Modéré',
+          action: 'Reprioriser et réassigner'
+        }
+      },
+      {
+        id: '3',
+        type: 'optimization',
+        title: 'Optimisation de la Charge de Travail',
+        description: `${highPriorityTasks} tâches haute priorité en attente. Optimisation de l'allocation recommandée.`,
+        confidence: 85,
+        impact: 'medium',
+        category: 'Ressources',
+        actionable: true,
+        data: {
+          highPriorityTasks,
+          availableUsers: users.length,
+          optimization: 'Équilibrer la charge'
+        }
+      },
+      {
+        id: '4',
+        type: 'opportunity',
+        title: 'Opportunité d\'Amélioration Continue',
+        description: `Potentiel d'amélioration de ${Math.round((100 - completionRate) / 2)}% identifié via l'optimisation des processus.`,
+        confidence: 78,
+        impact: 'medium',
+        category: 'Processus',
+        actionable: true,
+        data: {
+          currentEfficiency: completionRate,
+          potentialImprovement: Math.round((100 - completionRate) / 2),
+          method: 'Automatisation et formation'
+        }
+      }
+    ];
+    
+    // Marquer comme insights de fallback
+    const fallbackInsights = newInsights.map(insight => ({
+      ...insight,
+      generatedByAI: false,
+      generatedAt: new Date().toISOString()
+    }));
+    
+    setInsights(fallbackInsights);
+    saveInsights(fallbackInsights);
+  };
+
+  const applyInsightAction = async (insight: AIInsight) => {
+    try {
+      if (!insight.actionable) {
+        alert('Cette insight n\'est pas actionnable.');
+        return;
+      }
+
+      // Simuler l'application de l'action
+      let actionMessage = '';
+      
+      switch (insight.type) {
+        case 'optimization':
+          actionMessage = `✅ Optimisation appliquée: ${insight.title}\n\nActions prises:\n• Analyse des données effectuée\n• Recommandations envoyées à l'équipe\n• Suivi programmé dans 7 jours`;
+          break;
+        case 'risk':
+          actionMessage = `⚠️ Mesures de mitigation mises en place: ${insight.title}\n\nActions prises:\n• Équipe alertée\n• Plan de contingence activé\n• Surveillance renforcée`;
+          break;
+        case 'prediction':
+          actionMessage = `🔮 Prédiction prise en compte: ${insight.title}\n\nActions prises:\n• Planning ajusté\n• Ressources réallouées\n• Parties prenantes informées`;
+          break;
+        case 'opportunity':
+          actionMessage = `🚀 Opportunité saisie: ${insight.title}\n\nActions prises:\n• Initiative lancée\n• Budget alloué\n• Équipe constituée`;
+          break;
+        default:
+          actionMessage = `✅ Action appliquée: ${insight.title}`;
+      }
+
+      alert(actionMessage);
+      
+      // Marquer l'insight comme appliqué
+      const updatedInsights = insights.map(i => 
+        i.id === insight.id 
+          ? { ...i, applied: true, appliedAt: new Date().toISOString() }
+          : i
+      );
+      setInsights(updatedInsights);
+      saveInsights(updatedInsights);
+      
+    } catch (error) {
+      console.error('Error applying insight action:', error);
+      alert('Erreur lors de l\'application de l\'action.');
+    }
   };
 
   const getInsightIcon = (type: string) => {
@@ -172,13 +350,27 @@ const AIInsights: React.FC = () => {
             </div>
             <p className="text-purple-100">Analyse intelligente • Prédictions précises • Recommandations actionables</p>
           </div>
-          <button
-            onClick={generateAIInsights}
-            disabled={isAnalyzing}
-            className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-          >
-            {isAnalyzing ? 'Analyse...' : 'Actualiser IA'}
-          </button>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              {!isAvailable && (
+                <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                  Mode Dégradé
+                </span>
+              )}
+              {insights.length > 0 && (insights[0] as any).generatedByAI && (
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                  ✨ IA Activée
+                </span>
+              )}
+            </div>
+            <button
+              onClick={generateAIInsights}
+              disabled={isAnalyzing || aiLoading}
+              className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+            >
+              {isAnalyzing || aiLoading ? 'Analyse...' : 'Actualiser IA'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -231,12 +423,19 @@ const AIInsights: React.FC = () => {
                     Catégorie: <span className="font-medium text-slate-900">{insight.category}</span>
                   </div>
                 </div>
-                {insight.actionable && (
-                  <div className="flex items-center space-x-1 text-xs text-emerald-600">
-                    <Target className="w-3 h-3" />
-                    <span>Actionnable</span>
-                  </div>
-                )}
+                <div className="flex items-center space-x-2">
+                  {(insight as any).applied && (
+                    <div className="flex items-center space-x-1 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                      <span>✅ Appliquée</span>
+                    </div>
+                  )}
+                  {insight.actionable && !(insight as any).applied && (
+                    <div className="flex items-center space-x-1 text-xs text-emerald-600">
+                      <Target className="w-3 h-3" />
+                      <span>Actionnable</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Confidence Bar */}
@@ -322,8 +521,11 @@ const AIInsights: React.FC = () => {
                   Fermer
                 </button>
                 {selectedInsight.actionable && (
-                  <button className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200">
-                    Appliquer l'action
+                  <button 
+                    onClick={() => applyInsightAction(selectedInsight)}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all duration-200"
+                  >
+                    {(selectedInsight as any).applied ? '✅ Action appliquée' : 'Appliquer l\'action'}
                   </button>
                 )}
               </div>

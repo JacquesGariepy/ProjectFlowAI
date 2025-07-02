@@ -8,6 +8,14 @@ export function calculateProjectProgress(project: Project, tasks: Task[]): numbe
   return Math.round((completedTasks.length / projectTasks.length) * 100);
 }
 
+export function calculateProjectProgressById(projectId: string, tasks: Task[]): number {
+  const projectTasks = tasks.filter(task => task.projectId === projectId);
+  if (projectTasks.length === 0) return 0;
+  
+  const completedTasks = projectTasks.filter(task => task.status === 'completed');
+  return Math.round((completedTasks.length / projectTasks.length) * 100);
+}
+
 export function calculateTeamWorkload(users: User[], tasks: Task[]): { [userId: string]: number } {
   const workload: { [userId: string]: number } = {};
   

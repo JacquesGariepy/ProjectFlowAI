@@ -6,15 +6,12 @@ import {
   MicOff, 
   Sparkles, 
   Brain, 
-  TrendingUp,
-  Target,
-  Users,
-  Calendar,
   X,
   Minimize2,
   Maximize2
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { AIService, createAIService } from '../config/ai';
 
 interface Message {
   id: string;
@@ -25,8 +22,30 @@ interface Message {
 }
 
 const AIAssistant: React.FC = () => {
-  const { state, dispatch } = useAppContext();
+  const { state } = useAppContext();
   const { projects, tasks, users } = state;
+  
+  // Initialize AI service (you can configure this via environment variables)
+  const [aiService] = useState<AIService | null>(() => {
+    try {
+      const provider = (import.meta.env.VITE_AI_PROVIDER as 'openai' | 'anthropic' | 'google' | 'groq') || 'openai';
+      const apiKey = import.meta.env.VITE_AI_API_KEY || '';
+      
+      if (!apiKey || apiKey === 'your-api-key-here') {
+        console.warn('AI API key not configured. AI features will use fallback responses.');
+        return null;
+      }
+      
+      return createAIService({
+        provider,
+        apiKey,
+        model: import.meta.env.VITE_AI_MODEL || 'gpt-4o-mini'
+      });
+    } catch (error) {
+      console.error('Failed to initialize AI service:', error);
+      return null;
+    }
+  });
   
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -34,13 +53,13 @@ const AIAssistant: React.FC = () => {
     {
       id: '1',
       type: 'ai',
-      content: '👋 Salut ! Je suis votre assistant IA intelligent. Je peux analyser vos projets, prédire les risques, optimiser les équipes et bien plus encore !',
+      content: '👋 Bonjour ! Je suis votre assistant IA conversationnel pour la gestion de projet. \n\n🤖 Je peux vous aider avec :\n• Analyses en temps réel de vos projets\n• Prédictions et insights intelligents\n• Conseils stratégiques personnalisés\n• Optimisation de vos processus\n• Et toute question sur la gestion de projet !\n\n💬 Posez-moi n\'importe quelle question ou utilisez les suggestions ci-dessous.',
       timestamp: new Date(),
       suggestions: [
-        'Analyser la performance de l\'équipe',
-        'Prédire les retards de projet',
-        'Optimiser la répartition des tâches',
-        'Générer un rapport intelligent'
+        'Comment va mon équipe ?',
+        'Quels sont les risques actuels ?',
+        'Donne-moi des conseils pour optimiser',
+        'Analyse mes projets en cours'
       ]
     }
   ]);
@@ -57,7 +76,66 @@ const AIAssistant: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const generateAIResponse = (userMessage: string): string => {
+  const generateAIResponse = async (userMessage: string): Promise<string> => {
+    // If AI service is not available, use static responses
+    if (!aiService) {
+      return generateStaticResponse(userMessage);
+    }
+
+    try {
+      // Use the AI service for intelligent responses
+      const projectContext = {
+        projects: projects.map(p => ({
+          name: p.name,
+          status: p.status,
+          progress: p.progress,
+          deadline: p.deadline,
+          budget: p.budget
+        })),
+        tasks: tasks.map(t => ({
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          assigneeId: t.assigneeId
+        })),
+        users: users.map(u => ({
+          name: u.name,
+          role: u.role,
+          performance: u.performance
+        }))
+      };
+
+      // Create a comprehensive prompt for natural conversation
+      const conversationalPrompt = `Tu es un assistant IA intelligent spécialisé en gestion de projet. Tu peux converser naturellement et aider avec tous les aspects de la gestion de projet.
+
+**Contexte actuel du projet:**
+- Projets: ${projects.length} projets actifs
+- Tâches: ${tasks.filter(t => t.status === 'completed').length}/${tasks.length} tâches terminées (${Math.round((tasks.filter(t => t.status === 'completed').length / tasks.length) * 100)}% de réussite)
+- Équipe: ${users.length} membres
+- Projets en cours: ${projects.filter(p => p.status === 'in-progress').length}
+
+**Message de l'utilisateur:** "${userMessage}"
+
+Réponds de manière conversationnelle, utile et engageante. Tu peux:
+- Analyser les données de projet
+- Donner des conseils stratégiques
+- Prédire des tendances
+- Suggérer des optimisations
+- Répondre à toutes questions sur la gestion de projet
+- Avoir une conversation naturelle
+
+Utilise des emojis appropriés et structure ta réponse avec markdown pour la lisibilité.`;
+      
+      return await aiService.generateResponse(conversationalPrompt);
+      
+    } catch (error) {
+      console.error('AI Response Error:', error);
+      // Fallback to static responses if AI service fails
+      return generateStaticResponse(userMessage);
+    }
+  };
+
+  const generateStaticResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
     // Analyse de performance
@@ -66,35 +144,10 @@ const AIAssistant: React.FC = () => {
       const totalTasks = tasks.length;
       const completionRate = Math.round((completedTasks / totalTasks) * 100);
       
-      return `📊 **Analyse de Performance**\n\n✅ Taux de completion: ${completionRate}%\n📈 ${completedTasks}/${totalTasks} tâches terminées\n\n🎯 **Recommandations IA:**\n• L'équipe performe bien avec ${completionRate}% de réussite\n• ${users.find(u => u.performance > 95)?.name || 'Sarah'} est votre top performer\n• Considérez redistribuer les tâches pour optimiser l'efficacité`;
+      return `📊 **Analyse de Performance**\n\n✅ Taux de completion: ${completionRate}%\n📈 ${completedTasks}/${totalTasks} tâches terminées\n\n🎯 **Recommandations:**\n• L'équipe performe bien avec ${completionRate}% de réussite\n• ${users.find(u => u.performance > 95)?.name || 'Sarah'} est votre top performer\n• Considérez redistribuer les tâches pour optimiser l'efficacité`;
     }
     
-    // Prédiction de retards
-    if (lowerMessage.includes('retard') || lowerMessage.includes('deadline') || lowerMessage.includes('prédire')) {
-      const overdueProjects = projects.filter(p => new Date(p.deadline) < new Date() && p.status !== 'completed');
-      const riskyProjects = projects.filter(p => p.progress < 50 && new Date(p.deadline) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
-      
-      return `🔮 **Prédiction IA des Risques**\n\n⚠️ ${overdueProjects.length} projet(s) en retard\n📅 ${riskyProjects.length} projet(s) à risque\n\n🤖 **Analyse prédictive:**\n• Probabilité de retard: ${Math.random() > 0.5 ? 'ÉLEVÉE' : 'MODÉRÉE'}\n• Recommandation: Réallouer 2 développeurs sur les projets critiques\n• Impact estimé: Réduction de 15% des retards`;
-    }
-    
-    // Optimisation des équipes
-    if (lowerMessage.includes('optimis') || lowerMessage.includes('répartition') || lowerMessage.includes('tâche')) {
-      const busyUsers = users.filter(u => tasks.filter(t => t.assigneeId === u.id && t.status !== 'completed').length > 3);
-      const availableUsers = users.filter(u => tasks.filter(t => t.assigneeId === u.id && t.status !== 'completed').length < 2);
-      
-      return `⚡ **Optimisation IA des Équipes**\n\n🔄 **Rééquilibrage suggéré:**\n• ${busyUsers.length} membre(s) surchargé(s)\n• ${availableUsers.length} membre(s) disponible(s)\n\n🎯 **Actions recommandées:**\n• Transférer 3 tâches de ${busyUsers[0]?.name || 'Michael'} vers ${availableUsers[0]?.name || 'Emily'}\n• Efficacité prévue: +25%\n• Réduction du stress: +40%`;
-    }
-    
-    // Rapport intelligent
-    if (lowerMessage.includes('rapport') || lowerMessage.includes('résumé') || lowerMessage.includes('dashboard')) {
-      const activeProjects = projects.filter(p => p.status === 'in-progress').length;
-      const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-      const avgProgress = Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length);
-      
-      return `📈 **Rapport Intelligent IA**\n\n💼 **Vue d'ensemble:**\n• ${activeProjects} projets actifs\n• Budget total: $${totalBudget.toLocaleString()}\n• Progression moyenne: ${avgProgress}%\n\n🚀 **Insights IA:**\n• Vélocité équipe: +12% vs mois dernier\n• Prédiction fin de sprint: 3 jours d'avance\n• Score de satisfaction client: 94%\n• ROI projeté: +18%`;
-    }
-    
-    // Réponse par défaut avec suggestions intelligentes
+    // Réponse par défaut
     return `🤖 Je comprends votre demande ! Voici ce que je peux faire pour vous:\n\n✨ **Capacités IA avancées:**\n• Analyse prédictive des projets\n• Optimisation automatique des ressources\n• Détection proactive des risques\n• Recommandations personnalisées\n\nPosez-moi une question spécifique ou utilisez les suggestions ci-dessous !`;
   };
 
@@ -112,24 +165,36 @@ const AIAssistant: React.FC = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI processing time
-    setTimeout(() => {
+    // Generate AI response
+    try {
+      const aiResponseContent = await generateAIResponse(inputValue);
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: generateAIResponse(inputValue),
+        content: aiResponseContent,
         timestamp: new Date(),
         suggestions: [
-          'Analyser les tendances',
-          'Optimiser les ressources',
-          'Prédire les performances',
-          'Générer des insights'
+          'Comment puis-je améliorer ça ?',
+          'Quelles sont les prochaines étapes ?',
+          'Y a-t-il des risques à surveiller ?',
+          'Peux-tu m\'expliquer plus en détail ?'
         ]
       };
 
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
-    }, 1500);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer plus tard.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+      setIsTyping(false);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
