@@ -1,7 +1,7 @@
 import { igniteEngine, loadModels, Message } from 'multi-llm-ts';
 
 export interface AIConfig {
-  provider: 'openai' | 'anthropic' | 'google' | 'groq';
+  provider: 'anthropic' | 'azure' | 'cerebras' | 'deepseek' | 'google' | 'groq' | 'meta' | 'mistralai' | 'openai' | 'ollama' | 'openrouter' | 'xai';
   apiKey: string;
   model?: string;
 }
@@ -46,7 +46,7 @@ export class AIService {
       case 'openai':
         return 'gpt-4o-mini';
       case 'anthropic':
-        return 'claude-3-5-haiku-20241022'; // Modèle plus récent
+        return 'claude-sonnet-4-20250514';
       case 'google':
         return 'gemini-pro';
       case 'groq':
@@ -85,7 +85,7 @@ export class AIService {
       console.error('AI service error:', error);
       
       // Si erreur 429 (rate limit), attendre avant de réessayer
-      if (error.message?.includes('429') || error.message?.includes('Too Many Requests')) {
+      if (error instanceof Error && (error.message?.includes('429') || error.message?.includes('Too Many Requests'))) {
         console.warn('Rate limit reached, switching to fallback mode');
         throw new Error('Rate limit reached - using fallback responses');
       }

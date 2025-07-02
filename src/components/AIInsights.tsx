@@ -35,9 +35,10 @@ const AIInsights: React.FC = () => {
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const loadSavedInsights = () => {
+  const loadSavedInsights = useCallback(() => {
     try {
-      const saved = localStorage.getItem('ai-insights');
+      // Load insights based on current language
+      const saved = localStorage.getItem(`ai-insights-${language}`);
       if (saved) {
         const parsedInsights = JSON.parse(saved);
         // Check if insights are not too old (24 hours for better persistence)
@@ -57,7 +58,7 @@ const AIInsights: React.FC = () => {
       console.error('Error loading saved insights:', error);
       generateInitialInsights();
     }
-  };
+  }, [language]); // Add language as dependency
 
   const generateInitialInsights = () => {
     // Welcome insights only the first time
@@ -85,9 +86,11 @@ const AIInsights: React.FC = () => {
     try {
       const insightsWithTimestamp = newInsights.map(insight => ({
         ...insight,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        language: language // Add language to each insight
       }));
-      localStorage.setItem('ai-insights', JSON.stringify(insightsWithTimestamp));
+      // Save insights with language-specific key
+      localStorage.setItem(`ai-insights-${language}`, JSON.stringify(insightsWithTimestamp));
     } catch (error) {
       console.error('Error saving insights:', error);
     }
@@ -257,9 +260,9 @@ const AIInsights: React.FC = () => {
   }, [isAvailable, generateResponse, projects, tasks, users, language]);
 
   useEffect(() => {
-    // Load saved insights only once on mount
+    // Load saved insights when component mounts or language changes
     loadSavedInsights();
-  }, []);
+  }, [loadSavedInsights]); // Use loadSavedInsights as dependency
 
   // Remove this useEffect that automatically regenerated
   // useEffect(() => {
@@ -436,7 +439,8 @@ const AIInsights: React.FC = () => {
   const clearInsights = () => {
     if (confirm(t.ai.confirmClearHistory)) {
       setInsights([]);
-      localStorage.removeItem('ai-insights');
+      // Remove insights for current language only
+      localStorage.removeItem(`ai-insights-${language}`);
       generateInitialInsights(); // Reset welcome message
     }
   };

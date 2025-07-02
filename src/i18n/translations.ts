@@ -49,6 +49,15 @@ export interface Translations {
     classicDashboard: string;
   };
 
+  // Sidebar
+  sidebar: {
+    poweredByAI: string;
+    aiPremiumUpgrade: string;
+    unlockAdvancedFeatures: string;
+    upgradeNow: string;
+    aiAssistantTooltip: string;
+  };
+
   // Header
   header: {
     title: string;
@@ -110,6 +119,7 @@ export interface Translations {
   // Projects
   projects: {
     title: string;
+    subtitle: string;
     newProject: string;
     projectName: string;
     description: string;
@@ -132,6 +142,96 @@ export interface Translations {
     allProjects: string;
     myProjects: string;
     recentProjects: string;
+    // Additional fields for Projects component
+    totalProjects: string;
+    completionRate: string;
+    totalBudget: string;
+    averageProgress: string;
+    activeProjectsCount: string;
+    completedProjectsCount: string;
+    overdueProjects: string;
+    budgetUsed: string;
+    late: string;
+    // AI Recommendations
+    aiRecommendations: string;
+    addRecommendation: string;
+    teamReallocationSuggested: string;
+    budgetOptimizationDetected: string;
+    delayRiskIdentified: string;
+    accelerationOpportunity: string;
+    confidence: string;
+    reallocateNow: string;
+    editRecommendation: string;
+    newAiRecommendation: string;
+    recommendationTitle: string;
+    recommendationType: string;
+    recommendationImpact: string;
+    recommendationConfidence: string;
+    recommendationProject: string;
+    actionableRecommendation: string;
+    typeReallocation: string;
+    typeOptimization: string;
+    typeRisk: string;
+    typeOpportunity: string;
+    impactLow: string;
+    impactMedium: string;
+    impactHigh: string;
+    selectProject: string;
+    // Filters and search
+    searchProjects: string;
+    allStatuses: string;
+    allPriorities: string;
+    statusPlanning: string;
+    statusInProgress: string;
+    statusReview: string;
+    statusOnPause: string;
+    // Project actions
+    edit: string;
+    duplicate: string;
+    export: string;
+    delete: string;
+    viewDetails: string;
+    // Project details
+    tasks: string;
+    members: string;
+    todayText: string;
+    daysRemaining: string;
+    daysLate: string;
+    // Project modal
+    editProject: string;
+    createProject: string;
+    startDate: string;
+    category: string;
+    save: string;
+    cancel: string;
+    // Delete confirmation
+    deleteProject: string;
+    deleteConfirmation: string;
+    deleteWarning: string;
+    // Team reallocation
+    teamReallocation: string;
+    aiRecommendationText: string;
+    suggestedMembers: string;
+    execute: string;
+    // Notifications
+    projectDuplicated: string;
+    projectExported: string;
+    projectDeleted: string;
+    reallocationCompleted: string;
+    recommendationDeleted: string;
+    projectDuplicatedMessage: string;
+    projectExportedMessage: string;
+    projectDeletedMessage: string;
+    reallocationCompletedMessage: string;
+    // Status display text
+    statusPlanningDisplay: string;
+    statusInProgressDisplay: string;
+    statusReviewDisplay: string;
+    statusCompletedDisplay: string;
+    statusOnPauseDisplay: string;
+    priorityLowDisplay: string;
+    priorityMediumDisplay: string;
+    priorityHighDisplay: string;
   };
 
   // Tasks
@@ -161,7 +261,9 @@ export interface Translations {
   // Team
   team: {
     title: string;
+    subtitle: string;
     addMember: string;
+    newTeam: string;
     name: string;
     email: string;
     role: string;
@@ -172,11 +274,93 @@ export interface Translations {
     workload: string;
     availability: string;
     skills: string;
+    // Role types
     roleAdmin: string;
     roleManager: string;
     roleDeveloper: string;
     roleDesigner: string;
     roleAnalyst: string;
+    // Status types
+    statusActive: string;
+    statusVacation: string;
+    statusBusy: string;
+    statusOffline: string;
+    // Actions
+    view: string;
+    edit: string;
+    delete: string;
+    save: string;
+    cancel: string;
+    close: string;
+    viewProfile: string;
+    // Team management
+    teams: string;
+    allUsers: string;
+    members: string;
+    activeMembers: string;
+    projects: string;
+    tasks: string;
+    averagePerformance: string;
+    topPerformer: string;
+    bestPerformance: string;
+    totalTasksCompleted: string;
+    teamTotal: string;
+    performantTeam: string;
+    since: string;
+    // Search and filters
+    searchMembers: string;
+    allDepartments: string;
+    allStatuses: string;
+    // Form labels
+    fullName: string;
+    phone: string;
+    location: string;
+    status: string;
+    team: string;
+    noTeam: string;
+    selectDepartment: string;
+    estimatedTime: string;
+    skillsPlaceholder: string;
+    skillsSeparator: string;
+    completedOn: string;
+    activeProjectsCount: string;
+    // Modal titles
+    addMemberModal: string;
+    editProfileModal: string;
+    newTeamModal: string;
+    editTeamModal: string;
+    deleteMemberModal: string;
+    // Modal content
+    changePhotoText: string;
+    teamName: string;
+    description: string;
+    color: string;
+    teamLeader: string;
+    create: string;
+    addToTeam: string;
+    // Delete confirmation
+    deleteMember: string;
+    deleteConfirmation: string;
+    deleteWarning: string;
+    // Performance tracking
+    tasksCompleted: string;
+    performanceMetrics: string;
+    // Empty states
+    noMembersFound: string;
+    noMembersInTeam: string;
+    noMembersMatchCriteria: string;
+    // Notifications
+    userDeleted: string;
+    userDeletedMessage: string;
+    userAdded: string;
+    userUpdated: string;
+    userAddedMessage: string;
+    userUpdatedMessage: string;
+    addedTo: string;
+    updatedIn: string;
+    // File upload
+    selectValidImage: string;
+    uploadingImage: string;
   };
 
   // AI Features
@@ -289,6 +473,107 @@ export interface Translations {
     deleteAccount: string;
   };
 
+  // Calendar
+  calendar: {
+    title: string;
+    subtitle: string;
+    today: string;
+    month: string;
+    week: string;
+    day: string;
+    agenda: string;
+    previous: string;
+    next: string;
+    newEvent: string;
+    eventTitle: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    location: string;
+    attendees: string;
+    allDay: string;
+    reminder: string;
+    repeat: string;
+    category: string;
+    meeting: string;
+    deadline: string;
+    personal: string;
+    work: string;
+    noEvents: string;
+    createFirstEvent: string;
+    editEvent: string;
+    deleteEvent: string;
+    saveEvent: string;
+    cancelEvent: string;
+  };
+
+  // Blog
+  blog: {
+    title: string;
+    subtitle: string;
+    latestPosts: string;
+    readMore: string;
+    writtenBy: string;
+    publishedOn: string;
+    categories: string;
+    allCategories: string;
+    searchPosts: string;
+    noPostsFound: string;
+    loadingPosts: string;
+    featured: string;
+    minutes: string;
+    readTime: string;
+    tags: string;
+    share: string;
+    relatedPosts: string;
+  };
+
+  // Help Support
+  help: {
+    title: string;
+    subtitle: string;
+    searchHelp: string;
+    popularArticles: string;
+    gettingStarted: string;
+    troubleshooting: string;
+    advanced: string;
+    contactSupport: string;
+    documentation: string;
+    tutorials: string;
+    faq: string;
+    userGuide: string;
+    apiDocs: string;
+    community: string;
+    helpfulQuestion: string;
+    submitFeedback: string;
+    reportBug: string;
+    featureRequest: string;
+  };
+
+  // AI Premium
+  premium: {
+    title: string;
+    subtitle: string;
+    currentPlan: string;
+    upgradePlan: string;
+    features: string;
+    pricing: string;
+    monthly: string;
+    annually: string;
+    unlimitedAI: string;
+    advancedAnalytics: string;
+    prioritySupport: string;
+    customIntegrations: string;
+    teamCollaboration: string;
+    dataExport: string;
+    upgradeNow: string;
+    contactSales: string;
+    freeTrial: string;
+    mostPopular: string;
+    enterprise: string;
+    custom: string;
+  };
+
   // Sidebar
   sidebar: {
     poweredByAI: string;
@@ -383,6 +668,111 @@ export interface Translations {
     suggestImprovements: string;
     forecastTimeline: string;
   };
+
+  // Calendar
+  calendar: {
+    title: string;
+    subtitle: string;
+    newEvent: string;
+    // View options
+    monthView: string;
+    weekView: string;
+    dayView: string;
+    agendaView: string;
+    // Navigation
+    today: string;
+    previous: string;
+    next: string;
+    // Day names (short)
+    sunday: string;
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    // Day names (abbreviated)
+    sun: string;
+    mon: string;
+    tue: string;
+    wed: string;
+    thu: string;
+    fri: string;
+    sat: string;
+    // Month names
+    january: string;
+    february: string;
+    march: string;
+    april: string;
+    may: string;
+    june: string;
+    july: string;
+    august: string;
+    september: string;
+    october: string;
+    november: string;
+    december: string;
+    // Event types
+    meeting: string;
+    deadline: string;
+    presentation: string;
+    review: string;
+    personal: string;
+    // Event form
+    eventTitle: string;
+    eventDescription: string;
+    eventDate: string;
+    eventType: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+    attendees: string;
+    reminderMinutes: string;
+    recurringEvent: string;
+    // Reminder options
+    noReminder: string;
+    fiveMinutes: string;
+    fifteenMinutes: string;
+    thirtyMinutes: string;
+    oneHour: string;
+    oneDay: string;
+    // Modal titles
+    newEventModal: string;
+    editEventModal: string;
+    deleteEventModal: string;
+    // Actions
+    createEvent: string;
+    editEvent: string;
+    deleteEvent: string;
+    saveEvent: string;
+    // Placeholders
+    eventTitlePlaceholder: string;
+    eventDescriptionPlaceholder: string;
+    eventLocationPlaceholder: string;
+    searchPlaceholder: string;
+    // Filters
+    allTypes: string;
+    meetings: string;
+    deadlines: string;
+    presentations: string;
+    reviews: string;
+    personalEvents: string;
+    // Status messages
+    eventCreated: string;
+    eventUpdated: string;
+    eventDeleted: string;
+    eventCreatedMessage: string;
+    eventUpdatedMessage: string;
+    eventDeletedMessage: string;
+    // Confirmation
+    deleteConfirmation: string;
+    deleteWarning: string;
+    irreversibleAction: string;
+    // Time display
+    moreEvents: string;
+    // Year selector
+    selectYear: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -430,6 +820,13 @@ export const translations: Record<Language, Translations> = {
       helpSupport: 'Aide et Support',
       aiPremium: 'IA Premium',
       classicDashboard: 'Dashboard Classic',
+    },
+    sidebar: {
+      poweredByAI: 'Alimenté par l\'IA',
+      aiPremiumUpgrade: 'Mise à niveau IA Premium',
+      unlockAdvancedFeatures: 'Débloquez des fonctionnalités avancées d\'IA',
+      upgradeNow: 'Mettre à niveau',
+      aiAssistantTooltip: 'Assistant IA toujours disponible',
     },
     header: {
       title: 'ProjectFlow AI',
@@ -487,8 +884,9 @@ export const translations: Record<Language, Translations> = {
     },
     projects: {
       title: 'Projets',
+      subtitle: 'Gérez vos projets avec l\'intelligence artificielle',
       newProject: 'Nouveau Projet',
-      projectName: 'Nom du Projet',
+      projectName: 'Nom du projet',
       description: 'Description',
       status: 'Statut',
       priority: 'Priorité',
@@ -509,9 +907,100 @@ export const translations: Record<Language, Translations> = {
       allProjects: 'Tous les Projets',
       myProjects: 'Mes Projets',
       recentProjects: 'Projets Récents',
+      // Additional fields for Projects component
+      totalProjects: 'Total Projets',
+      completionRate: 'Taux de Completion',
+      totalBudget: 'Budget Total',
+      averageProgress: 'Progression Moyenne',
+      activeProjectsCount: 'actifs',
+      completedProjectsCount: 'terminés',
+      overdueProjects: 'en retard',
+      budgetUsed: 'utilisé',
+      late: 'en retard',
+      // AI Recommendations
+      aiRecommendations: 'Recommandations IA',
+      addRecommendation: 'Ajouter',
+      teamReallocationSuggested: 'Réallocation d\'équipe suggérée',
+      budgetOptimizationDetected: 'Optimisation budget détectée',
+      delayRiskIdentified: 'Risque de retard identifié',
+      accelerationOpportunity: 'Opportunité d\'accélération',
+      confidence: 'Confiance',
+      reallocateNow: 'Réallouer maintenant',
+      editRecommendation: 'Modifier la Recommandation',
+      newAiRecommendation: 'Nouvelle Recommandation IA',
+      recommendationTitle: 'Titre',
+      recommendationType: 'Type',
+      recommendationImpact: 'Impact',
+      recommendationConfidence: 'Confiance (%)',
+      recommendationProject: 'Projet',
+      actionableRecommendation: 'Recommandation actionnable',
+      typeReallocation: 'Réallocation',
+      typeOptimization: 'Optimisation',
+      typeRisk: 'Risque',
+      typeOpportunity: 'Opportunité',
+      impactLow: 'Faible',
+      impactMedium: 'Moyen',
+      impactHigh: 'Élevé',
+      selectProject: 'Sélectionner un projet',
+      // Filters and search
+      searchProjects: 'Rechercher des projets...',
+      allStatuses: 'Tous les statuts',
+      allPriorities: 'Toutes les priorités',
+      statusPlanning: 'Planification',
+      statusInProgress: 'En cours',
+      statusReview: 'Révision',
+      statusOnPause: 'En pause',
+      // Project actions
+      edit: 'Modifier',
+      duplicate: 'Dupliquer',
+      export: 'Exporter',
+      delete: 'Supprimer',
+      viewDetails: 'Voir détails',
+      // Project details
+      tasks: 'Tâches',
+      members: 'Membres',
+      todayText: 'Aujourd\'hui',
+      daysRemaining: 'jours restants',
+      daysLate: 'jours de retard',
+      // Project modal
+      editProject: 'Modifier le Projet',
+      createProject: 'Nouveau Projet',
+      startDate: 'Date de début',
+      category: 'Catégorie',
+      save: 'Sauvegarder',
+      cancel: 'Annuler',
+      // Delete confirmation
+      deleteProject: 'Supprimer le projet',
+      deleteConfirmation: 'Cette action est irréversible',
+      deleteWarning: 'Êtes-vous sûr de vouloir supprimer ce projet ? Toutes les tâches associées seront également supprimées.',
+      // Team reallocation
+      teamReallocation: 'Réallocation d\'équipe',
+      aiRecommendationText: 'Transférer 2 développeurs vers ce projet pour accélérer la livraison de 15%.',
+      suggestedMembers: 'Membres suggérés:',
+      execute: 'Exécuter',
+      // Notifications
+      projectDuplicated: 'Projet dupliqué',
+      projectExported: 'Projet exporté',
+      projectDeleted: 'Projet supprimé',
+      reallocationCompleted: 'Réallocation effectuée',
+      recommendationDeleted: 'Recommandation supprimée',
+      projectDuplicatedMessage: 'a été dupliqué avec succès',
+      projectExportedMessage: 'ont été exportées',
+      projectDeletedMessage: 'a été supprimé avec succès',
+      reallocationCompletedMessage: 'a été réallouée avec succès',
+      // Status display text
+      statusPlanningDisplay: 'Planification',
+      statusInProgressDisplay: 'En cours',
+      statusReviewDisplay: 'Révision',
+      statusCompletedDisplay: 'Terminé',
+      statusOnPauseDisplay: 'En pause',
+      priorityLowDisplay: 'Basse',
+      priorityMediumDisplay: 'Moyenne',
+      priorityHighDisplay: 'Haute',
     },
     tasks: {
       title: 'Tâches',
+      subtitle: 'Gérez vos tâches avec l\'intelligence artificielle',
       newTask: 'Nouvelle Tâche',
       taskTitle: 'Titre de la Tâche',
       description: 'Description',
@@ -525,16 +1014,112 @@ export const translations: Record<Language, Translations> = {
       statusInProgress: 'En Cours',
       statusCompleted: 'Terminé',
       statusBlocked: 'Bloqué',
+      statusReview: 'Révision',
       allTasks: 'Toutes les Tâches',
       myTasks: 'Mes Tâches',
       overdue: 'En Retard',
       today: 'Aujourd\'hui',
       thisWeek: 'Cette Semaine',
       upcoming: 'À Venir',
+      // Metrics
+      totalTasks: 'Total Tâches',
+      completedTasks: 'terminées',
+      myTasksMetric: 'Mes Tâches',
+      completedPercentage: '% complétées',
+      timeTracked: 'Temps Suivi',
+      efficiency: '% efficacité',
+      overdueTasks: 'En Retard',
+      attentionRequired: 'Nécessitent attention',
+      // AI Insights
+      aiInsightsTitle: 'Insights IA sur les Tâches',
+      productivity: 'Productivité',
+      vsLastMonth: 'vs mois dernier',
+      aiAccuracy: 'Précision IA',
+      exactPredictions: 'Prédictions exactes',
+      collaboration: 'Collaboration',
+      teamScore: 'Score d\'équipe',
+      // Filters and search
+      globalSearch: 'Recherche globale...',
+      searchByTitle: 'Rechercher par titre...',
+      tasksCount: 'tâches',
+      filtered: 'Filtré',
+      sorted: 'Trié',
+      savedViews: 'Vues sauvegardées',
+      viewName: 'Nom de la vue...',
+      export: 'Export',
+      reset: 'Reset',
+      // Priority levels
+      priorityLow: 'Basse',
+      priorityMedium: 'Moyenne',
+      priorityHigh: 'Haute',
+      priorityCritical: 'Critique',
+      // Table headers
+      task: 'Tâche',
+      assigned: 'Assigné',
+      deadline: 'Échéance',
+      time: 'Temps',
+      actions: 'Actions',
+      // Time tracking
+      hours: 'h',
+      estimatedTime: 'Temps estimé (heures)',
+      timeTracking: 'Suivi du temps',
+      addTime: 'Ajouter',
+      // Actions
+      view: 'Visualiser',
+      edit: 'Modifier',
+      delete: 'Supprimer',
+      save: 'Sauvegarder',
+      cancel: 'Annuler',
+      // Task details
+      details: 'Détails',
+      comments: 'Commentaires',
+      addComment: 'Ajouter un commentaire...',
+      send: 'Envoyer',
+      createdOn: 'Créée le',
+      completedOn: 'Terminée le',
+      // Modals
+      editTask: 'Modifier la Tâche',
+      newTaskModal: 'Nouvelle Tâche',
+      deleteTask: 'Supprimer la tâche',
+      deleteConfirmation: 'Cette action est irréversible',
+      deleteWarning: 'Êtes-vous sûr de vouloir supprimer cette tâche ? Toutes les données associées seront perdues.',
+      // Status messages
+      taskDeleted: 'Tâche supprimée',
+      taskDeletedMessage: 'a été supprimée avec succès',
+      statusUpdated: 'Statut mis à jour',
+      statusUpdatedMessage: 'Le statut de la tâche a été changé vers',
+      taskUpdated: 'Tâche mise à jour',
+      taskCreated: 'Tâche créée',
+      taskSavedMessage: 'a été',
+      taskSavedUpdated: 'mise à jour',
+      taskSavedCreated: 'créée',
+      successMessage: 'avec succès',
+      viewSaved: 'Vue sauvegardée',
+      viewSavedMessage: 'a été sauvegardée',
+      viewLoaded: 'Vue chargée',
+      viewLoadedMessage: 'a été chargée',
+      // Empty state
+      noTasksFound: 'Aucune tâche trouvée',
+      noTasksFiltered: 'Aucune tâche ne correspond à vos critères de recherche.',
+      createFirstTask: 'Commencez par créer votre première tâche.',
+      resetFilters: 'Réinitialiser les filtres',
+      createTask: 'Créer une tâche',
+      // Form labels
+      title: 'Titre',
+      startDate: 'Date de début',
+      tagsPlaceholder: 'frontend, urgent, bug',
+      tagsSeparator: 'Tags (séparés par des virgules)',
+      // Time display
+      daysLate: 'jours de retard',
+      todayDeadline: 'Aujourd\'hui',
+      daysRemaining: 'jours restants',
+      hoursLabel: 'Heures',
     },
     team: {
       title: 'Équipe',
+      subtitle: 'Gérez vos équipes et collaborateurs',
       addMember: 'Ajouter Membre',
+      newTeam: 'Nouvelle Équipe',
       name: 'Nom',
       email: 'Email',
       role: 'Rôle',
@@ -545,11 +1130,93 @@ export const translations: Record<Language, Translations> = {
       workload: 'Charge de Travail',
       availability: 'Disponibilité',
       skills: 'Compétences',
+      // Role types
       roleAdmin: 'Administrateur',
       roleManager: 'Manager',
       roleDeveloper: 'Développeur',
       roleDesigner: 'Designer',
       roleAnalyst: 'Analyste',
+      // Status types
+      statusActive: 'Actif',
+      statusVacation: 'En congé',
+      statusBusy: 'Occupé',
+      statusOffline: 'Hors ligne',
+      // Actions
+      view: 'Voir',
+      edit: 'Modifier',
+      delete: 'Supprimer',
+      save: 'Sauvegarder',
+      cancel: 'Annuler',
+      close: 'Fermer',
+      viewProfile: 'Voir le profil',
+      // Team management
+      teams: 'Équipes',
+      allUsers: 'Tous les utilisateurs',
+      members: 'Membres',
+      activeMembers: 'actifs',
+      projects: 'Projets',
+      tasks: 'Tâches',
+      averagePerformance: 'Performance Moy.',
+      topPerformer: 'Top Performer',
+      bestPerformance: 'Meilleure performance',
+      totalTasksCompleted: 'Tâches Terminées',
+      teamTotal: 'Total équipe',
+      performantTeam: 'Équipe performante',
+      since: 'Depuis',
+      // Search and filters
+      searchMembers: 'Rechercher des membres...',
+      allDepartments: 'Tous les départements',
+      allStatuses: 'Tous les statuts',
+      // Form labels
+      fullName: 'Nom complet',
+      phone: 'Téléphone',
+      location: 'Localisation',
+      status: 'Statut',
+      team: 'Équipe',
+      noTeam: 'Aucune équipe',
+      selectDepartment: 'Sélectionner un département',
+      estimatedTime: 'Temps estimé (heures)',
+      skillsPlaceholder: 'React, TypeScript, Node.js',
+      skillsSeparator: 'Compétences (séparées par des virgules)',
+      completedOn: 'Terminée le',
+      activeProjectsCount: 'Projets actifs',
+      // Modal titles
+      addMemberModal: 'Ajouter un membre',
+      editProfileModal: 'Modifier le profil',
+      newTeamModal: 'Nouvelle équipe',
+      editTeamModal: 'Modifier l\'équipe',
+      deleteMemberModal: 'Supprimer le membre',
+      // Modal content
+      changePhotoText: 'Cliquez sur l\'icône pour changer la photo',
+      teamName: 'Nom de l\'équipe',
+      description: 'Description',
+      color: 'Couleur',
+      teamLeader: 'Chef d\'équipe',
+      create: 'Créer',
+      addToTeam: 'Ajouter à l\'équipe',
+      // Delete confirmation
+      deleteMember: 'Supprimer le membre',
+      deleteConfirmation: 'Cette action est irréversible',
+      deleteWarning: 'Êtes-vous sûr de vouloir supprimer ce membre de l\'équipe ? Toutes ses assignations seront également supprimées.',
+      // Performance tracking
+      tasksCompleted: 'Tâches terminées',
+      performanceMetrics: 'Performance',
+      // Empty states
+      noMembersFound: 'Aucun membre trouvé',
+      noMembersInTeam: 'Aucun membre dans l\'équipe',
+      noMembersMatchCriteria: 'ne correspond à vos critères.',
+      // Notifications
+      userDeleted: 'Utilisateur supprimé',
+      userDeletedMessage: 'a été supprimé de l\'équipe',
+      userAdded: 'Utilisateur ajouté',
+      userUpdated: 'Utilisateur mis à jour',
+      userAddedMessage: 'a été ajouté à',
+      userUpdatedMessage: 'a été mis à jour dans',
+      addedTo: 'ajouté à',
+      updatedIn: 'mis à jour dans',
+      // File upload
+      selectValidImage: 'Veuillez sélectionner un fichier image valide.',
+      uploadingImage: 'Téléchargement...',
     },
     ai: {
       insights: 'Insights IA Avancés',
@@ -655,6 +1322,99 @@ export const translations: Record<Language, Translations> = {
       backupData: 'Sauvegarder Données',
       deleteAccount: 'Supprimer Compte',
     },
+    calendar: {
+      title: 'Calendrier',
+      subtitle: 'Gérez vos événements et échéances',
+      today: 'Aujourd\'hui',
+      month: 'Mois',
+      week: 'Semaine',
+      day: 'Jour',
+      agenda: 'Agenda',
+      previous: 'Précédent',
+      next: 'Suivant',
+      newEvent: 'Nouvel Événement',
+      eventTitle: 'Titre de l\'événement',
+      description: 'Description',
+      startDate: 'Date de début',
+      endDate: 'Date de fin',
+      location: 'Lieu',
+      attendees: 'Participants',
+      allDay: 'Toute la journée',
+      reminder: 'Rappel',
+      repeat: 'Répéter',
+      category: 'Catégorie',
+      meeting: 'Réunion',
+      deadline: 'Échéance',
+      personal: 'Personnel',
+      work: 'Travail',
+      noEvents: 'Aucun événement',
+      createFirstEvent: 'Créer votre premier événement',
+      editEvent: 'Modifier l\'événement',
+      deleteEvent: 'Supprimer l\'événement',
+      saveEvent: 'Sauvegarder',
+      cancelEvent: 'Annuler',
+    },
+    blog: {
+      title: 'Blog',
+      subtitle: 'Articles et guides pour optimiser vos projets',
+      latestPosts: 'Derniers articles',
+      readMore: 'Lire la suite',
+      writtenBy: 'Écrit par',
+      publishedOn: 'Publié le',
+      categories: 'Catégories',
+      allCategories: 'Toutes les catégories',
+      searchPosts: 'Rechercher des articles...',
+      noPostsFound: 'Aucun article trouvé',
+      loadingPosts: 'Chargement des articles...',
+      featured: 'À la une',
+      minutes: 'minutes',
+      readTime: 'de lecture',
+      tags: 'Tags',
+      share: 'Partager',
+      relatedPosts: 'Articles connexes',
+    },
+    help: {
+      title: 'Aide et Support',
+      subtitle: 'Trouvez des réponses et obtenez de l\'aide',
+      searchHelp: 'Rechercher dans l\'aide...',
+      popularArticles: 'Articles populaires',
+      gettingStarted: 'Premiers pas',
+      troubleshooting: 'Dépannage',
+      advanced: 'Avancé',
+      contactSupport: 'Contacter le support',
+      documentation: 'Documentation',
+      tutorials: 'Tutoriels',
+      faq: 'FAQ',
+      userGuide: 'Guide utilisateur',
+      apiDocs: 'Documentation API',
+      community: 'Communauté',
+      helpfulQuestion: 'Cette réponse vous a-t-elle aidé ?',
+      submitFeedback: 'Envoyer des commentaires',
+      reportBug: 'Signaler un bug',
+      featureRequest: 'Demander une fonctionnalité',
+    },
+    premium: {
+      title: 'IA Premium',
+      subtitle: 'Débloquez tout le potentiel de l\'intelligence artificielle',
+      currentPlan: 'Plan actuel',
+      upgradePlan: 'Mettre à niveau',
+      features: 'Fonctionnalités',
+      pricing: 'Tarifs',
+      monthly: 'Mensuel',
+      annually: 'Annuel',
+      unlimitedAI: 'IA illimitée',
+      advancedAnalytics: 'Analyses avancées',
+      prioritySupport: 'Support prioritaire',
+      customIntegrations: 'Intégrations personnalisées',
+      teamCollaboration: 'Collaboration d\'équipe',
+      dataExport: 'Export de données',
+      upgradeNow: 'Mettre à niveau maintenant',
+      contactSales: 'Contacter les ventes',
+      freeTrial: 'Essai gratuit',
+      mostPopular: 'Le plus populaire',
+      enterprise: 'Entreprise',
+      custom: 'Personnalisé',
+    },
     sidebar: {
       poweredByAI: 'Powered by Advanced AI',
       aiPremiumDescription: 'Débloquez l\'analyse prédictive avancée et l\'optimisation automatique',
@@ -738,6 +1498,109 @@ export const translations: Record<Language, Translations> = {
       suggestImprovements: 'Suggérer des améliorations',
       forecastTimeline: 'Prévoir le calendrier',
     },
+    calendar: {
+      title: 'Calendrier',
+      subtitle: 'Gérez vos événements et rendez-vous',
+      newEvent: 'Nouvel Événement',
+      // View options
+      monthView: 'Mois',
+      weekView: 'Semaine',
+      dayView: 'Jour',
+      agendaView: 'Agenda',
+      // Navigation
+      today: 'Aujourd\'hui',
+      previous: 'Précédent',
+      next: 'Suivant',
+      // Day names (short)
+      sunday: 'Dimanche',
+      monday: 'Lundi',
+      tuesday: 'Mardi',
+      wednesday: 'Mercredi',
+      thursday: 'Jeudi',
+      friday: 'Vendredi',
+      saturday: 'Samedi',
+      // Day names (abbreviated)
+      sun: 'Dim',
+      mon: 'Lun',
+      tue: 'Mar',
+      wed: 'Mer',
+      thu: 'Jeu',
+      fri: 'Ven',
+      sat: 'Sam',
+      // Month names
+      january: 'Janvier',
+      february: 'Février',
+      march: 'Mars',
+      april: 'Avril',
+      may: 'Mai',
+      june: 'Juin',
+      july: 'Juillet',
+      august: 'Août',
+      september: 'Septembre',
+      october: 'Octobre',
+      november: 'Novembre',
+      december: 'Décembre',
+      // Event types
+      meeting: 'Réunion',
+      deadline: 'Échéance',
+      presentation: 'Présentation',
+      review: 'Révision',
+      personal: 'Personnel',
+      // Event form
+      eventTitle: 'Titre',
+      eventDescription: 'Description',
+      eventDate: 'Date',
+      eventType: 'Type',
+      startTime: 'Heure de début',
+      endTime: 'Heure de fin',
+      location: 'Lieu',
+      attendees: 'Participants',
+      reminderMinutes: 'Rappel (minutes)',
+      recurringEvent: 'Événement récurrent',
+      // Reminder options
+      noReminder: 'Aucun rappel',
+      fiveMinutes: '5 minutes',
+      fifteenMinutes: '15 minutes',
+      thirtyMinutes: '30 minutes',
+      oneHour: '1 heure',
+      oneDay: '1 jour',
+      // Modal titles
+      newEventModal: 'Nouvel Événement',
+      editEventModal: 'Modifier l\'Événement',
+      deleteEventModal: 'Supprimer l\'événement',
+      // Actions
+      createEvent: 'Créer',
+      editEvent: 'Modifier',
+      deleteEvent: 'Supprimer',
+      saveEvent: 'Sauvegarder',
+      // Placeholders
+      eventTitlePlaceholder: 'Titre de l\'événement',
+      eventDescriptionPlaceholder: 'Description de l\'événement',
+      eventLocationPlaceholder: 'Lieu de l\'événement',
+      searchPlaceholder: 'Rechercher...',
+      // Filters
+      allTypes: 'Tous les types',
+      meetings: 'Réunions',
+      deadlines: 'Échéances',
+      presentations: 'Présentations',
+      reviews: 'Révisions',
+      personalEvents: 'Personnel',
+      // Status messages
+      eventCreated: 'Événement créé',
+      eventUpdated: 'Événement mis à jour',
+      eventDeleted: 'Événement supprimé',
+      eventCreatedMessage: 'a été créé avec succès',
+      eventUpdatedMessage: 'a été mis à jour avec succès',
+      eventDeletedMessage: 'a été supprimé avec succès',
+      // Confirmation
+      deleteConfirmation: 'Cette action est irréversible',
+      deleteWarning: 'Êtes-vous sûr de vouloir supprimer cet événement ?',
+      irreversibleAction: 'Cette action est irréversible',
+      // Time display
+      moreEvents: 'de plus',
+      // Year selector
+      selectYear: 'Sélectionner une année',
+    },
   },
   en: {
     common: {
@@ -783,6 +1646,13 @@ export const translations: Record<Language, Translations> = {
       helpSupport: 'Help & Support',
       aiPremium: 'AI Premium',
       classicDashboard: 'Classic Dashboard',
+    },
+    sidebar: {
+      poweredByAI: 'Powered by AI',
+      aiPremiumUpgrade: 'AI Premium Upgrade',
+      unlockAdvancedFeatures: 'Unlock advanced AI features',
+      upgradeNow: 'Upgrade Now',
+      aiAssistantTooltip: 'AI Assistant always available',
     },
     header: {
       title: 'ProjectFlow AI',
@@ -840,6 +1710,7 @@ export const translations: Record<Language, Translations> = {
     },
     projects: {
       title: 'Projects',
+      subtitle: 'Manage your projects with artificial intelligence',
       newProject: 'New Project',
       projectName: 'Project Name',
       description: 'Description',
@@ -862,9 +1733,100 @@ export const translations: Record<Language, Translations> = {
       allProjects: 'All Projects',
       myProjects: 'My Projects',
       recentProjects: 'Recent Projects',
+      // Additional fields for Projects component
+      totalProjects: 'Total Projects',
+      completionRate: 'Completion Rate',
+      totalBudget: 'Total Budget',
+      averageProgress: 'Average Progress',
+      activeProjectsCount: 'active',
+      completedProjectsCount: 'completed',
+      overdueProjects: 'overdue',
+      budgetUsed: 'used',
+      late: 'overdue',
+      // AI Recommendations
+      aiRecommendations: 'AI Recommendations',
+      addRecommendation: 'Add',
+      teamReallocationSuggested: 'Team reallocation suggested',
+      budgetOptimizationDetected: 'Budget optimization detected',
+      delayRiskIdentified: 'Delay risk identified',
+      accelerationOpportunity: 'Acceleration opportunity',
+      confidence: 'Confidence',
+      reallocateNow: 'Reallocate now',
+      editRecommendation: 'Edit Recommendation',
+      newAiRecommendation: 'New AI Recommendation',
+      recommendationTitle: 'Title',
+      recommendationType: 'Type',
+      recommendationImpact: 'Impact',
+      recommendationConfidence: 'Confidence (%)',
+      recommendationProject: 'Project',
+      actionableRecommendation: 'Actionable recommendation',
+      typeReallocation: 'Reallocation',
+      typeOptimization: 'Optimization',
+      typeRisk: 'Risk',
+      typeOpportunity: 'Opportunity',
+      impactLow: 'Low',
+      impactMedium: 'Medium',
+      impactHigh: 'High',
+      selectProject: 'Select a project',
+      // Filters and search
+      searchProjects: 'Search projects...',
+      allStatuses: 'All statuses',
+      allPriorities: 'All priorities',
+      statusPlanning: 'Planning',
+      statusInProgress: 'In Progress',
+      statusReview: 'Review',
+      statusOnPause: 'On Hold',
+      // Project actions
+      edit: 'Edit',
+      duplicate: 'Duplicate',
+      export: 'Export',
+      delete: 'Delete',
+      viewDetails: 'View details',
+      // Project details
+      tasks: 'Tasks',
+      members: 'Members',
+      todayText: 'Today',
+      daysRemaining: 'days remaining',
+      daysLate: 'days overdue',
+      // Project modal
+      editProject: 'Edit Project',
+      createProject: 'New Project',
+      startDate: 'Start Date',
+      category: 'Category',
+      save: 'Save',
+      cancel: 'Cancel',
+      // Delete confirmation
+      deleteProject: 'Delete project',
+      deleteConfirmation: 'This action is irreversible',
+      deleteWarning: 'Are you sure you want to delete this project? All associated tasks will also be deleted.',
+      // Team reallocation
+      teamReallocation: 'Team Reallocation',
+      aiRecommendationText: 'Transfer 2 developers to this project to accelerate delivery by 15%.',
+      suggestedMembers: 'Suggested members:',
+      execute: 'Execute',
+      // Notifications
+      projectDuplicated: 'Project duplicated',
+      projectExported: 'Project exported',
+      projectDeleted: 'Project deleted',
+      reallocationCompleted: 'Reallocation completed',
+      recommendationDeleted: 'Recommendation deleted',
+      projectDuplicatedMessage: 'has been duplicated successfully',
+      projectExportedMessage: 'data has been exported',
+      projectDeletedMessage: 'has been deleted successfully',
+      reallocationCompletedMessage: 'has been reallocated successfully',
+      // Status display text
+      statusPlanningDisplay: 'Planning',
+      statusInProgressDisplay: 'In Progress',
+      statusReviewDisplay: 'Review',
+      statusCompletedDisplay: 'Completed',
+      statusOnPauseDisplay: 'On Hold',
+      priorityLowDisplay: 'Low',
+      priorityMediumDisplay: 'Medium',
+      priorityHighDisplay: 'High',
     },
     tasks: {
       title: 'Tasks',
+      subtitle: 'Manage your tasks with artificial intelligence',
       newTask: 'New Task',
       taskTitle: 'Task Title',
       description: 'Description',
@@ -878,16 +1840,112 @@ export const translations: Record<Language, Translations> = {
       statusInProgress: 'In Progress',
       statusCompleted: 'Completed',
       statusBlocked: 'Blocked',
+      statusReview: 'Review',
       allTasks: 'All Tasks',
       myTasks: 'My Tasks',
       overdue: 'Overdue',
       today: 'Today',
       thisWeek: 'This Week',
       upcoming: 'Upcoming',
+      // Metrics
+      totalTasks: 'Total Tasks',
+      completedTasks: 'completed',
+      myTasksMetric: 'My Tasks',
+      completedPercentage: '% completed',
+      timeTracked: 'Time Tracked',
+      efficiency: '% efficiency',
+      overdueTasks: 'Overdue',
+      attentionRequired: 'Require attention',
+      // AI Insights
+      aiInsightsTitle: 'AI Insights on Tasks',
+      productivity: 'Productivity',
+      vsLastMonth: 'vs last month',
+      aiAccuracy: 'AI Accuracy',
+      exactPredictions: 'Exact predictions',
+      collaboration: 'Collaboration',
+      teamScore: 'Team score',
+      // Filters and search
+      globalSearch: 'Global search...',
+      searchByTitle: 'Search by title...',
+      tasksCount: 'tasks',
+      filtered: 'Filtered',
+      sorted: 'Sorted',
+      savedViews: 'Saved views',
+      viewName: 'View name...',
+      export: 'Export',
+      reset: 'Reset',
+      // Priority levels
+      priorityLow: 'Low',
+      priorityMedium: 'Medium',
+      priorityHigh: 'High',
+      priorityCritical: 'Critical',
+      // Table headers
+      task: 'Task',
+      assigned: 'Assigned',
+      deadline: 'Deadline',
+      time: 'Time',
+      actions: 'Actions',
+      // Time tracking
+      hours: 'h',
+      estimatedTime: 'Estimated time (hours)',
+      timeTracking: 'Time tracking',
+      addTime: 'Add',
+      // Actions
+      view: 'View',
+      edit: 'Edit',
+      delete: 'Delete',
+      save: 'Save',
+      cancel: 'Cancel',
+      // Task details
+      details: 'Details',
+      comments: 'Comments',
+      addComment: 'Add a comment...',
+      send: 'Send',
+      createdOn: 'Created on',
+      completedOn: 'Completed on',
+      // Modals
+      editTask: 'Edit Task',
+      newTaskModal: 'New Task',
+      deleteTask: 'Delete task',
+      deleteConfirmation: 'This action is irreversible',
+      deleteWarning: 'Are you sure you want to delete this task? All associated data will be lost.',
+      // Status messages
+      taskDeleted: 'Task deleted',
+      taskDeletedMessage: 'has been deleted successfully',
+      statusUpdated: 'Status updated',
+      statusUpdatedMessage: 'The task status has been changed to',
+      taskUpdated: 'Task updated',
+      taskCreated: 'Task created',
+      taskSavedMessage: 'has been',
+      taskSavedUpdated: 'updated',
+      taskSavedCreated: 'created',
+      successMessage: 'successfully',
+      viewSaved: 'View saved',
+      viewSavedMessage: 'has been saved',
+      viewLoaded: 'View loaded',
+      viewLoadedMessage: 'has been loaded',
+      // Empty state
+      noTasksFound: 'No tasks found',
+      noTasksFiltered: 'No tasks match your search criteria.',
+      createFirstTask: 'Start by creating your first task.',
+      resetFilters: 'Reset filters',
+      createTask: 'Create a task',
+      // Form labels
+      title: 'Title',
+      startDate: 'Start Date',
+      tagsPlaceholder: 'frontend, urgent, bug',
+      tagsSeparator: 'Tags (separated by commas)',
+      // Time display
+      daysLate: 'days overdue',
+      todayDeadline: 'Today',
+      daysRemaining: 'days remaining',
+      hoursLabel: 'Hours',
     },
     team: {
       title: 'Team',
+      subtitle: 'Manage your teams and collaborators',
       addMember: 'Add Member',
+      newTeam: 'New Team',
       name: 'Name',
       email: 'Email',
       role: 'Role',
@@ -898,11 +1956,93 @@ export const translations: Record<Language, Translations> = {
       workload: 'Workload',
       availability: 'Availability',
       skills: 'Skills',
+      // Role types
       roleAdmin: 'Administrator',
       roleManager: 'Manager',
       roleDeveloper: 'Developer',
       roleDesigner: 'Designer',
       roleAnalyst: 'Analyst',
+      // Status types
+      statusActive: 'Active',
+      statusVacation: 'On Leave',
+      statusBusy: 'Busy',
+      statusOffline: 'Offline',
+      // Actions
+      view: 'View',
+      edit: 'Edit',
+      delete: 'Delete',
+      save: 'Save',
+      cancel: 'Cancel',
+      close: 'Close',
+      viewProfile: 'View profile',
+      // Team management
+      teams: 'Teams',
+      allUsers: 'All users',
+      members: 'Members',
+      activeMembers: 'active',
+      projects: 'Projects',
+      tasks: 'Tasks',
+      averagePerformance: 'Avg Performance',
+      topPerformer: 'Top Performer',
+      bestPerformance: 'Best performance',
+      totalTasksCompleted: 'Tasks Completed',
+      teamTotal: 'Team total',
+      performantTeam: 'High-performing team',
+      since: 'Since',
+      // Search and filters
+      searchMembers: 'Search members...',
+      allDepartments: 'All departments',
+      allStatuses: 'All statuses',
+      // Form labels
+      fullName: 'Full name',
+      phone: 'Phone',
+      location: 'Location',
+      status: 'Status',
+      team: 'Team',
+      noTeam: 'No team',
+      selectDepartment: 'Select a department',
+      estimatedTime: 'Estimated time (hours)',
+      skillsPlaceholder: 'React, TypeScript, Node.js',
+      skillsSeparator: 'Skills (separated by commas)',
+      completedOn: 'Completed on',
+      activeProjectsCount: 'Active projects',
+      // Modal titles
+      addMemberModal: 'Add member',
+      editProfileModal: 'Edit profile',
+      newTeamModal: 'New team',
+      editTeamModal: 'Edit team',
+      deleteMemberModal: 'Delete member',
+      // Modal content
+      changePhotoText: 'Click the icon to change photo',
+      teamName: 'Team name',
+      description: 'Description',
+      color: 'Color',
+      teamLeader: 'Team leader',
+      create: 'Create',
+      addToTeam: 'Add to team',
+      // Delete confirmation
+      deleteMember: 'Delete member',
+      deleteConfirmation: 'This action is irreversible',
+      deleteWarning: 'Are you sure you want to delete this team member? All their assignments will also be removed.',
+      // Performance tracking
+      tasksCompleted: 'Tasks completed',
+      performanceMetrics: 'Performance',
+      // Empty states
+      noMembersFound: 'No members found',
+      noMembersInTeam: 'No members in team',
+      noMembersMatchCriteria: 'match your criteria.',
+      // Notifications
+      userDeleted: 'User deleted',
+      userDeletedMessage: 'has been removed from the team',
+      userAdded: 'User added',
+      userUpdated: 'User updated',
+      userAddedMessage: 'has been added to',
+      userUpdatedMessage: 'has been updated in',
+      addedTo: 'added to',
+      updatedIn: 'updated in',
+      // File upload
+      selectValidImage: 'Please select a valid image file.',
+      uploadingImage: 'Uploading...',
     },
     ai: {
       insights: 'Advanced AI Insights',
@@ -1008,6 +2148,99 @@ export const translations: Record<Language, Translations> = {
       backupData: 'Backup Data',
       deleteAccount: 'Delete Account',
     },
+    calendar: {
+      title: 'Calendar',
+      subtitle: 'Manage your events and deadlines',
+      today: 'Today',
+      month: 'Month',
+      week: 'Week',
+      day: 'Day',
+      agenda: 'Agenda',
+      previous: 'Previous',
+      next: 'Next',
+      newEvent: 'New Event',
+      eventTitle: 'Event title',
+      description: 'Description',
+      startDate: 'Start date',
+      endDate: 'End date',
+      location: 'Location',
+      attendees: 'Attendees',
+      allDay: 'All day',
+      reminder: 'Reminder',
+      repeat: 'Repeat',
+      category: 'Category',
+      meeting: 'Meeting',
+      deadline: 'Deadline',
+      personal: 'Personal',
+      work: 'Work',
+      noEvents: 'No events',
+      createFirstEvent: 'Create your first event',
+      editEvent: 'Edit event',
+      deleteEvent: 'Delete event',
+      saveEvent: 'Save',
+      cancelEvent: 'Cancel',
+    },
+    blog: {
+      title: 'Blog',
+      subtitle: 'Articles and guides to optimize your projects',
+      latestPosts: 'Latest posts',
+      readMore: 'Read more',
+      writtenBy: 'Written by',
+      publishedOn: 'Published on',
+      categories: 'Categories',
+      allCategories: 'All categories',
+      searchPosts: 'Search articles...',
+      noPostsFound: 'No articles found',
+      loadingPosts: 'Loading articles...',
+      featured: 'Featured',
+      minutes: 'minutes',
+      readTime: 'read',
+      tags: 'Tags',
+      share: 'Share',
+      relatedPosts: 'Related posts',
+    },
+    help: {
+      title: 'Help & Support',
+      subtitle: 'Find answers and get help',
+      searchHelp: 'Search help...',
+      popularArticles: 'Popular articles',
+      gettingStarted: 'Getting started',
+      troubleshooting: 'Troubleshooting',
+      advanced: 'Advanced',
+      contactSupport: 'Contact support',
+      documentation: 'Documentation',
+      tutorials: 'Tutorials',
+      faq: 'FAQ',
+      userGuide: 'User guide',
+      apiDocs: 'API Documentation',
+      community: 'Community',
+      helpfulQuestion: 'Was this answer helpful?',
+      submitFeedback: 'Submit feedback',
+      reportBug: 'Report a bug',
+      featureRequest: 'Request a feature',
+    },
+    premium: {
+      title: 'AI Premium',
+      subtitle: 'Unlock the full potential of artificial intelligence',
+      currentPlan: 'Current plan',
+      upgradePlan: 'Upgrade plan',
+      features: 'Features',
+      pricing: 'Pricing',
+      monthly: 'Monthly',
+      annually: 'Annually',
+      unlimitedAI: 'Unlimited AI',
+      advancedAnalytics: 'Advanced analytics',
+      prioritySupport: 'Priority support',
+      customIntegrations: 'Custom integrations',
+      teamCollaboration: 'Team collaboration',
+      dataExport: 'Data export',
+      upgradeNow: 'Upgrade now',
+      contactSales: 'Contact sales',
+      freeTrial: 'Free trial',
+      mostPopular: 'Most popular',
+      enterprise: 'Enterprise',
+      custom: 'Custom',
+    },
     sidebar: {
       poweredByAI: 'Powered by Advanced AI',
       aiPremiumDescription: 'Unlock advanced predictive analysis and automatic optimization',
@@ -1090,6 +2323,109 @@ export const translations: Record<Language, Translations> = {
       identifyBottlenecks: 'Identify bottlenecks',
       suggestImprovements: 'Suggest improvements',
       forecastTimeline: 'Forecast timeline',
+    },
+    calendar: {
+      title: 'Calendar',
+      subtitle: 'Manage your events and appointments',
+      newEvent: 'New Event',
+      // View options
+      monthView: 'Month',
+      weekView: 'Week',
+      dayView: 'Day',
+      agendaView: 'Agenda',
+      // Navigation
+      today: 'Today',
+      previous: 'Previous',
+      next: 'Next',
+      // Day names (short)
+      sunday: 'Sunday',
+      monday: 'Monday',
+      tuesday: 'Tuesday',
+      wednesday: 'Wednesday',
+      thursday: 'Thursday',
+      friday: 'Friday',
+      saturday: 'Saturday',
+      // Day names (abbreviated)
+      sun: 'Sun',
+      mon: 'Mon',
+      tue: 'Tue',
+      wed: 'Wed',
+      thu: 'Thu',
+      fri: 'Fri',
+      sat: 'Sat',
+      // Month names
+      january: 'January',
+      february: 'February',
+      march: 'March',
+      april: 'April',
+      may: 'May',
+      june: 'June',
+      july: 'July',
+      august: 'August',
+      september: 'September',
+      october: 'October',
+      november: 'November',
+      december: 'December',
+      // Event types
+      meeting: 'Meeting',
+      deadline: 'Deadline',
+      presentation: 'Presentation',
+      review: 'Review',
+      personal: 'Personal',
+      // Event form
+      eventTitle: 'Title',
+      eventDescription: 'Description',
+      eventDate: 'Date',
+      eventType: 'Type',
+      startTime: 'Start Time',
+      endTime: 'End Time',
+      location: 'Location',
+      attendees: 'Attendees',
+      reminderMinutes: 'Reminder (minutes)',
+      recurringEvent: 'Recurring Event',
+      // Reminder options
+      noReminder: 'No reminder',
+      fiveMinutes: '5 minutes',
+      fifteenMinutes: '15 minutes',
+      thirtyMinutes: '30 minutes',
+      oneHour: '1 hour',
+      oneDay: '1 day',
+      // Modal titles
+      newEventModal: 'New Event',
+      editEventModal: 'Edit Event',
+      deleteEventModal: 'Delete event',
+      // Actions
+      createEvent: 'Create',
+      editEvent: 'Edit',
+      deleteEvent: 'Delete',
+      saveEvent: 'Save',
+      // Placeholders
+      eventTitlePlaceholder: 'Event title',
+      eventDescriptionPlaceholder: 'Event description',
+      eventLocationPlaceholder: 'Event location',
+      searchPlaceholder: 'Search...',
+      // Filters
+      allTypes: 'All types',
+      meetings: 'Meetings',
+      deadlines: 'Deadlines',
+      presentations: 'Presentations',
+      reviews: 'Reviews',
+      personalEvents: 'Personal',
+      // Status messages
+      eventCreated: 'Event created',
+      eventUpdated: 'Event updated',
+      eventDeleted: 'Event deleted',
+      eventCreatedMessage: 'has been created successfully',
+      eventUpdatedMessage: 'has been updated successfully',
+      eventDeletedMessage: 'has been deleted successfully',
+      // Confirmation
+      deleteConfirmation: 'This action is irreversible',
+      deleteWarning: 'Are you sure you want to delete this event?',
+      irreversibleAction: 'This action is irreversible',
+      // Time display
+      moreEvents: 'more',
+      // Year selector
+      selectYear: 'Select a year',
     },
   },
 };
