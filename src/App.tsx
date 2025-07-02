@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider } from './context/AppContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { SettingsProvider } from './context/SettingsContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
@@ -129,9 +130,11 @@ function AppContent() {
 function App() {
   return (
     <LanguageProvider>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
+      <SettingsProvider>
+        <AppProvider>
+          <AppContent />
+        </AppProvider>
+      </SettingsProvider>
     </LanguageProvider>
   );
 }

@@ -57,6 +57,7 @@ export interface Translations {
     upgradeNow: string;
     aiAssistantTooltip: string;
     discoverPremium: string;
+    aiPremiumDescription: string;
   };
 
   // Header
@@ -162,6 +163,10 @@ export interface Translations {
     notificationsPanelDesc: string;
     profileMenu: string;
     profileMenuDesc: string;
+    commands: string;
+    responses: string;
+    messages: string;
+    voiceTest: string;
   };
 
   // Dashboard
@@ -191,6 +196,18 @@ export interface Translations {
     taskDistribution: string;
     totalTasks: string;
     completedTasks: string;
+    completed: string;
+    inProgress: string;
+    toDo: string;
+    review: string;
+    recentProjects: string;
+    viewAll: string;
+    viewCalendar: string;
+    today: string;
+    dayLeft: string;
+    daysLeft: string;
+    noUpcomingDeadlines: string;
+    allProjectsOnTrack: string;
   };
 
   // Projects
@@ -428,6 +445,54 @@ export interface Translations {
     repeat: string;
     noEvents: string;
     createFirstEvent: string;
+    eventDeleted: string;
+    eventCreated: string;
+    eventUpdated: string;
+    eventCreatedMessage: string;
+    eventUpdatedMessage: string;
+    moreEvents: string;
+    sun: string;
+    mon: string;
+    tue: string;
+    wed: string;
+    thu: string;
+    fri: string;
+    sat: string;
+    searchPlaceholder: string;
+    allTypes: string;
+    meetings: string;
+    deadlines: string;
+    presentations: string;
+    reviews: string;
+    personalEvents: string;
+    monthView: string;
+    weekView: string;
+    dayView: string;
+    newEventModal: string;
+    editEventModal: string;
+    eventTitlePlaceholder: string;
+    eventDescriptionPlaceholder: string;
+    eventDate: string;
+    eventType: string;
+    meeting: string;
+    deadline: string;
+    presentation: string;
+    review: string;
+    personal: string;
+    eventLocationPlaceholder: string;
+    reminderMinutes: string;
+    noReminder: string;
+    fiveMinutes: string;
+    fifteenMinutes: string;
+    thirtyMinutes: string;
+    oneHour: string;
+    oneDay: string;
+    recurringEvent: string;
+    createEvent: string;
+    saveEvent: string;
+    deleteEventModal: string;
+    deleteConfirmation: string;
+    deleteWarning: string;
   };
 
   // Blog
@@ -487,6 +552,7 @@ export interface Translations {
     hasBeenUpdated: string;
     hasBeenDeleted: string;
     preview: string;
+    allStatuses: string;
   };
 
   // Settings
@@ -679,7 +745,6 @@ export interface Translations {
     predictiveAnalysis: string;
     automaticOptimization: string;
     proactiveRiskDetection: string;
-    personalizedRecommendations: string;
     askSpecificQuestion: string;
     // Error handling
     technicalDifficulties: string;
@@ -835,7 +900,6 @@ export interface Translations {
     predictiveInsights: string;
     automatedOptimization: string;
     prioritySupport: string;
-    unlimitedProjects: string;
     teamCollaboration: string;
     dataExport: string;
     
@@ -867,7 +931,6 @@ export interface Translations {
     taskReallocation: string;
     planningOptimization: string;
     trendDetection: string;
-    personalizedRecommendations: string;
     behavioralAnalysis: string;
     automatedReports: string;
     voiceRecognition: string;
@@ -1040,6 +1103,12 @@ export interface Translations {
     schedule: string;
   };
 
+  // AI Insights
+  aiInsights: {
+    processCategory: string;
+    insightsCount: string;
+  };
+
   // Status and States
   status: {
     active: string;
@@ -1182,6 +1251,7 @@ export const translations: Record<Language, Translations> = {
       upgradeNow: 'Mettre à niveau maintenant',
       aiAssistantTooltip: 'Assistant IA - Disponible 24/7',
       discoverPremium: 'Découvrir Premium',
+      aiPremiumDescription: 'Accédez à des fonctionnalités d\'IA avancées pour optimiser votre productivité',
     },
     header: {
       title: 'ProjectFlow AI',
@@ -1283,6 +1353,10 @@ export const translations: Record<Language, Translations> = {
       notificationsPanelDesc: 'Ouvre le panneau des notifications',
       profileMenu: 'profil',
       profileMenuDesc: 'Ouvre le menu profil',
+      commands: 'Commandes',
+      responses: 'Réponses',
+      messages: 'Messages',
+      voiceTest: 'Test vocal',
     },
     dashboard: {
       title: 'Tableau de Bord',
@@ -1310,6 +1384,18 @@ export const translations: Record<Language, Translations> = {
       taskDistribution: 'Répartition des Tâches',
       totalTasks: 'Total Tâches',
       completedTasks: 'Tâches Terminées',
+      completed: 'Terminé',
+      inProgress: 'En cours',
+      toDo: 'À faire',
+      review: 'Révision',
+      recentProjects: 'Projets récents',
+      viewAll: 'Voir tout',
+      viewCalendar: 'Voir le calendrier',
+      today: 'Aujourd\'hui',
+      dayLeft: 'jour restant',
+      daysLeft: 'jours restants',
+      noUpcomingDeadlines: 'Aucune échéance prochaine',
+      allProjectsOnTrack: 'Tous les projets sont sur la bonne voie',
     },
     projects: {
       title: 'Projets',
@@ -1413,6 +1499,12 @@ export const translations: Record<Language, Translations> = {
       confidencePercent: 'Confiance (%)',
       selectProject: 'Sélectionner un projet',
       actionableRecommendation: 'Recommandation actionnable',
+      // Status aliases
+      planning: 'Planification',
+      inProgress: 'En Cours',
+      review: 'En Révision',
+      onHold: 'En Attente',
+      project: 'Projet',
     },
     tasks: {
       title: 'Tâches',
@@ -1590,6 +1682,54 @@ export const translations: Record<Language, Translations> = {
       repeat: 'Répéter',
       noEvents: 'Aucun événement',
       createFirstEvent: 'Créez votre premier événement',
+      eventDeleted: 'Événement supprimé',
+      eventCreated: 'Événement créé',
+      eventUpdated: 'Événement mis à jour',
+      eventCreatedMessage: 'L\'événement a été créé avec succès',
+      eventUpdatedMessage: 'L\'événement a été mis à jour avec succès',
+      moreEvents: '+ {count} autres événements',
+      sun: 'Dim',
+      mon: 'Lun',
+      tue: 'Mar',
+      wed: 'Mer',
+      thu: 'Jeu',
+      fri: 'Ven',
+      sat: 'Sam',
+      searchPlaceholder: 'Rechercher des événements...',
+      allTypes: 'Tous les types',
+      meetings: 'Réunions',
+      deadlines: 'Échéances',
+      presentations: 'Présentations',
+      reviews: 'Révisions',
+      personalEvents: 'Événements personnels',
+      monthView: 'Vue mensuelle',
+      weekView: 'Vue hebdomadaire',
+      dayView: 'Vue journalière',
+      newEventModal: 'Nouvel événement',
+      editEventModal: 'Modifier l\'événement',
+      eventTitlePlaceholder: 'Entrez le titre de l\'événement',
+      eventDescriptionPlaceholder: 'Ajoutez une description de l\'événement',
+      eventDate: 'Date de l\'événement',
+      eventType: 'Type d\'événement',
+      meeting: 'Réunion',
+      deadline: 'Échéance',
+      presentation: 'Présentation',
+      review: 'Révision',
+      personal: 'Personnel',
+      eventLocationPlaceholder: 'Ajouter un lieu',
+      reminderMinutes: 'Rappel',
+      noReminder: 'Pas de rappel',
+      fiveMinutes: '5 minutes avant',
+      fifteenMinutes: '15 minutes avant',
+      thirtyMinutes: '30 minutes avant',
+      oneHour: '1 heure avant',
+      oneDay: '1 jour avant',
+      recurringEvent: 'Événement récurrent',
+      createEvent: 'Créer l\'événement',
+      saveEvent: 'Enregistrer l\'événement',
+      deleteEventModal: 'Supprimer l\'événement',
+      deleteConfirmation: 'Êtes-vous sûr de vouloir supprimer cet événement ?',
+      deleteWarning: 'Cette action ne peut pas être annulée.',
     },
     blog: {
       title: 'Blog',
@@ -1647,6 +1787,7 @@ export const translations: Record<Language, Translations> = {
       hasBeenUpdated: 'a été mis à jour avec succès',
       hasBeenDeleted: 'a été supprimé avec succès',
       preview: 'Aperçu',
+      allStatuses: 'Tous les statuts',
     },
     settings: {
       title: 'Paramètres',
@@ -1835,7 +1976,6 @@ export const translations: Record<Language, Translations> = {
       predictiveAnalysis: '• Analyse prédictive des projets',
       automaticOptimization: '• Optimisation automatique des ressources',
       proactiveRiskDetection: '• Détection proactive des risques',
-      personalizedRecommendations: '• Recommandations personnalisées',
       askSpecificQuestion: 'Posez-moi une question spécifique ou utilisez les suggestions ci-dessous !',
       // Error handling
       technicalDifficulties: 'Désolé, je rencontre des difficultés techniques.',
@@ -1985,7 +2125,6 @@ export const translations: Record<Language, Translations> = {
       predictiveInsights: 'Insights Prédictifs',
       automatedOptimization: 'Optimisation Automatisée',
       prioritySupport: 'Support Prioritaire',
-      unlimitedProjects: 'Projets Illimités',
       teamCollaboration: 'Collaboration d\'Équipe',
       dataExport: 'Export de Données',
       
@@ -2017,7 +2156,6 @@ export const translations: Record<Language, Translations> = {
       taskReallocation: 'Réallocation intelligente des tâches',
       planningOptimization: 'Optimisation du planning automatique',
       trendDetection: 'Détection automatique des tendances',
-      personalizedRecommendations: 'Recommandations personnalisées',
       behavioralAnalysis: 'Analyse comportementale avancée',
       automatedReports: 'Rapports intelligents automatisés',
       voiceRecognition: 'Reconnaissance vocale multilingue',
@@ -2183,6 +2321,10 @@ export const translations: Record<Language, Translations> = {
       shareReport: 'Partager Rapport',
       schedule: 'Programmer',
     },
+    aiInsights: {
+      processCategory: 'Catégorie de processus',
+      insightsCount: 'Nombre d\'insights',
+    },
     status: {
       active: 'Actif',
       inactive: 'Inactif',
@@ -2314,6 +2456,7 @@ export const translations: Record<Language, Translations> = {
       upgradeNow: 'Upgrade Now',
       aiAssistantTooltip: 'AI Assistant - Available 24/7',
       discoverPremium: 'Discover Premium',
+      aiPremiumDescription: 'Access advanced AI features to optimize your productivity',
     },
     header: {
       title: 'ProjectFlow AI',
@@ -2415,6 +2558,10 @@ export const translations: Record<Language, Translations> = {
       notificationsPanelDesc: 'Opens notifications panel',
       profileMenu: 'profile',
       profileMenuDesc: 'Opens profile menu',
+      commands: 'Commands',
+      responses: 'Responses',
+      messages: 'Messages',
+      voiceTest: 'Voice Test',
     },
     dashboard: {
       title: 'Dashboard',
@@ -2442,6 +2589,18 @@ export const translations: Record<Language, Translations> = {
       taskDistribution: 'Task Distribution',
       totalTasks: 'Total Tasks',
       completedTasks: 'Completed Tasks',
+      completed: 'Completed',
+      inProgress: 'In Progress',
+      toDo: 'To Do',
+      review: 'Review',
+      recentProjects: 'Recent Projects',
+      viewAll: 'View All',
+      viewCalendar: 'View Calendar',
+      today: 'Today',
+      dayLeft: 'day left',
+      daysLeft: 'days left',
+      noUpcomingDeadlines: 'No upcoming deadlines',
+      allProjectsOnTrack: 'All projects on track',
     },
     projects: {
       title: 'Projects',
@@ -2545,6 +2704,12 @@ export const translations: Record<Language, Translations> = {
       confidencePercent: 'Confidence (%)',
       selectProject: 'Select a project',
       actionableRecommendation: 'Actionable recommendation',
+      // Status aliases
+      planning: 'Planning',
+      inProgress: 'In Progress',
+      review: 'Review',
+      onHold: 'On Hold',
+      project: 'Project',
     },
     tasks: {
       title: 'Tasks',
@@ -2722,6 +2887,54 @@ export const translations: Record<Language, Translations> = {
       repeat: 'Repeat',
       noEvents: 'No events',
       createFirstEvent: 'Create your first event',
+      eventDeleted: 'Event deleted',
+      eventCreated: 'Event created',
+      eventUpdated: 'Event updated',
+      eventCreatedMessage: 'Event has been created successfully',
+      eventUpdatedMessage: 'Event has been updated successfully',
+      moreEvents: '+ {count} more events',
+      sun: 'Sun',
+      mon: 'Mon',
+      tue: 'Tue',
+      wed: 'Wed',
+      thu: 'Thu',
+      fri: 'Fri',
+      sat: 'Sat',
+      searchPlaceholder: 'Search events...',
+      allTypes: 'All types',
+      meetings: 'Meetings',
+      deadlines: 'Deadlines',
+      presentations: 'Presentations',
+      reviews: 'Reviews',
+      personalEvents: 'Personal events',
+      monthView: 'Month view',
+      weekView: 'Week view',
+      dayView: 'Day view',
+      newEventModal: 'New event',
+      editEventModal: 'Edit event',
+      eventTitlePlaceholder: 'Enter event title',
+      eventDescriptionPlaceholder: 'Add an event description',
+      eventDate: 'Event date',
+      eventType: 'Event type',
+      meeting: 'Meeting',
+      deadline: 'Deadline',
+      presentation: 'Presentation',
+      review: 'Review',
+      personal: 'Personal',
+      eventLocationPlaceholder: 'Add location',
+      reminderMinutes: 'Reminder',
+      noReminder: 'No reminder',
+      fiveMinutes: '5 minutes before',
+      fifteenMinutes: '15 minutes before',
+      thirtyMinutes: '30 minutes before',
+      oneHour: '1 hour before',
+      oneDay: '1 day before',
+      recurringEvent: 'Recurring event',
+      createEvent: 'Create event',
+      saveEvent: 'Save event',
+      deleteEventModal: 'Delete event',
+      deleteConfirmation: 'Are you sure you want to delete this event?',
+      deleteWarning: 'This action cannot be undone.',
     },
     blog: {
       title: 'Blog',
@@ -2779,6 +2992,7 @@ export const translations: Record<Language, Translations> = {
       hasBeenUpdated: 'has been updated successfully',
       hasBeenDeleted: 'has been deleted successfully',
       preview: 'Preview',
+      allStatuses: 'All Statuses',
     },
     settings: {
       title: 'Settings',
@@ -2967,7 +3181,6 @@ export const translations: Record<Language, Translations> = {
       predictiveAnalysis: '• Predictive project analysis',
       automaticOptimization: '• Automatic resource optimization',
       proactiveRiskDetection: '• Proactive risk detection',
-      personalizedRecommendations: '• Personalized recommendations',
       askSpecificQuestion: 'Ask me a specific question or use the suggestions below!',
       // Error handling
       technicalDifficulties: 'Sorry, I\'m experiencing technical difficulties.',
@@ -3117,7 +3330,6 @@ export const translations: Record<Language, Translations> = {
       predictiveInsights: 'Predictive Insights',
       automatedOptimization: 'Automated Optimization',
       prioritySupport: 'Priority Support',
-      unlimitedProjects: 'Unlimited Projects',
       teamCollaboration: 'Team Collaboration',
       dataExport: 'Data Export',
       
@@ -3149,7 +3361,6 @@ export const translations: Record<Language, Translations> = {
       taskReallocation: 'Intelligent task reallocation',
       planningOptimization: 'Automatic planning optimization',
       trendDetection: 'Automatic trend detection',
-      personalizedRecommendations: 'Personalized recommendations',
       behavioralAnalysis: 'Advanced behavioral analysis',
       automatedReports: 'Automated intelligent reports',
       voiceRecognition: 'Multilingual voice recognition',
@@ -3314,6 +3525,10 @@ export const translations: Record<Language, Translations> = {
       exportData: 'Export Data',
       shareReport: 'Share Report',
       schedule: 'Schedule',
+    },
+    aiInsights: {
+      processCategory: 'Process Category',
+      insightsCount: 'Insights Count',
     },
     status: {
       active: 'Active',

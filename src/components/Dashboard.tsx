@@ -9,11 +9,10 @@ import {
   MoreHorizontal,
   Calendar,
   Target,
-  DollarSign,
   AlertTriangle,
   ArrowRight
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Tooltip, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { useAppContext } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getProjectStats, getTaskStats, calculateCompletionRate } from '../utils/calculations';

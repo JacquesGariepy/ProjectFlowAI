@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Mic, 
   MicOff, 
   Volume2, 
   VolumeX, 
-  Zap, 
   Brain,
-  MessageSquare,
-  Settings
+  MessageSquare
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -108,7 +106,7 @@ const VoiceCommands: React.FC = () => {
   const processVoiceCommand = (command: string) => {
     const matchedCommand = voiceCommands.find(cmd => 
       command.includes(cmd.command) || 
-      cmd.command.split(' ').some(word => command.includes(word))
+      cmd.command.split(' ').some((word: string) => command.includes(word))
     );
 
     if (matchedCommand) {

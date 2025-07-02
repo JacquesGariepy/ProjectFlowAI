@@ -4,27 +4,16 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Plus, 
-  Clock, 
   MapPin, 
-  Users, 
-  Edit, 
   Trash2, 
   X, 
   Save,
-  MoreHorizontal,
-  Filter,
   Search,
-  Eye,
-  Bell,
-  Repeat,
-  Video,
-  Phone,
-  FileText,
   ChevronDown
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
-import { CalendarEvent, User as UserType } from '../types';
+import { CalendarEvent } from '../types';
 import { formatDate, formatDateTime } from '../utils/dateUtils';
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -111,18 +100,6 @@ const Calendar: React.FC = () => {
     });
   };
 
-  // Get events for current view with date range filtering
-  const getEventsForView = () => {
-    const start = getViewStartDate();
-    const end = getViewEndDate();
-    
-    const filteredEvents = filterEvents(calendarEvents);
-    
-    return filteredEvents.filter(event => {
-      const eventDate = new Date(event.date + 'T00:00:00');
-      return eventDate >= start && eventDate <= end;
-    });
-  };
 
   // Get events for a specific date (used in day view and individual day cells)
   const getEventsForDate = (date: Date): CalendarEvent[] => {
@@ -341,7 +318,7 @@ const Calendar: React.FC = () => {
   // Render functions
   const renderMonthView = () => {
     const startDate = getViewStartDate();
-    const days = [];
+    const days: Date[] = [];
     
     // Generate calendar days
     for (let i = 0; i < 42; i++) {
@@ -425,7 +402,7 @@ const Calendar: React.FC = () => {
 
   const renderWeekView = () => {
     const startDate = getViewStartDate();
-    const days = [];
+    const days: Date[] = [];
     const hours = Array.from({ length: 24 }, (_, i) => i);
     
     for (let i = 0; i < 7; i++) {
@@ -515,8 +492,6 @@ const Calendar: React.FC = () => {
   };
 
   const renderDayView = () => {
-    // Utiliser getEventsForDate pour une cohérence parfaite
-    const eventsForDay = getEventsForDate(currentDate);
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const isToday = isSameDate(currentDate, new Date());
     
@@ -615,16 +590,6 @@ const Calendar: React.FC = () => {
     }
   };
 
-  const getEventTypeColor = (type: string) => {
-    switch (type) {
-      case 'meeting': return 'bg-blue-100 text-blue-700';
-      case 'deadline': return 'bg-red-100 text-red-700';
-      case 'presentation': return 'bg-purple-100 text-purple-700';
-      case 'review': return 'bg-orange-100 text-orange-700';
-      case 'personal': return 'bg-green-100 text-green-700';
-      default: return 'bg-slate-100 text-slate-700';
-    }
-  };
 
   return (
     <div className="space-y-6">

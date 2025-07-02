@@ -3,7 +3,6 @@ import {
   FolderOpen, 
   Plus, 
   Search, 
-  Filter, 
   MoreHorizontal, 
   Calendar, 
   Users, 
@@ -21,15 +20,12 @@ import {
   Save,
   Brain,
   Zap,
-  Eye,
-  Settings,
-  User,
   ArrowRight,
   Sparkles
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Project, User as UserType } from '../types';
+import { Project } from '../types';
 import { formatDate, getDaysUntilDeadline, isOverdue } from '../utils/dateUtils';
 import { calculateBudgetUtilization, calculateProjectProgress } from '../utils/calculations';
 

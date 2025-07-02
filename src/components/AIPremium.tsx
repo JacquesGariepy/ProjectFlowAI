@@ -4,13 +4,9 @@ import {
   Sparkles, 
   Brain, 
   Zap, 
-  Target, 
   TrendingUp, 
-  Users, 
   Calendar, 
-  BarChart3, 
   Shield, 
-  Clock, 
   CheckCircle, 
   Star, 
   Crown, 
@@ -18,10 +14,6 @@ import {
   Globe, 
   Headphones, 
   Download, 
-  Smartphone, 
-  Monitor, 
-  ArrowRight, 
-  X,
   Play,
   Pause,
   Volume2
@@ -49,9 +41,8 @@ interface AIFeature {
 
 const AIPremium: React.FC = () => {
   const { t } = useLanguage();
-  const [selectedPlan, setSelectedPlan] = useState<string>('pro');
+  const [selectedPlan] = useState<string>('pro');
   const [showDemo, setShowDemo] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const pricingPlans: PricingPlan[] = [
     {
